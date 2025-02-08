@@ -21,7 +21,7 @@ import org.springframework.cache.annotation.Cacheable
 @Service
 class AuthService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder,
+    private val passwordEncoder: PasswordEncoder,  // Ensure PasswordEncoder is injected
     private val jwtService: JwtService,
     private val authenticationManager: AuthenticationManager,
 ) {

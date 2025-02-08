@@ -8,12 +8,12 @@ import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 
 @Configuration
 class ApplicationConfig(
     private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder, // Inject PasswordEncoder
 ) {
     @Bean
     fun userDetailsService(): UserDetailsService =
@@ -34,7 +34,4 @@ class ApplicationConfig(
 
     @Bean
     fun authenticationManager(config: AuthenticationConfiguration): AuthenticationManager = config.authenticationManager
-
-    @Bean
-    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 }
