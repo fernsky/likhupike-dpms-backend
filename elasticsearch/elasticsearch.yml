@@ -1,0 +1,18 @@
+cluster.name: "dpms-cluster"
+network.host: 0.0.0.0
+discovery.type: single-node
+xpack.security.enabled: false
+
+# Path settings
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# Memory settings
+bootstrap.memory_lock: true
+
+# Network settings
+http.port: 9200
+transport.port: 9300
+
+# Index settings
+action.auto_create_index: .monitoring-*,.watches,.triggered_watches,.watcher-history-*

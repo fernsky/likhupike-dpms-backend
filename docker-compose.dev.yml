@@ -1,0 +1,81 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+      - "35729:35729" # Live reload port
+    volumes:
+      - .:/app
+      - gradle-cache:/root/.gradle
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dpms
+      SPRING_REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: http://minio:9000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - dpms-network
+
+  postgres:
+    image: postgis/postgis:17-3.5
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: dpms
+      POSTGRES_USER: dpms
+      POSTGRES_PASSWORD: dpmsSecurePass123!
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+    networks:
+      - dpms-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dpms"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass redisSecurePass123!
+    volumes:
+      - redis-data-dev:/data
+    networks:
+      - dpms-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redisSecurePass123!", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:RELEASE.2024-03-21T23-13-43Z
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: miniopass
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data-dev:/data
+    networks:
+      - dpms-network
+
+networks:
+  dpms-network:
+    driver: bridge
+
+volumes:
+  postgres-data-dev:
+  redis-data-dev:
+  minio-data-dev:
+  gradle-cache:

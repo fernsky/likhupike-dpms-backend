@@ -1,0 +1,27 @@
+FROM eclipse-temurin:21-jdk-alpine
+
+WORKDIR /app
+
+# Install development tools
+RUN apk add --no-cache curl tar
+
+# Copy Gradle files first for better caching
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle.kts .
+COPY settings.gradle.kts .
+
+# Make gradlew executable
+RUN chmod +x ./gradlew
+
+# Download dependencies
+RUN ./gradlew --no-daemon dependencies
+
+# Create source directory
+RUN mkdir -p src/main/kotlin
+RUN mkdir -p src/main/resources
+
+EXPOSE 8080
+EXPOSE 35729
+
+CMD ["./gradlew", "bootRun", "--no-daemon"]

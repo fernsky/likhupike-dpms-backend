@@ -1,0 +1,208 @@
+plugins {
+    kotlin("jvm") version "1.9.25"
+    kotlin("plugin.spring") version "1.9.25"
+    kotlin("plugin.jpa") version "1.9.25"
+    id("org.springframework.boot") version "3.4.2"
+    id("io.spring.dependency-management") version "1.1.7"
+    id("org.asciidoctor.jvm.convert") version "3.3.2"
+    id("org.openapi.generator") version "7.4.0"
+    id("com.google.cloud.tools.jib") version "3.4.1"
+    id("application")  // Add this line
+}
+
+springBoot {
+    mainClass.set("np.gov.likhupikemun.dpms.DpmsApiApplicationKt")
+}
+
+// Project metadata
+group = "np.gov.likhupikemun"
+version = "0.0.1-SNAPSHOT"
+
+// Java configuration
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+// Repository configuration
+repositories {
+    mavenCentral()
+}
+
+// Project properties
+extra["snippetsDir"] = file("build/generated-snippets")
+extra["springModulithVersion"] = "1.3.1"
+extra["testcontainersVersion"] = "1.19.7"
+extra["springCloudVersion"] = "2023.0.0"
+
+dependencies {
+    // Spring Boot core dependencies
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    // Kotlin support
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    // Spatial and Geometry support
+    implementation("org.locationtech.jts:jts-core")
+    implementation("org.hibernate.orm:hibernate-spatial")
+
+    // API Documentation
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+
+    // Database and JPA enhancements
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
+    implementation("com.vladmihalcea:hibernate-types-60:2.21.1")
+
+    // Utility libraries
+    implementation("net.coobird:thumbnailator:0.4.20")
+
+    // Spring Modulith
+    implementation("org.springframework.modulith:spring-modulith-starter-core")
+    implementation("org.springframework.modulith:spring-modulith-starter-jpa")
+    
+    // Session management
+    implementation("org.springframework.session:spring-session-jdbc")
+
+    // Development tools
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+
+    // Runtime dependencies
+    runtimeOnly("org.springframework.modulith:spring-modulith-actuator")
+    runtimeOnly("org.springframework.modulith:spring-modulith-observability")
+
+    // Test dependencies
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.springframework.modulith:spring-modulith-starter-test")
+    testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
+    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Database & Spatial
+    implementation("org.postgresql:postgresql:42.7.5")
+    implementation("org.hibernate.orm:hibernate-spatial")
+    implementation("org.locationtech.jts:jts-core")
+    implementation("org.liquibase:liquibase-core")
+
+    // Caching
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.redisson:redisson-spring-boot-starter:3.27.1")
+    implementation("io.netty:netty-resolver-dns-native-macos:4.1.107.Final:osx-aarch_64")
+
+    // Messaging & Events
+    implementation("org.springframework.kafka:spring-kafka")
+    
+    // Storage
+    implementation("io.minio:minio:8.5.9")
+    implementation("software.amazon.awssdk:s3:2.25.11")
+    
+    // Monitoring & Observability
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("io.opentelemetry:opentelemetry-api")
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+    
+    // Security & Auth
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.security:spring-security-oauth2-jose")
+    implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
+
+    // Validation & Utils
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.github.java-json-tools:json-patch:1.13")
+    
+    // HAL Explorer
+    implementation("org.springframework.boot:spring-boot-starter-hateoas")
+    implementation("org.springframework.data:spring-data-rest-hal-explorer")
+    
+    // Spring Data REST
+    implementation("org.springframework.boot:spring-boot-starter-data-rest")
+    implementation("org.springframework.data:spring-data-rest-hal-explorer")
+    
+    // Test containers
+    testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:kafka")
+    testImplementation("com.redis:testcontainers-redis:2.2.3")
+    testImplementation("org.testcontainers:elasticsearch")
+    testImplementation(platform("org.testcontainers:testcontainers-bom:1.19.7"))
+    testImplementation("org.testcontainers:testcontainers")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+
+    // Bucket4j
+    implementation("com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0")
+}
+
+// Spring Modulith BOM
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.modulith:spring-modulith-bom:${property("springModulithVersion")}")
+        mavenBom("org.testcontainers:testcontainers-bom:${property("testcontainersVersion")}")
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+    }
+}
+
+// Kotlin compiler configuration
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xjsr305=strict")
+    }
+}
+
+// JPA entities configuration
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
+}
+
+// Test configuration
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+// Documentation tasks
+tasks.test {
+    outputs.dir(project.extra["snippetsDir"]!!)
+}
+
+tasks.asciidoctor {
+    inputs.dir(project.extra["snippetsDir"]!!)
+    dependsOn(tasks.test)
+}
+
+// Docker build configuration
+jib {
+    from {
+        image = "eclipse-temurin:21-jre-alpine"
+    }
+    to {
+        image = "dpms-api"
+        tags = setOf("latest")
+    }
+    container {
+        jvmFlags = listOf("-Xms512m", "-Xmx512m")
+        ports = listOf("8080")
+    }
+}
+
+tasks.bootRun {
+    jvmArgs = listOf(
+        "-XX:+AllowRedefinitionToAddDeleteMethods",
+        "-Dspring.devtools.restart.enabled=true",
+        "-Dspring.profiles.active=local",
+        "-Dspring.devtools.restart.poll-interval=2s",
+        "-Dspring.devtools.restart.quiet-period=1s"
+    )
+}

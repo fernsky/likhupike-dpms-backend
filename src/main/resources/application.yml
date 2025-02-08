@@ -1,0 +1,104 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dpms-api
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: 6379
+      password: ${REDIS_PASSWORD:redisSecurePass123!}
+      connect-timeout: 10000
+      timeout: 10000
+      database: 0
+      client-type: jedis
+      jedis:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never # Liquibase will handle schema creation
+    timeout: 30m
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:dpms}
+    username: ${POSTGRES_USER:dpms}
+    password: ${POSTGRES_PASSWORD:dpmsSecurePass123!}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-test-query: SELECT 1
+  jpa:
+    hibernate:
+      ddl-auto: none # Let Liquibase handle schema changes
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    generate-ddl: false
+  sql:
+    init:
+      mode: never
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    contexts: ${SPRING_PROFILES_ACTIVE:local}
+    default-schema: public
+    parameters:
+      textColumnType: text
+    database-change-log-lock-table: databasechangeloglock
+    database-change-log-table: databasechangelog
+    drop-first: false
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: dpms-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "np.gov.likhupikemun.dpms.*"
+  main:
+    allow-bean-definition-overriding: true # Changed from false to true
+
+dpms:
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:miniopass}
+    bucket: dpms-files
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    np.gov.likhupikemun.dpms: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    web: DEBUG
+    org.springframework.security: DEBUG
+
+jwt:
+  secret-key: ${JWT_SECRET:464CC3302A0EF7195BD26AA6948E76B7CD112C735A42B3EF11E36FD39} # Change in production
+  expiration: 24 # hours

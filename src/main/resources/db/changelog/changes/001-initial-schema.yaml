@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: "1"
+      author: trilochan
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: users
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: varchar(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: full_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: full_name_np
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date_of_birth
+                  type: date
+              - column:
+                  name: address
+                  type: varchar(500)
+              - column:
+                  name: profile_picture
+                  type: varchar(255)
+              - column:
+                  name: office_post
+                  type: varchar(255)
+              - column:
+                  name: ward_number
+                  type: int
+              - column:
+                  name: is_municipality_level
+                  type: boolean
+                  defaultValue: "false"
+              - column:
+                  name: is_approved
+                  type: boolean
+                  defaultValue: "false"
+              - column:
+                  name: approved_by
+                  type: varchar(36)
+              - column:
+                  name: approved_at
+                  type: timestamp
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp
+              - column:
+                  name: created_by
+                  type: varchar(36)
+              - column:
+                  name: updated_by
+                  type: varchar(36)

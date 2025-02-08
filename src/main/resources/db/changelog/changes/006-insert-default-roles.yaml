@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: "6"
+      author: trilochan
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: roles
+      changes:
+        - preConditions:
+            - sqlCheck:
+                expectedResult: 0
+                sql: SELECT COUNT(*) FROM roles WHERE id = '1'
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: "1"
+              - column:
+                  name: name
+                  value: "MUNICIPALITY_ADMIN"
+        - preConditions:
+            - sqlCheck:
+                expectedResult: 0
+                sql: SELECT COUNT(*) FROM roles WHERE id = '2'
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: "2"
+              - column:
+                  name: name
+                  value: "WARD_ADMIN"
+        - preConditions:
+            - sqlCheck:
+                expectedResult: 0
+                sql: SELECT COUNT(*) FROM roles WHERE id = '3'
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: "3"
+              - column:
+                  name: name
+                  value: "EDITOR"
+        - preConditions:
+            - sqlCheck:
+                expectedResult: 0
+                sql: SELECT COUNT(*) FROM roles WHERE id = '4'
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: "4"
+              - column:
+                  name: name
+                  value: "VIEWER"

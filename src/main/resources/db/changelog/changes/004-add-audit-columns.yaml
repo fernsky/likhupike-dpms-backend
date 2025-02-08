@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: "4"
+      author: trilochan
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: roles
+        - not:
+            columnExists:
+              tableName: roles
+              columnName: created_at
+      changes:
+        - addColumn:
+            tableName: roles
+            columns:
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp
+              - column:
+                  name: created_by
+                  type: varchar(36)
+              - column:
+                  name: updated_by
+                  type: varchar(36)

@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dpms
+    username: dpms
+    password: dpmsSecurePass123!
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redisSecurePass123!
+    rest:
+      base-path: /api
+  kafka:
+    bootstrap-servers: localhost:9092
+  liquibase:
+    enabled: true
+    url: jdbc:postgresql://localhost:5432/dpms
+    user: dpms
+    password: dpmsSecurePass123!
+    contexts: local
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/kotlin
+      trigger-file: .reloadtrigger
+
+dpms:
+  minio:
+    endpoint: http://localhost:9000
+    access-key: minioadmin
+    secret-key: miniopass
+    bucket: dpms-files
+
+logging:
+  level:
+    np.gov.likhupikemun.dpms: DEBUG
+    org.hibernate.SQL: DEBUG
