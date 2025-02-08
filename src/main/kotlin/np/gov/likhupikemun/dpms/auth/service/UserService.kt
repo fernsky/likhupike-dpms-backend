@@ -170,7 +170,7 @@ class UserService(
     private fun createUserFromRequest(request: CreateUserRequest): User {
         val user = User(
             email = request.email,
-            _password = passwordEncoder.encode(request.password),
+            password = passwordEncoder.encode(request.password),
             fullName = request.fullName,
             fullNameNepali = request.fullNameNepali,
             dateOfBirth = LocalDate.parse(request.dateOfBirth),

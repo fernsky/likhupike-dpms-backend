@@ -17,7 +17,7 @@ class User(
     var email: String,
 
     @Column(nullable = false)
-    private var _password: String,
+    private var password: String,
 
     @Column(name = "full_name", nullable = false)
     var fullName: String,
@@ -61,7 +61,7 @@ class User(
 
 ) : AuditableEntity(), UserDetails {
     override fun getAuthorities() = roles.map { SimpleGrantedAuthority("ROLE_${it.name}") }
-    override fun getPassword() = _password
+    override fun getPassword() = password
     override fun getUsername() = email
     override fun isAccountNonExpired() = true
     override fun isAccountNonLocked() = true
@@ -70,7 +70,7 @@ class User(
 
     // Add this if you need to modify the password
     fun setPassword(newPassword: String) {
-        _password = newPassword
+        password = newPassword
     }
 
     fun hasRole(roleType: RoleType): Boolean = 

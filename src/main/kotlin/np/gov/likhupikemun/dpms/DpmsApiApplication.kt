@@ -1,6 +1,7 @@
 package np.gov.likhupikemun.dpms
 
 import np.gov.likhupikemun.dpms.shared.config.ApplicationConfig
+import np.gov.likhupikemun.dpms.shared.config.JacksonConfig
 import np.gov.likhupikemun.dpms.shared.config.JpaConfig
 import np.gov.likhupikemun.dpms.shared.config.JwtAuthenticationFilter
 import np.gov.likhupikemun.dpms.shared.config.JwtService
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Import
 
 @SpringBootApplication
 @Import(
+    JacksonConfig::class,
     JwtService::class,
     JwtAuthenticationFilter::class,
     SecurityConfig::class,

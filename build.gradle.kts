@@ -7,7 +7,7 @@ plugins {
     id("org.asciidoctor.jvm.convert") version "3.3.2"
     id("org.openapi.generator") version "7.4.0"
     id("com.google.cloud.tools.jib") version "3.4.1"
-    id("application")  // Add this line
+    id("application")
 }
 
 springBoot {
@@ -48,6 +48,10 @@ dependencies {
     // Kotlin support
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    // Jackson for JSON parsing
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // Spatial and Geometry support
     implementation("org.locationtech.jts:jts-core")

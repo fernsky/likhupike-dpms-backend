@@ -37,13 +37,15 @@ class AuthService(
             throw EmailAlreadyExistsException(request.email)
         }
 
+        val dateOfBirth: LocalDate = request.dateOfBirth // Directly use request.dateOfBirth
+
         val user =
             User(
                 email = request.email,
-                _password = passwordEncoder.encode(request.password),  // Changed from password to _password
+                password = passwordEncoder.encode(request.password),  // Changed from password to _password
                 fullName = request.fullName,
                 fullNameNepali = request.fullNameNepali,
-                dateOfBirth = LocalDate.parse(request.dateOfBirth),
+                dateOfBirth = dateOfBirth,
                 address = request.address,
                 officePost = request.officePost,
                 wardNumber = request.wardNumber,

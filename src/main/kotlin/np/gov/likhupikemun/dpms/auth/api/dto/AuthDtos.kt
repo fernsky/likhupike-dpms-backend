@@ -3,6 +3,7 @@ package np.gov.likhupikemun.dpms.auth.api.dto
 import jakarta.validation.constraints.*
 import np.gov.likhupikemun.dpms.shared.validation.annotations.NepaliName
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
+import java.time.LocalDate // Add this import
 
 data class LoginRequest(
     @field:Email(message = "Invalid email format")
@@ -36,7 +37,7 @@ data class RegisterRequest(
 
     @field:NotNull(message = "Date of birth is required")
     @field:Past(message = "Date of birth must be in the past")
-    val dateOfBirth: String,
+    val dateOfBirth: LocalDate, // Change type to LocalDate
 
     @field:NotBlank(message = "Address is required")
     val address: String,
