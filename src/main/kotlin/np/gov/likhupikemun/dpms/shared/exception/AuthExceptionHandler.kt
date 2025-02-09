@@ -94,4 +94,32 @@ class AuthExceptionHandler {
             )
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
     }
+
+    @ExceptionHandler(TokenExpiredException::class)
+    fun handleTokenExpiredException(
+        ex: TokenExpiredException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                message = ex.message ?: "Token has expired",
+                errorCode = ex.errorCode,
+                statusCode = ex.statusCode,
+            )
+        return ResponseEntity(errorResponse, HttpStatus.UNAUTHORIZED)
+    }
+
+    @ExceptionHandler(InvalidTokenException::class)
+    fun handleInvalidTokenException(
+        ex: InvalidTokenException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                message = ex.message ?: "Invalid token",
+                errorCode = ex.errorCode,
+                statusCode = ex.statusCode,
+            )
+        return ResponseEntity(errorResponse, HttpStatus.UNAUTHORIZED)
+    }
 }
