@@ -2,9 +2,13 @@ package np.gov.likhupikemun.dpms.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import np.gov.likhupikemun.dpms.auth.api.dto.AuthResponse
+import np.gov.likhupikemun.dpms.auth.api.dto.LoginRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.RegisterRequest
 import np.gov.likhupikemun.dpms.auth.domain.OfficePost
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
+import np.gov.likhupikemun.dpms.auth.exception.EmailAlreadyExistsException
+import np.gov.likhupikemun.dpms.auth.exception.InvalidCredentialsException
+import np.gov.likhupikemun.dpms.auth.exception.TokenExpiredException
 import np.gov.likhupikemun.dpms.auth.service.AuthService
 import np.gov.likhupikemun.dpms.config.TestConfig
 import np.gov.likhupikemun.dpms.shared.security.jwt.JwtService
@@ -79,7 +83,7 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.refreshToken").value(testAuthResponse.refreshToken))
             .andExpect(jsonPath("$.expiresIn").value(testAuthResponse.expiresIn))
     }
-/*
+
     @Test
     fun `register - should return 409 when email already exists`() {
         // given
@@ -164,5 +168,4 @@ class AuthControllerTest {
                     .header("X-Refresh-Token", "expired-refresh-token"),
             ).andExpect(status().isUnauthorized)
     }
- */
 }
