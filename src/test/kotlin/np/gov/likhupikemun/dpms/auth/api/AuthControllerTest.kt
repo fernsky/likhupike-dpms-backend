@@ -5,6 +5,7 @@ import np.gov.likhupikemun.dpms.auth.api.dto.AuthResponse
 import np.gov.likhupikemun.dpms.auth.api.dto.LoginRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.RegisterRequest
 import np.gov.likhupikemun.dpms.auth.domain.OfficePost
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.exception.EmailAlreadyExistsException
 import np.gov.likhupikemun.dpms.auth.exception.InvalidCredentialsException
 import np.gov.likhupikemun.dpms.auth.exception.TokenExpiredException
@@ -19,6 +20,8 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.time.LocalDate
+import java.util.*
 
 @WebMvcTest(AuthController::class)
 class AuthControllerTest {
@@ -33,22 +36,29 @@ class AuthControllerTest {
 
     private val testAuthResponse =
         AuthResponse(
+            userId = UUID.randomUUID().toString(), // Convert UUID to String
+            email = "test@example.com",
             token = "test-token",
             refreshToken = "test-refresh-token",
             expiresIn = 3600,
+            roles = listOf(RoleType.USER), // Use RoleType.USER and List instead of Set
+        )
+
+    private val baseRegisterRequest =
+        RegisterRequest(
+            email = "test@example.com",
+            password = "password123",
+            fullName = "Test User",
+            fullNameNepali = "टेस्ट युजर",
+            officePost = OfficePost.CHIEF_ADMINISTRATIVE_OFFICER.title,
+            wardNumber = null,
+            dateOfBirth = LocalDate.of(1990, 1, 1),
+            address = "Test Address",
         )
 
     @Test
     fun `register - should return 201 when registration is successful`() {
         // given
-        val registerRequest =
-            RegisterRequest(
-                email = "test@example.com",
-                password = "password123",
-                fullName = "Test User",
-                officePost = OfficePost.CHIEF_ADMINISTRATIVE_OFFICER.title,
-                wardNumber = null,
-            )
         whenever(authService.register(any())).thenReturn(testAuthResponse)
 
         // when/then
@@ -56,7 +66,7 @@ class AuthControllerTest {
             .perform(
                 post("/api/v1/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(registerRequest)),
+                    .content(objectMapper.writeValueAsString(baseRegisterRequest)),
             ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.token").value(testAuthResponse.token))
             .andExpect(jsonPath("$.refreshToken").value(testAuthResponse.refreshToken))
@@ -66,14 +76,7 @@ class AuthControllerTest {
     @Test
     fun `register - should return 409 when email already exists`() {
         // given
-        val registerRequest =
-            RegisterRequest(
-                email = "existing@example.com",
-                password = "password123",
-                fullName = "Test User",
-                officePost = OfficePost.CHIEF_ADMINISTRATIVE_OFFICER.title,
-                wardNumber = null,
-            )
+        val registerRequest = baseRegisterRequest.copy(email = "existing@example.com")
         whenever(authService.register(any())).thenThrow(EmailAlreadyExistsException(registerRequest.email))
 
         // when/then
