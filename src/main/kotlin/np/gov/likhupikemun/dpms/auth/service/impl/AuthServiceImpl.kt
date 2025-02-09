@@ -114,17 +114,28 @@ class AuthServiceImpl(
                 UsernamePasswordAuthenticationToken(request.email, request.password),
             )
         } catch (e: Exception) {
+            val user = userRepository.findByEmail(request.email)
+            if (user != null && !user.isApproved) {
+                logger.warn("User is not approved: {}", request.email)
+                throw UserNotApprovedException()
+            }
             logger.warn("Authentication failed for user: {}", request.email)
             throw InvalidCredentialsException()
         }
 
-        return userRepository
-            .findByEmail(request.email)
-            ?.takeIf { it.isApproved }
-            ?: run {
-                logger.warn("User not found or not approved: {}", request.email)
-                throw UserNotFoundException(request.email)
-            }
+        val user =
+            userRepository.findByEmail(request.email)
+                ?: run {
+                    logger.warn("User not found: {}", request.email)
+                    throw UserNotFoundException(request.email)
+                }
+
+        if (!user.isApproved) {
+            logger.warn("User not approved: {}", request.email)
+            throw UserNotApprovedException()
+        }
+
+        return user
     }
 
     private fun validateRefreshTokenAndGetUser(refreshToken: String): User {
