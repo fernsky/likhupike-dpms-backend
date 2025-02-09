@@ -93,8 +93,17 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("io.mockk:mockk:1.13.5")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(module = "mockito-core")
+    }
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("io.mockk:mockk:1.13.9")
+    testImplementation("com.ninja-squad:springmockk:4.0.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("io.rest-assured:rest-assured:5.4.0")
+    testImplementation("io.rest-assured:kotlin-extensions:5.4.0")
 
     // Database & Spatial
     implementation("org.postgresql:postgresql:42.7.5")
@@ -215,6 +224,45 @@ tasks.withType<Test> {
             println("-".repeat(80))
         }
     }))
+    
+    systemProperty("spring.profiles.active", "test")
+    
+    testLogging {
+        events("passed", "skipped", "failed")
+        showExceptions = true
+        showStackTraces = true
+        showCauses = true
+        
+        // Output test results to console
+        outputs.upToDateWhen { false }
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+    
+    // Parallel test execution
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+}
+
+// Configure all Copy tasks
+tasks.withType<Copy> {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// Specifically configure resource processing
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.processTestResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// Add test resources
+sourceSets {
+    test {
+        resources {
+            srcDirs("src/test/resources")
+        }
+    }
 }
 
 // Documentation tasks
