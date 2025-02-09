@@ -1,0 +1,44 @@
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    contexts: test
+  test:
+    database:
+      replace: none
+  redis:
+    connect-timeout: 2s
+    timeout: 1s
+    enabled: false
+  cache:
+    type: redis
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  data:
+    redis:
+      repositories:
+        enabled: false
+  main:
+    allow-bean-definition-overriding: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: metrics,prometheus
+  metrics:
+    enable:
+      all: true
+    distribution:
+      percentiles-histogram:
+        all: true

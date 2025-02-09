@@ -162,6 +162,14 @@ dependencies {
 
     // Mockito-Kotlin
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+
+    // Redis dependencies
+    implementation("io.lettuce:lettuce-core")
+
+    // TestContainers
+    testImplementation("org.testcontainers:testcontainers:1.19.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.19.3")
+    testImplementation("org.testcontainers:postgresql:1.19.3")
 }
 
 // Spring Modulith BOM
