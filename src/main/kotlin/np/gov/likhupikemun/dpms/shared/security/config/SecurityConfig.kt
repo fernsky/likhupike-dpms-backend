@@ -1,5 +1,6 @@
-package np.gov.likhupikemun.dpms.shared.config
+package np.gov.likhupikemun.dpms.shared.security.config
 
+import np.gov.likhupikemun.dpms.shared.config.JwtAuthenticationFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationProvider

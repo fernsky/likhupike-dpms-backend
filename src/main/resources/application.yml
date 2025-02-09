@@ -70,6 +70,9 @@ spring:
         spring.json.trusted.packages: "np.gov.likhupikemun.dpms.*"
   main:
     allow-bean-definition-overriding: true # Changed from false to true
+  redis:
+    host: localhost
+    port: 6379
 
 dpms:
   minio:
@@ -102,3 +105,4 @@ logging:
 jwt:
   secret-key: ${JWT_SECRET:464CC3302A0EF7195BD26AA6948E76B7CD112C735A42B3EF11E36FD39} # Change in production
   expiration: 24 # hours
+  refresh-expiration: 168 # 7 days in hours

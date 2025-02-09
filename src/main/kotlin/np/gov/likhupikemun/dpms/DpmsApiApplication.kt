@@ -4,11 +4,10 @@ import np.gov.likhupikemun.dpms.shared.config.ApplicationConfig
 import np.gov.likhupikemun.dpms.shared.config.JacksonConfig
 import np.gov.likhupikemun.dpms.shared.config.JpaConfig
 import np.gov.likhupikemun.dpms.shared.config.JwtAuthenticationFilter
-import np.gov.likhupikemun.dpms.shared.config.JwtService
 import np.gov.likhupikemun.dpms.shared.config.MetricsConfig
 import np.gov.likhupikemun.dpms.shared.config.RestConfig
-import np.gov.likhupikemun.dpms.shared.config.SecurityConfig
 import np.gov.likhupikemun.dpms.shared.config.WebSecurityConfig
+import np.gov.likhupikemun.dpms.shared.security.config.SecurityConfig
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.ComponentScan
@@ -18,7 +17,6 @@ import org.springframework.context.annotation.Import
 @SpringBootApplication
 @Import(
     JacksonConfig::class,
-    JwtService::class,
     JwtAuthenticationFilter::class,
     SecurityConfig::class,
     WebSecurityConfig::class,

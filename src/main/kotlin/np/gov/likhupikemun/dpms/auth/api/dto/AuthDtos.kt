@@ -1,58 +1,87 @@
 package np.gov.likhupikemun.dpms.auth.api.dto
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
-import np.gov.likhupikemun.dpms.shared.validation.annotations.NepaliName
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
-import java.time.LocalDate // Add this import
+import np.gov.likhupikemun.dpms.shared.validation.annotations.NepaliName
+import java.time.LocalDate
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "Login request payload")
 data class LoginRequest(
-    @field:Email(message = "Invalid email format")
-    @field:NotBlank(message = "Email is required")
+    @field:Email(message = "The provided email address is invalid")
+    @field:NotBlank(message = "Email address cannot be empty")
+    @Schema(example = "user@example.com", required = true)
     val email: String,
-
-    @field:NotBlank(message = "Password is required")
+    @field:NotBlank(message = "Password cannot be empty")
     @field:Size(min = 8, message = "Password must be at least 8 characters long")
-    val password: String
+    @Schema(example = "Password123#", required = true)
+    val password: String,
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "Registration request payload")
 data class RegisterRequest(
-    @field:Email(message = "Invalid email format")
-    @field:NotBlank(message = "Email is required")
+    @field:Email(message = "The provided email address is invalid")
+    @field:NotBlank(message = "Email address cannot be empty")
+    @Schema(example = "user@example.com", required = true)
     val email: String,
-
-    @field:NotBlank(message = "Password is required")
+    @field:NotBlank(message = "Password cannot be empty")
     @field:Pattern(
-        regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
-        message = "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character"
+        regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=])(?=\\S+\$).{8,}\$",
+        message = """Password must contain:
+            - At least 8 characters
+            - At least one uppercase letter
+            - At least one lowercase letter
+            - At least one number
+            - At least one special character (@#$%^&+=)""",
+    )
+    @Schema(
+        example = "Password123#",
+        required = true,
+        description = "Password must be at least 8 characters long and contain uppercase, lowercase, number and special character",
     )
     val password: String,
-
-    @field:NotBlank(message = "Full name is required")
+    @field:NotBlank(message = "Full name cannot be empty")
     @field:Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
+    @Schema(example = "John Doe", required = true)
     val fullName: String,
-
-    @field:NotBlank(message = "Nepali name is required")
-    @field:NepaliName
+    @field:NotBlank(message = "Nepali name cannot be empty")
+    @field:NepaliName(message = "Please enter a valid name in Nepali")
+    @Schema(example = "जोन डो", required = true)
     val fullNameNepali: String,
-
     @field:NotNull(message = "Date of birth is required")
-    @field:Past(message = "Date of birth must be in the past")
-    val dateOfBirth: LocalDate, // Change type to LocalDate
-
-    @field:NotBlank(message = "Address is required")
+    @field:Past(message = "Date of birth must be a past date")
+    @Schema(example = "1990-01-01", required = true)
+    val dateOfBirth: LocalDate,
+    @field:NotBlank(message = "Address cannot be empty")
+    @field:Size(min = 5, max = 200, message = "Address must be between 5 and 200 characters")
+    @Schema(example = "123 Main St, City", required = true)
     val address: String,
-
-    @field:NotBlank(message = "Office post is required")
+    @field:NotBlank(message = "Office post cannot be empty")
+    @field:Size(min = 2, max = 100, message = "Office post must be between 2 and 100 characters")
+    @Schema(example = "Software Engineer", required = true)
     val officePost: String,
-
-    @field:Min(value = 1, message = "Ward number must be greater than 0")
-    @field:Max(value = 50, message = "Ward number must be less than 50")
-    val wardNumber: Int?
+    @field:Min(value = 1, message = "Ward number must be at least 1")
+    @field:Max(value = 50, message = "Ward number cannot exceed 50")
+    @Schema(example = "1", minimum = "1", maximum = "50")
+    val wardNumber: Int?,
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "Authentication response payload")
 data class AuthResponse(
+    @Schema(description = "JWT access token")
     val token: String,
+    @Schema(description = "User identifier")
     val userId: String,
+    @Schema(description = "User email")
     val email: String,
-    val roles: List<RoleType>
+    @Schema(description = "User roles")
+    val roles: List<RoleType>,
+    @Schema(description = "Token expiration time in seconds")
+    val expiresIn: Long,
+    @Schema(description = "Refresh token")
+    val refreshToken: String?,
 )
