@@ -146,6 +146,9 @@ dependencies {
 
     // Bucket4j
     implementation("com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0")
+
+    // Mockito-Kotlin
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
 }
 
 // Spring Modulith BOM
@@ -174,6 +177,40 @@ allOpen {
 // Test configuration
 tasks.withType<Test> {
     useJUnitPlatform()
+    
+    // Force tests to always run
+    outputs.upToDateWhen { false }
+    
+    testLogging {
+        events(
+            org.gradle.api.tasks.testing.logging.TestLogEvent.STARTED,
+            org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
+            org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
+            org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
+        )
+        
+        showStandardStreams = true
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        
+        // Set output format
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+    
+    // Show a summary at the end
+    afterSuite(KotlinClosure2({ desc: TestDescriptor, result: TestResult ->
+        if (desc.parent == null) { // will match the outermost suite
+            println("\nTest result: ${result.resultType}")
+            println("""
+                Test summary: ${result.testCount} tests,
+                ${result.successfulTestCount} succeeded,
+                ${result.failedTestCount} failed,
+                ${result.skippedTestCount} skipped
+            """.trimIndent())
+            println("-".repeat(80))
+        }
+    }))
 }
 
 // Documentation tasks

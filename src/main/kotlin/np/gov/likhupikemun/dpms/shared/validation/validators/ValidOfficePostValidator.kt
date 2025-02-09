@@ -3,6 +3,7 @@ package np.gov.likhupikemun.dpms.shared.validation.annotations
 import jakarta.validation.ConstraintValidator
 import jakarta.validation.ConstraintValidatorContext
 import np.gov.likhupikemun.dpms.auth.domain.OfficePost
+import np.gov.likhupikemun.dpms.shared.validation.annotations.ValidOfficePost
 
 class ValidOfficePostValidator : ConstraintValidator<ValidOfficePost, String> {
     override fun initialize(constraintAnnotation: ValidOfficePost) {}
@@ -11,7 +12,21 @@ class ValidOfficePostValidator : ConstraintValidator<ValidOfficePost, String> {
         value: String?,
         context: ConstraintValidatorContext,
     ): Boolean {
-        if (value == null) return false
+        if (value == null) {
+            context.disableDefaultConstraintViolation()
+            context
+                .buildConstraintViolationWithTemplate("Office post cannot be null")
+                .addConstraintViolation()
+            return false
+        }
+
+        if (value.isBlank()) {
+            context.disableDefaultConstraintViolation()
+            context
+                .buildConstraintViolationWithTemplate("Office post cannot be empty")
+                .addConstraintViolation()
+            return false
+        }
 
         val isValid = OfficePost.fromTitle(value) != null
 

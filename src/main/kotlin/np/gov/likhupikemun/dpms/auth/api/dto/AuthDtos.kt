@@ -78,7 +78,7 @@ data class RegisterRequest(
         maximum = "50"
     )
     @field:Min(value = 1, message = "Ward number must be at least 1")
-    @field:Max(value = 50, message = "Ward number cannot exceed 50")
+    @field:Max(value = 5, message = "Ward number cannot exceed 5")
     val wardNumber: Int?,
 )
 

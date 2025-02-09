@@ -8,7 +8,7 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [ValidOfficePostValidator::class])
 annotation class ValidOfficePost(
-    val message: String = "Invalid office post. Must be one of: {validPosts}",
+    val message: String = "Invalid office post",
     val groups: Array<KClass<*>> = [],
     val payload: Array<KClass<out Payload>> = [],
 )
