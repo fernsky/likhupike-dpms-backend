@@ -64,4 +64,34 @@ class AuthExceptionHandler {
             )
         return ResponseEntity(errorResponse, HttpStatus.UNAUTHORIZED)
     }
+
+    @ExceptionHandler(InvalidOfficePostException::class)
+    fun handleInvalidOfficePostException(
+        ex: InvalidOfficePostException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                message = ex.message ?: "Invalid office post",
+                errorCode = ex.errorCode,
+                statusCode = ex.statusCode,
+                details = "Please provide a valid office post from the allowed list",
+            )
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(InvalidOfficePostWardCombinationException::class)
+    fun handleInvalidOfficePostWardCombinationException(
+        ex: InvalidOfficePostWardCombinationException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                message = ex.message ?: "Invalid office post and ward combination",
+                errorCode = ex.errorCode,
+                statusCode = ex.statusCode,
+                details = "Chief Administrative Officer operates at municipality level and cannot be assigned to a specific ward",
+            )
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
 }

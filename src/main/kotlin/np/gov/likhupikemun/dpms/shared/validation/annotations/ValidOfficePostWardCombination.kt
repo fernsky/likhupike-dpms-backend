@@ -4,11 +4,11 @@ import jakarta.validation.Constraint
 import jakarta.validation.Payload
 import kotlin.reflect.KClass
 
-@Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-@Constraint(validatedBy = [ValidOfficePostValidator::class])
-annotation class ValidOfficePost(
-    val message: String = "Invalid office post. Must be one of: {validPosts}",
+@Constraint(validatedBy = [OfficePostWardValidator::class])
+annotation class ValidOfficePostWardCombination(
+    val message: String = "Chief Administrative Officer cannot be assigned to a specific ward",
     val groups: Array<KClass<*>> = [],
     val payload: Array<KClass<out Payload>> = [],
 )

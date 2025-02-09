@@ -3,8 +3,11 @@ package np.gov.likhupikemun.dpms.auth.api.dto
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
+import np.gov.likhupikemun.dpms.auth.domain.OfficePost
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.shared.validation.annotations.NepaliName
+import np.gov.likhupikemun.dpms.shared.validation.annotations.ValidOfficePost
+import np.gov.likhupikemun.dpms.shared.validation.annotations.ValidOfficePostWardCombination
 import java.time.LocalDate
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -22,6 +25,7 @@ data class LoginRequest(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Registration request payload")
+@ValidOfficePostWardCombination
 data class RegisterRequest(
     @field:Email(message = "The provided email address is invalid")
     @field:NotBlank(message = "Email address cannot be empty")
@@ -60,12 +64,21 @@ data class RegisterRequest(
     @Schema(example = "123 Main St, City", required = true)
     val address: String,
     @field:NotBlank(message = "Office post cannot be empty")
-    @field:Size(min = 2, max = 100, message = "Office post must be between 2 and 100 characters")
-    @Schema(example = "Software Engineer", required = true)
+    @field:ValidOfficePost
+    @Schema(
+        example = "Manager",
+        description = "Must be one of: Chief Administrative Officer, Manager, Employee, IT Officer, Administrative Officer, Account Officer",
+        required = true
+    )
     val officePost: String,
+    @Schema(
+        example = "1",
+        description = "Ward number (not applicable for Chief Administrative Officer)",
+        minimum = "1",
+        maximum = "50"
+    )
     @field:Min(value = 1, message = "Ward number must be at least 1")
     @field:Max(value = 50, message = "Ward number cannot exceed 50")
-    @Schema(example = "1", minimum = "1", maximum = "50")
     val wardNumber: Int?,
 )
 
