@@ -54,7 +54,7 @@ class AuthControllerTest {
     private val baseRegisterRequest =
         RegisterRequest(
             email = "test@example.com",
-            password = "password123",
+            password = "Password@123",
             fullName = "Test User",
             fullNameNepali = "टेस्ट युजर",
             officePost = OfficePost.CHIEF_ADMINISTRATIVE_OFFICER.title,
