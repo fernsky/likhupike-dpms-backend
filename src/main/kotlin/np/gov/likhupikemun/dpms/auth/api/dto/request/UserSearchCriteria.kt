@@ -3,8 +3,8 @@ package np.gov.likhupikemun.dpms.auth.api.dto.request
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
-import np.gov.likhupikemun.dpms.auth.api.dto.RoleType
 import np.gov.likhupikemun.dpms.auth.api.dto.UserStatus
+import np.gov.likhupikemun.dpms.auth.domain.RoleType // Updated import to use domain RoleType
 import np.gov.likhupikemun.dpms.auth.exception.InvalidSearchCriteriaException
 import org.springframework.data.domain.Sort
 import java.time.LocalDate
@@ -37,7 +37,8 @@ data class UserSearchCriteria(
     )
     @field:Size(min = 2, max = 100)
     val searchTerm: String? = null,
-    val roles: Set<RoleType>? = null,
+    @Schema(example = "[\"EDITOR\", \"VIEWER\"]")
+    val roles: Set<RoleType>? = null, // Now using domain RoleType
     val status: UserStatus? = null,
     val officePosts: Set<String>? = null,
     @field:JsonFormat(pattern = "yyyy-MM-dd")

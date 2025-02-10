@@ -1,11 +1,12 @@
 package np.gov.likhupikemun.dpms.auth.service
 
-import np.gov.likhupikemun.dpms.auth.api.dto.*
+import np.gov.likhupikemun.dpms.auth.api.dto.UpdateUserRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.UserStatus
 import np.gov.likhupikemun.dpms.auth.api.dto.request.CreateUserRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.request.UserSearchCriteria
 import np.gov.likhupikemun.dpms.auth.api.dto.request.UserSortField
 import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
@@ -24,8 +25,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
-import np.gov.likhupikemun.dpms.auth.api.dto.RoleType as DtoRoleType
-import np.gov.likhupikemun.dpms.auth.domain.RoleType as DomainRoleType
 
 @Service
 class UserService(
@@ -180,7 +179,7 @@ class UserService(
     private fun validateRoleAssignment(
         admin: User,
         user: User,
-        newRoles: Set<DtoRoleType>,
+        newRoles: Set<RoleType>,
     ) {
         val isMunicipalityAdmin = admin.isMunicipalityAdmin()
         val isWardAdmin = admin.isWardAdmin()
@@ -189,17 +188,17 @@ class UserService(
             !isMunicipalityAdmin && !isWardAdmin ->
                 throw UnauthorizedException("Only admins can assign roles")
 
-            newRoles.contains(DtoRoleType.MUNICIPALITY_ADMIN) && !isMunicipalityAdmin ->
+            newRoles.contains(RoleType.MUNICIPALITY_ADMIN) && !isMunicipalityAdmin ->
                 throw UnauthorizedException("Only municipality admins can assign municipality admin role")
 
-            newRoles.contains(DtoRoleType.WARD_ADMIN) &&
+            newRoles.contains(RoleType.WARD_ADMIN) &&
                 !isMunicipalityAdmin &&
                 (admin.wardNumber != user.wardNumber) ->
                 throw UnauthorizedException("Ward admin can only assign roles in their ward")
         }
 
-        val domainRoles = newRoles.map { DomainRoleType.valueOf(it.name) }.toSet()
-        user.roles = roleRepository.findByNameIn(domainRoles).toMutableSet()
+        val persistentRoles = roleRepository.findByNameIn(newRoles)
+        user.roles = persistentRoles.toMutableSet()
     }
 
     private fun validateUserDeactivation(
@@ -268,14 +267,15 @@ class UserService(
             user.profilePicture = fileService.storeFile(it)
         }
 
-        val roles =
+        val domainRoles =
             if (request.roles.isEmpty()) {
-                setOf(DomainRoleType.VIEWER)
+                setOf(RoleType.VIEWER)
             } else {
-                request.roles.map { DomainRoleType.valueOf(it.name) }.toSet()
+                request.roles.map { convertToEntityRole(it) }.toSet()
             }
 
-        user.roles.addAll(roleRepository.findByNameIn(roles))
+        val persistentRoles = roleRepository.findByNameIn(domainRoles)
+        user.roles = persistentRoles.toMutableSet()
         return user
     }
 
@@ -304,10 +304,23 @@ class UserService(
             fullNameNepali = fullNameNepali,
             wardNumber = wardNumber,
             officePost = officePost,
-            roles = roles.map { DtoRoleType.valueOf(it.name) }.toSet(),
+            roles = roles.map { it.roleType }.toSet(),
             status = if (isApproved) UserStatus.ACTIVE else UserStatus.PENDING,
             profilePictureUrl = profilePicture?.let { "/uploads/profiles/$it" },
             createdAt = createdAt ?: LocalDateTime.now(),
             updatedAt = updatedAt ?: LocalDateTime.now(),
         )
+
+    private fun updateUserRoles(
+        user: User,
+        newDtoRoles: Set<RoleType>,
+    ) {
+        val domainRoleTypes = newDtoRoles.map { convertToEntityRole(it) }
+        val persistentRoles = roleRepository.findByNameIn(domainRoleTypes)
+        user.roles = persistentRoles.toMutableSet()
+    }
+
+    private fun convertToEntityRole(dtoRole: RoleType): RoleType = RoleType.valueOf(dtoRole.name)
+
+    private fun convertToDtoRole(entityRole: RoleType): RoleType = RoleType.valueOf(entityRole.name)
 }

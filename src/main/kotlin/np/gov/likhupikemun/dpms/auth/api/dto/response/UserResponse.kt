@@ -1,7 +1,8 @@
 package np.gov.likhupikemun.dpms.auth.api.dto.response
 
 import io.swagger.v3.oas.annotations.media.Schema
-import np.gov.likhupikemun.dpms.auth.api.dto.RoleType
+import np.gov.likhupikemun.dpms.auth.api.dto.UserStatus
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import java.time.LocalDateTime
 
 @Schema(description = "User response data")
@@ -46,6 +47,12 @@ data class UserResponse(
         example = "/uploads/profiles/123.jpg",
     )
     val profilePictureUrl: String?,
+    @field:Schema(
+        description = "User's account status",
+        example = "ACTIVE",
+        allowableValues = ["PENDING", "ACTIVE", "INACTIVE"],
+    )
+    val status: UserStatus,
     @field:Schema(
         description = "User creation timestamp",
         example = "2024-01-20T10:30:00",

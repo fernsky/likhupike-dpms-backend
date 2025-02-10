@@ -1,22 +1,24 @@
 package np.gov.likhupikemun.dpms.auth.api.dto
 
+import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
-import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
 
-fun User.toResponse() =
-    UserResponse(
+fun User.toResponse(): UserResponse {
+    val dtoRoles = roles.map { role -> RoleType.valueOf(role.roleType.name) }.toSet()
+
+    return UserResponse(
         id = id!!,
         email = email,
         fullName = fullName,
         fullNameNepali = fullNameNepali,
-        dateOfBirth = dateOfBirth.format(DateTimeFormatter.ISO_DATE),
-        address = address,
-        profilePicture = profilePicture,
-        officePost = officePost,
         wardNumber = wardNumber,
-        isMunicipalityLevel = isMunicipalityLevel,
-        isApproved = isApproved,
-        roles = roles.map { it.name }.toSet(),
-        createdAt = createdAt.format(DateTimeFormatter.ISO_DATE_TIME),
-        updatedAt = updatedAt?.format(DateTimeFormatter.ISO_DATE_TIME),
+        officePost = officePost,
+        roles = dtoRoles,
+        status = if (isApproved) UserStatus.ACTIVE else UserStatus.PENDING,
+        profilePictureUrl = profilePicture?.let { "/uploads/profiles/$it" },
+        createdAt = createdAt ?: LocalDateTime.now(),
+        updatedAt = updatedAt ?: LocalDateTime.now(),
     )
+}

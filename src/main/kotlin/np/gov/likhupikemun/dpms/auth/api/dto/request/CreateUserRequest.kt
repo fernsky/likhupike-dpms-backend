@@ -2,7 +2,7 @@ package np.gov.likhupikemun.dpms.auth.api.dto.request
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
-import np.gov.likhupikemun.dpms.auth.api.dto.RoleType
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.shared.exception.InvalidInputException
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDate
@@ -102,7 +102,6 @@ data class CreateUserRequest(
     )
     val profilePicture: MultipartFile?,
     @field:Schema(
-        description = "User roles",
         example = "[\"EDITOR\", \"VIEWER\"]",
         defaultValue = "[\"VIEWER\"]",
         allowableValues = ["MUNICIPALITY_ADMIN", "WARD_ADMIN", "EDITOR", "VIEWER"],

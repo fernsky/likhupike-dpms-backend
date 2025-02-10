@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.shared.exception.InvalidInputException
 import np.gov.likhupikemun.dpms.shared.validation.annotations.*
 import org.springframework.data.domain.Sort
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Schema(description = "User creation request")
 data class CreateUserRequest(
@@ -87,47 +87,6 @@ data class UserSearchCriteria(
     @Schema(example = "20", minimum = "1", maximum = "100", defaultValue = "20")
     val pageSize: Int = 20,
 )
-
-@Schema(description = "User response data")
-data class UserResponse(
-    @Schema(example = "550e8400-e29b-41d4-a716-446655440000")
-    val id: String,
-    @Schema(example = "john.doe@example.com")
-    val email: String,
-    @Schema(example = "John Doe")
-    val fullName: String,
-    @Schema(example = "जोन डो")
-    val fullNameNepali: String,
-    @Schema(example = "5")
-    val wardNumber: Int?,
-    @Schema(example = "WARD_SECRETARY")
-    val officePost: String,
-    @Schema(example = "[\"EDITOR\", \"VIEWER\"]")
-    val roles: Set<RoleType>,
-    @Schema(example = "ACTIVE")
-    val status: UserStatus,
-    @Schema(example = "/uploads/profiles/123.jpg")
-    val profilePictureUrl: String?,
-    @Schema(example = "2024-01-20T10:30:00")
-    val createdAt: LocalDateTime,
-    @Schema(example = "2024-01-20T10:30:00")
-    val updatedAt: LocalDateTime,
-)
-
-@Schema(description = "Available user roles")
-enum class RoleType {
-    @Schema(description = "Municipality level administrator")
-    MUNICIPALITY_ADMIN,
-
-    @Schema(description = "Ward level administrator")
-    WARD_ADMIN,
-
-    @Schema(description = "Content editor")
-    EDITOR,
-
-    @Schema(description = "Read-only access")
-    VIEWER,
-}
 
 @Schema(description = "User account status")
 enum class UserStatus {

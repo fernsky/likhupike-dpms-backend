@@ -1,25 +1,29 @@
 package np.gov.likhupikemun.dpms.auth.domain
 
+import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.persistence.*
-import np.gov.likhupikemun.dpms.shared.domain.AuditableEntity
 
 @Entity
 @Table(name = "roles")
 class Role(
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
-    val id: String? = null,
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true)
-    val name: RoleType,
+    @Column(name = "name", nullable = false, unique = true)
+    val roleType: RoleType,
+    @Id
+    val id: String = roleType.name,
+)
 
-    @ManyToMany(mappedBy = "roles")
-    val users: MutableSet<User> = mutableSetOf()
-) : AuditableEntity()
-
+@Schema(description = "Available user roles")
 enum class RoleType {
+    @Schema(description = "Municipality level administrator")
     MUNICIPALITY_ADMIN,
+
+    @Schema(description = "Ward level administrator")
     WARD_ADMIN,
+
+    @Schema(description = "Content editor")
     EDITOR,
-    VIEWER
+
+    @Schema(description = "Read-only access")
+    VIEWER,
 }
