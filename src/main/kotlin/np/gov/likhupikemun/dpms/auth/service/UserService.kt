@@ -1,10 +1,11 @@
 package np.gov.likhupikemun.dpms.auth.service
 
 import np.gov.likhupikemun.dpms.auth.api.dto.*
+import np.gov.likhupikemun.dpms.auth.api.dto.UserStatus
 import np.gov.likhupikemun.dpms.auth.api.dto.request.CreateUserRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.request.UserSearchCriteria
+import np.gov.likhupikemun.dpms.auth.api.dto.request.UserSortField
 import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
-import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
+import np.gov.likhupikemun.dpms.auth.api.dto.RoleType as DtoRoleType
+import np.gov.likhupikemun.dpms.auth.domain.RoleType as DomainRoleType
 
 @Service
 class UserService(
@@ -75,16 +78,6 @@ class UserService(
             .map { it.toResponse() }
 
     @Transactional(readOnly = true)
-    fun searchUsers(
-        wardNumber: Int?,
-        searchTerm: String?,
-        pageable: Pageable,
-    ): Page<UserResponse> =
-        userRepository
-            .searchUsers(wardNumber, searchTerm, pageable)
-            .map { it.toResponse() }
-
-    @Transactional(readOnly = true)
     @Cacheable(value = ["users"], key = "#criteria.toString()")
     fun searchUsers(criteria: UserSearchCriteria): Page<UserResponse> {
         val currentUser = securityService.getCurrentUser()
@@ -92,25 +85,17 @@ class UserService(
 
         val sortOrder =
             when (criteria.sortBy) {
+                UserSortField.CREATED_AT -> Sort.by(criteria.sortDirection, "createdAt")
                 UserSortField.FULL_NAME -> Sort.by(criteria.sortDirection, "fullName")
                 UserSortField.FULL_NAME_NEPALI -> Sort.by(criteria.sortDirection, "fullNameNepali")
                 UserSortField.WARD_NUMBER -> Sort.by(criteria.sortDirection, "wardNumber")
                 UserSortField.OFFICE_POST -> Sort.by(criteria.sortDirection, "officePost")
                 UserSortField.EMAIL -> Sort.by(criteria.sortDirection, "email")
                 UserSortField.APPROVAL_STATUS -> Sort.by(criteria.sortDirection, "isApproved")
-                else -> Sort.by(criteria.sortDirection, "createdAt")
             }
 
-        val pageable =
-            PageRequest.of(
-                criteria.page,
-                criteria.pageSize,
-                sortOrder,
-            )
-
-        return userRepository
-            .searchUsers(criteria, pageable)
-            .map { it.toResponse() }
+        val pageable = PageRequest.of(criteria.page, criteria.pageSize, sortOrder)
+        return userRepository.searchUsers(criteria, pageable).map { it.toResponse() }
     }
 
     @Transactional
@@ -195,7 +180,7 @@ class UserService(
     private fun validateRoleAssignment(
         admin: User,
         user: User,
-        newRoles: Set<np.gov.likhupikemun.dpms.auth.api.dto.RoleType>,
+        newRoles: Set<DtoRoleType>,
     ) {
         val isMunicipalityAdmin = admin.isMunicipalityAdmin()
         val isWardAdmin = admin.isWardAdmin()
@@ -204,14 +189,17 @@ class UserService(
             !isMunicipalityAdmin && !isWardAdmin ->
                 throw UnauthorizedException("Only admins can assign roles")
 
-            newRoles.contains(np.gov.likhupikemun.dpms.auth.api.dto.RoleType.MUNICIPALITY_ADMIN) && !isMunicipalityAdmin ->
+            newRoles.contains(DtoRoleType.MUNICIPALITY_ADMIN) && !isMunicipalityAdmin ->
                 throw UnauthorizedException("Only municipality admins can assign municipality admin role")
 
-            newRoles.contains(np.gov.likhupikemun.dpms.auth.api.dto.RoleType.WARD_ADMIN) &&
+            newRoles.contains(DtoRoleType.WARD_ADMIN) &&
                 !isMunicipalityAdmin &&
                 (admin.wardNumber != user.wardNumber) ->
                 throw UnauthorizedException("Ward admin can only assign roles in their ward")
         }
+
+        val domainRoles = newRoles.map { DomainRoleType.valueOf(it.name) }.toSet()
+        user.roles = roleRepository.findByNameIn(domainRoles).toMutableSet()
     }
 
     private fun validateUserDeactivation(
@@ -282,9 +270,9 @@ class UserService(
 
         val roles =
             if (request.roles.isEmpty()) {
-                setOf(RoleType.VIEWER)
+                setOf(DomainRoleType.VIEWER)
             } else {
-                request.roles.map { RoleType.valueOf(it.name) }.toSet()
+                request.roles.map { DomainRoleType.valueOf(it.name) }.toSet()
             }
 
         user.roles.addAll(roleRepository.findByNameIn(roles))
@@ -310,16 +298,16 @@ class UserService(
 
     private fun User.toResponse(): UserResponse =
         UserResponse(
-            id = id,
+            id = id!!,
             email = email,
             fullName = fullName,
             fullNameNepali = fullNameNepali,
             wardNumber = wardNumber,
             officePost = officePost,
-            roles = roles.map { it.name }.toSet(),
+            roles = roles.map { DtoRoleType.valueOf(it.name) }.toSet(),
             status = if (isApproved) UserStatus.ACTIVE else UserStatus.PENDING,
             profilePictureUrl = profilePicture?.let { "/uploads/profiles/$it" },
-            createdAt = createdAt,
-            updatedAt = updatedAt,
+            createdAt = createdAt ?: LocalDateTime.now(),
+            updatedAt = updatedAt ?: LocalDateTime.now(),
         )
 }
