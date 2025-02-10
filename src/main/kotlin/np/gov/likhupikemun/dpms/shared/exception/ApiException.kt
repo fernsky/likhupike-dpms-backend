@@ -7,10 +7,6 @@ sealed class ApiException(
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)
 
-class UserNotFoundException(
-    email: String,
-) : ApiException("User not found with email: $email", "USER_NOT_FOUND", 404)
-
 class UserNotApprovedException(
     email: String,
 ) : ApiException("User account not yet approved: $email", "USER_NOT_APPROVED", 403)

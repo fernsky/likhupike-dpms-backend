@@ -10,6 +10,7 @@ import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
 import np.gov.likhupikemun.dpms.auth.exception.UserDeletionException
+import np.gov.likhupikemun.dpms.auth.exception.UserNotFoundException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.UserRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.specifications.UserSpecifications
