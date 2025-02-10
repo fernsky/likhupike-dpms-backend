@@ -1,9 +1,12 @@
 package np.gov.likhupikemun.dpms.auth.service.impl
 
+import com.github.benmanes.caffeine.cache.Cache // Change this import
 import io.micrometer.observation.annotation.Observed
 import np.gov.likhupikemun.dpms.auth.api.dto.AuthResponse
 import np.gov.likhupikemun.dpms.auth.api.dto.LoginRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.RegisterRequest
+import np.gov.likhupikemun.dpms.auth.api.dto.RequestPasswordResetRequest
+import np.gov.likhupikemun.dpms.auth.api.dto.ResetPasswordRequest
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.*
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.UserRepository
@@ -13,6 +16,8 @@ import np.gov.likhupikemun.dpms.shared.security.jwt.TokenPair
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.security.authentication.AuthenticationManager
@@ -20,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 import np.gov.likhupikemun.dpms.auth.service.AuthService as AuthService
 
 @Service
@@ -29,6 +35,8 @@ class AuthServiceImpl(
     private val jwtService: JwtService,
     private val authenticationManager: AuthenticationManager,
     private val userEventPublisher: UserEventPublisher,
+    private val mailSender: JavaMailSender,
+    private val resetTokenCache: Cache<String, String>, // Now using Caffeine Cache
 ) : AuthService {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -86,6 +94,41 @@ class AuthServiceImpl(
         jwtService.invalidateToken(token)
         val email = jwtService.extractEmail(token)
         logger.info("User logged out successfully: {}", email)
+    }
+
+    @Transactional
+    @Retryable(
+        value = [Exception::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 1000, multiplier = 2.0),
+    )
+    override fun requestPasswordReset(request: RequestPasswordResetRequest) {
+        val user =
+            userRepository.findByEmail(request.email)
+                ?: throw UserNotFoundException(request.email)
+
+        val token = generateResetToken()
+        resetTokenCache.put(token, user.email)
+
+        sendPasswordResetEmail(user.email, token)
+        logger.info("Password reset requested for user: {}", request.email)
+    }
+
+    @Transactional
+    override fun resetPassword(request: ResetPasswordRequest) {
+        val email =
+            resetTokenCache.getIfPresent(request.token)
+                ?: throw InvalidPasswordResetTokenException()
+
+        val user =
+            userRepository.findByEmail(email)
+                ?: throw UserNotFoundException(email)
+
+        user.password = passwordEncoder.encode(request.newPassword)
+        userRepository.save(user)
+
+        resetTokenCache.invalidate(request.token)
+        logger.info("Password reset successful for user: {}", email)
     }
 
     private fun validateRegistration(request: RegisterRequest) {
@@ -162,4 +205,25 @@ class AuthServiceImpl(
         roles = user.roles.map { it.name },
         expiresIn = tokenPair.expiresIn,
     )
+
+    private fun generateResetToken(): String = UUID.randomUUID().toString()
+
+    private fun sendPasswordResetEmail(
+        email: String,
+        token: String,
+    ) {
+        val message = SimpleMailMessage()
+        message.setTo(email)
+        message.setSubject("Password Reset Request")
+        message.setText(
+            """
+            You have requested to reset your password.
+            Please use the following token to reset your password: $token
+            
+            If you did not request this, please ignore this email.
+            """.trimIndent(),
+        )
+
+        mailSender.send(message)
+    }
 }

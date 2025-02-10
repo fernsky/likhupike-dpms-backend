@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   app:
     build:
@@ -69,6 +71,13 @@ services:
       - minio-data-dev:/data
     networks:
       - dpms-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: dpms_mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web interface
 
 networks:
   dpms-network:

@@ -64,6 +64,13 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
+  mailhog:
+    image: mailhog/mailhog
+    container_name: dpms_mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web interface
+
 volumes:
   postgres-data-dev:
   redis-data-dev:

@@ -23,6 +23,17 @@ spring:
       enabled: true
       additional-paths: src/main/kotlin
       trigger-file: .reloadtrigger
+  mail:
+    host: localhost
+    port: 1025
+    username: test # These credentials don't matter for MailHog
+    password: test # but are required by Spring Mail
+    properties:
+      mail:
+        smtp:
+          auth: false # Disable auth for local development
+          starttls:
+            enable: false
 
 dpms:
   minio:

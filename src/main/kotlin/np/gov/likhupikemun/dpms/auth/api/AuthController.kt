@@ -8,6 +8,8 @@ import jakarta.validation.Valid
 import np.gov.likhupikemun.dpms.auth.api.dto.AuthResponse
 import np.gov.likhupikemun.dpms.auth.api.dto.LoginRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.RegisterRequest
+import np.gov.likhupikemun.dpms.auth.api.dto.RequestPasswordResetRequest
+import np.gov.likhupikemun.dpms.auth.api.dto.ResetPasswordRequest
 import np.gov.likhupikemun.dpms.auth.service.AuthService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -75,5 +77,39 @@ class AuthController(
         logger.debug("Processing token refresh request")
         val response = authService.refreshToken(refreshToken)
         return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "Request password reset")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Password reset email sent"),
+            ApiResponse(responseCode = "404", description = "User not found"),
+            ApiResponse(responseCode = "429", description = "Too many requests"),
+        ],
+    )
+    @PostMapping("/password-reset/request")
+    fun requestPasswordReset(
+        @Valid @RequestBody request: RequestPasswordResetRequest,
+    ): ResponseEntity<Unit> {
+        logger.debug("Processing password reset request for email: {}", request.email)
+        authService.requestPasswordReset(request)
+        return ResponseEntity.ok().build()
+    }
+
+    @Operation(summary = "Reset password using token")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Password successfully reset"),
+            ApiResponse(responseCode = "400", description = "Invalid token or password"),
+            ApiResponse(responseCode = "404", description = "User not found"),
+        ],
+    )
+    @PostMapping("/password-reset/reset")
+    fun resetPassword(
+        @Valid @RequestBody request: ResetPasswordRequest,
+    ): ResponseEntity<Unit> {
+        logger.debug("Processing password reset with token")
+        authService.resetPassword(request)
+        return ResponseEntity.ok().build()
     }
 }

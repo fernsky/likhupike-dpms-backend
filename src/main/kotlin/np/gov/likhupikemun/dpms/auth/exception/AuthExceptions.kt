@@ -49,3 +49,17 @@ class InvalidTokenException :
         errorCode = "AUTH_006",
         statusCode = 401,
     )
+
+class InvalidPasswordResetTokenException :
+    AuthException(
+        message = "Invalid or expired password reset token",
+        errorCode = "AUTH_007",
+        statusCode = 400,
+    )
+
+class PasswordResetLimitExceededException :
+    AuthException(
+        message = "Password reset request limit exceeded. Please try again later",
+        errorCode = "AUTH_008",
+        statusCode = 429,
+    )

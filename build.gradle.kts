@@ -170,6 +170,10 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.19.3")
     testImplementation("org.testcontainers:junit-jupiter:1.19.3")
     testImplementation("org.testcontainers:postgresql:1.19.3")
+
+    // Additional dependencies
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 }
 
 // Spring Modulith BOM

@@ -98,3 +98,33 @@ data class AuthResponse(
     @Schema(description = "Refresh token")
     val refreshToken: String?,
 )
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "Request password reset payload")
+data class RequestPasswordResetRequest(
+    @field:Email(message = "The provided email address is invalid")
+    @field:NotBlank(message = "Email address cannot be empty")
+    @Schema(example = "user@example.com", required = true)
+    val email: String
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "Reset password payload")
+data class ResetPasswordRequest(
+    @field:NotBlank(message = "Token cannot be empty")
+    @Schema(description = "Password reset token received via email", required = true)
+    val token: String,
+
+    @field:NotBlank(message = "Password cannot be empty")
+    @field:Pattern(
+        regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=])(?=\\S+\$).{8,}\$",
+        message = """Password must contain:
+            - At least 8 characters
+            - At least one uppercase letter
+            - At least one lowercase letter
+            - At least one number
+            - At least one special character (@#$%^&+=)"""
+    )
+    @Schema(example = "NewPassword123#", required = true)
+    val newPassword: String
+)

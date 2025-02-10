@@ -1,10 +1,10 @@
 package np.gov.likhupikemun.dpms.auth.service.impl
 
+import com.github.benmanes.caffeine.cache.Cache
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
-import np.gov.likhupikemun.dpms.auth.api.dto.LoginRequest
-import np.gov.likhupikemun.dpms.auth.api.dto.RegisterRequest
+import np.gov.likhupikemun.dpms.auth.api.dto.*
 import np.gov.likhupikemun.dpms.auth.domain.Role
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
@@ -16,6 +16,8 @@ import np.gov.likhupikemun.dpms.shared.security.jwt.TokenPair
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -38,6 +40,12 @@ class AuthServiceImplTest {
 
     @MockK
     private lateinit var userEventPublisher: UserEventPublisher
+
+    @MockK
+    private lateinit var mailSender: JavaMailSender
+
+    @MockK
+    private lateinit var resetTokenCache: Cache<String, String>
 
     @InjectMockKs
     private lateinit var authService: AuthServiceImpl
@@ -248,5 +256,71 @@ class AuthServiceImplTest {
 
         // Verify
         verify { jwtService.invalidateToken(token) }
+    }
+
+    @Test
+    fun `requestPasswordReset - should send reset email when user exists`() {
+        // Arrange
+        val email = "test@example.com"
+        val request = RequestPasswordResetRequest(email)
+
+        every { userRepository.findByEmail(email) } returns mockUser
+        every { resetTokenCache.put(any(), email) } returns Unit
+        every { mailSender.send(any<SimpleMailMessage>()) } just Runs
+
+        // Act
+        authService.requestPasswordReset(request)
+
+        // Verify
+        verify {
+            mailSender.send(any<SimpleMailMessage>())
+            resetTokenCache.put(any(), email)
+        }
+    }
+
+    @Test
+    fun `requestPasswordReset - should throw when user not found`() {
+        val email = "nonexistent@example.com"
+        val request = RequestPasswordResetRequest(email)
+
+        every { userRepository.findByEmail(email) } returns null
+
+        assertThrows<UserNotFoundException> {
+            authService.requestPasswordReset(request)
+        }
+    }
+
+    @Test
+    fun `resetPassword - should update password when token is valid`() {
+        // Arrange
+        val email = "test@example.com"
+        val token = "valid-token"
+        val newPassword = "NewPassword123#"
+        val request = ResetPasswordRequest(token, newPassword)
+
+        every { resetTokenCache.getIfPresent(token) } returns email
+        every { userRepository.findByEmail(email) } returns mockUser
+        every { passwordEncoder.encode(newPassword) } returns "encoded-password"
+        every { userRepository.save(any()) } returns mockUser
+        every { resetTokenCache.invalidate(token) } returns Unit
+
+        // Act
+        authService.resetPassword(request)
+
+        // Verify
+        verify {
+            userRepository.save(any())
+            resetTokenCache.invalidate(token)
+        }
+    }
+
+    @Test
+    fun `resetPassword - should throw when token is invalid`() {
+        val request = ResetPasswordRequest("invalid-token", "NewPassword123#")
+        every { resetTokenCache.getIfPresent(any()) } returns null
+
+        assertThrows<InvalidPasswordResetTokenException> {
+            authService.resetPassword(request)
+        }
     }
 }

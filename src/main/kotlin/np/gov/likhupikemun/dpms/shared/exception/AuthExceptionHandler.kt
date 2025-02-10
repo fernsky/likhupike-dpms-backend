@@ -122,4 +122,34 @@ class AuthExceptionHandler {
             )
         return ResponseEntity(errorResponse, HttpStatus.UNAUTHORIZED)
     }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException::class)
+    fun handleInvalidPasswordResetTokenException(
+        ex: InvalidPasswordResetTokenException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                message = ex.message ?: "Invalid or expired password reset token",
+                errorCode = ex.errorCode,
+                statusCode = ex.statusCode,
+                details = "The password reset token is invalid or has expired. Please request a new password reset.",
+            )
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(PasswordResetLimitExceededException::class)
+    fun handlePasswordResetLimitExceededException(
+        ex: PasswordResetLimitExceededException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                message = ex.message ?: "Password reset request limit exceeded",
+                errorCode = ex.errorCode,
+                statusCode = ex.statusCode,
+                details = "You have exceeded the maximum number of password reset attempts. Please try again later.",
+            )
+        return ResponseEntity(errorResponse, HttpStatus.TOO_MANY_REQUESTS)
+    }
 }
