@@ -14,18 +14,30 @@ import org.springframework.web.context.request.WebRequest
 
 @RestControllerAdvice
 class BaseExceptionHandler {
+    @ExceptionHandler(BaseException::class)
+    fun handleBaseException(
+        ex: BaseException,
+        request: WebRequest,
+    ): ResponseEntity<ApiResponse<Nothing>> =
+        ResponseEntity
+            .status(ex.statusCode)
+            .body(ApiResponse(status = ApiResponse.Status.ERROR, error = ex.toErrorDetails()))
+
     @ExceptionHandler(Exception::class)
     fun handleGenericException(
         ex: Exception,
         request: WebRequest,
-    ): ResponseEntity<ErrorResponse> {
-        val errorResponse =
-            ErrorResponse(
+    ): ResponseEntity<ApiResponse<Nothing>> {
+        val errorDetails =
+            ErrorDetails(
+                code = BaseException.DEFAULT_ERROR_CODE,
                 message = "An unexpected error occurred",
-                errorCode = "INTERNAL_SERVER_ERROR",
-                statusCode = 500,
+                status = BaseException.DEFAULT_STATUS_CODE,
+                details = mapOf("error" to ex.toString()),
             )
-        return ResponseEntity(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponse(status = ApiResponse.Status.ERROR, error = errorDetails))
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)

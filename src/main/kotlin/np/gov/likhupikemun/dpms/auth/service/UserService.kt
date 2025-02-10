@@ -1,15 +1,23 @@
 package np.gov.likhupikemun.dpms.auth.service
 
 import np.gov.likhupikemun.dpms.auth.api.dto.*
-import np.gov.likhupikemun.dpms.auth.domain.*
+import np.gov.likhupikemun.dpms.auth.api.dto.request.CreateUserRequest
+import np.gov.likhupikemun.dpms.auth.api.dto.request.UserSearchCriteria
+import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
+import np.gov.likhupikemun.dpms.auth.domain.User
+import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.UserRepository
 import np.gov.likhupikemun.dpms.shared.exception.*
 import np.gov.likhupikemun.dpms.shared.service.FileService
 import np.gov.likhupikemun.dpms.shared.service.SecurityService
 import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -29,25 +37,32 @@ class UserService(
         val currentUser = securityService.getCurrentUser()
         validateUserCreation(currentUser, request)
 
-        val user = createUserFromRequest(request)
-        return userRepository.save(user).toResponse()
+        if (userRepository.existsByEmail(request.email)) {
+            throw EmailAlreadyExistsException(request.email)
+        }
+
+        return createUserFromRequest(request).let {
+            userRepository.save(it).toResponse()
+        }
     }
 
     @Transactional
     fun approveUser(userId: String): UserResponse {
         val currentUser = securityService.getCurrentUser()
-        val user =
-            userRepository
-                .findById(userId)
-                .orElseThrow { UserNotFoundException(userId) }
+        val user = findUserById(userId)
 
-        validateUserApproval(currentUser, user)
+        when {
+            user.isApproved -> throw UserApprovalException("User is already approved")
+            !canApproveUser(currentUser, user) ->
+                throw UnauthorizedException("Not authorized to approve this user")
+        }
 
-        user.isApproved = true
-        user.approvedBy = currentUser.id
-        user.approvedAt = LocalDateTime.now()
-
-        return userRepository.save(user).toResponse()
+        return user
+            .apply {
+                isApproved = true
+                approvedBy = currentUser.id
+                approvedAt = LocalDateTime.now()
+            }.let { userRepository.save(it).toResponse() }
     }
 
     @Transactional(readOnly = true)
@@ -68,6 +83,35 @@ class UserService(
         userRepository
             .searchUsers(wardNumber, searchTerm, pageable)
             .map { it.toResponse() }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = ["users"], key = "#criteria.toString()")
+    fun searchUsers(criteria: UserSearchCriteria): Page<UserResponse> {
+        val currentUser = securityService.getCurrentUser()
+        validateSearchPermissions(currentUser, criteria)
+
+        val sortOrder =
+            when (criteria.sortBy) {
+                UserSortField.FULL_NAME -> Sort.by(criteria.sortDirection, "fullName")
+                UserSortField.FULL_NAME_NEPALI -> Sort.by(criteria.sortDirection, "fullNameNepali")
+                UserSortField.WARD_NUMBER -> Sort.by(criteria.sortDirection, "wardNumber")
+                UserSortField.OFFICE_POST -> Sort.by(criteria.sortDirection, "officePost")
+                UserSortField.EMAIL -> Sort.by(criteria.sortDirection, "email")
+                UserSortField.APPROVAL_STATUS -> Sort.by(criteria.sortDirection, "isApproved")
+                else -> Sort.by(criteria.sortDirection, "createdAt")
+            }
+
+        val pageable =
+            PageRequest.of(
+                criteria.page,
+                criteria.pageSize,
+                sortOrder,
+            )
+
+        return userRepository
+            .searchUsers(criteria, pageable)
+            .map { it.toResponse() }
+    }
 
     @Transactional
     fun updateUser(
@@ -151,7 +195,7 @@ class UserService(
     private fun validateRoleAssignment(
         admin: User,
         user: User,
-        newRoles: Set<RoleType>,
+        newRoles: Set<np.gov.likhupikemun.dpms.auth.api.dto.RoleType>,
     ) {
         val isMunicipalityAdmin = admin.isMunicipalityAdmin()
         val isWardAdmin = admin.isWardAdmin()
@@ -160,10 +204,10 @@ class UserService(
             !isMunicipalityAdmin && !isWardAdmin ->
                 throw UnauthorizedException("Only admins can assign roles")
 
-            newRoles.contains(RoleType.MUNICIPALITY_ADMIN) && !isMunicipalityAdmin ->
+            newRoles.contains(np.gov.likhupikemun.dpms.auth.api.dto.RoleType.MUNICIPALITY_ADMIN) && !isMunicipalityAdmin ->
                 throw UnauthorizedException("Only municipality admins can assign municipality admin role")
 
-            newRoles.contains(RoleType.WARD_ADMIN) &&
+            newRoles.contains(np.gov.likhupikemun.dpms.auth.api.dto.RoleType.WARD_ADMIN) &&
                 !isMunicipalityAdmin &&
                 (admin.wardNumber != user.wardNumber) ->
                 throw UnauthorizedException("Ward admin can only assign roles in their ward")
@@ -198,6 +242,26 @@ class UserService(
         }
     }
 
+    private fun validateSearchPermissions(
+        currentUser: User,
+        criteria: UserSearchCriteria,
+    ) {
+        when {
+            !currentUser.isMunicipalityAdmin() && criteria.isMunicipalityLevel == true ->
+                throw UnauthorizedException("Only municipality admins can search municipality-level users")
+
+            currentUser.isWardAdmin() &&
+                criteria.wardNumberFrom != null &&
+                criteria.wardNumberFrom != currentUser.wardNumber ->
+                throw UnauthorizedException("Ward admin can only search users in their ward")
+
+            currentUser.isWardAdmin() &&
+                criteria.wardNumberTo != null &&
+                criteria.wardNumberTo != currentUser.wardNumber ->
+                throw UnauthorizedException("Ward admin can only search users in their ward")
+        }
+    }
+
     private fun createUserFromRequest(request: CreateUserRequest): User {
         val user =
             User(
@@ -220,10 +284,42 @@ class UserService(
             if (request.roles.isEmpty()) {
                 setOf(RoleType.VIEWER)
             } else {
-                request.roles
+                request.roles.map { RoleType.valueOf(it.name) }.toSet()
             }
 
         user.roles.addAll(roleRepository.findByNameIn(roles))
         return user
     }
+
+    private fun canApproveUser(
+        approver: User,
+        userToApprove: User,
+    ): Boolean =
+        when {
+            approver.isMunicipalityAdmin() -> true
+            approver.isWardAdmin() ->
+                !userToApprove.isMunicipalityLevel &&
+                    approver.wardNumber == userToApprove.wardNumber
+            else -> false
+        }
+
+    private fun findUserById(userId: String): User =
+        userRepository
+            .findById(userId)
+            .orElseThrow { UserNotFoundException(userId) }
+
+    private fun User.toResponse(): UserResponse =
+        UserResponse(
+            id = id,
+            email = email,
+            fullName = fullName,
+            fullNameNepali = fullNameNepali,
+            wardNumber = wardNumber,
+            officePost = officePost,
+            roles = roles.map { it.name }.toSet(),
+            status = if (isApproved) UserStatus.ACTIVE else UserStatus.PENDING,
+            profilePictureUrl = profilePicture?.let { "/uploads/profiles/$it" },
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+        )
 }
