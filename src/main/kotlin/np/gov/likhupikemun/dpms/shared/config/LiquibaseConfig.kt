@@ -11,7 +11,9 @@ class LiquibaseConfig {
     fun liquibase(dataSource: DataSource) =
         SpringLiquibase().apply {
             this.dataSource = dataSource
-            changeLog = "classpath:db/changelog/db.changelog-master.yaml"
+            changeLog = "classpath:db/changelog/db.changelog-master.xml"
             contexts = "development,test,production"
+            defaultSchema = "public"
+            setShouldRun(true)
         }
 }

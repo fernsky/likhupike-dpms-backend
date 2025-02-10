@@ -116,4 +116,39 @@ class UserController(
         userService.deactivateUser(userId).let {
             ResponseEntity.ok(ApiResponse.success(message = "User deactivated successfully"))
         }
+
+    @Operation(
+        summary = "Safe delete user",
+        description = """
+            Safely delete a user by marking them as deleted.
+            This preserves referential integrity while making the user inaccessible.
+            Municipality admins can delete any user.
+            Ward admins can only delete users in their ward.
+        """,
+    )
+    @ApiResponses(
+        value = [
+            io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "User deleted successfully",
+            ),
+            io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "User not found",
+            ),
+            io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "403",
+                description = "Insufficient permissions to delete user",
+            ),
+        ],
+    )
+    @DeleteMapping("/{userId}/delete")
+    @PreAuthorize("hasAnyRole('MUNICIPALITY_ADMIN', 'WARD_ADMIN')")
+    fun deleteUser(
+        @Parameter(description = "ID of user to delete", required = true)
+        @PathVariable userId: String,
+    ): ResponseEntity<ApiResponse<Unit>> =
+        userService.safeDeleteUser(userId).let {
+            ResponseEntity.ok(ApiResponse.success(message = "User deleted successfully"))
+        }
 }

@@ -33,3 +33,7 @@ class ProfilePictureException(
 class InvalidOfficePostException(
     message: String,
 ) : BaseException(message, "INVALID_OFFICE_POST", 400)
+
+class UserDeletionException(
+    message: String,
+) : BaseException(message, "USER_DELETION_ERROR", 400)

@@ -9,6 +9,7 @@ import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
+import np.gov.likhupikemun.dpms.auth.exception.UserDeletionException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.UserRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.specifications.UserSpecifications
@@ -149,6 +150,25 @@ class UserService(
         userRepository.save(user)
     }
 
+    @Transactional
+    @CacheEvict(value = ["user"], key = "#userId")
+    fun safeDeleteUser(userId: String) {
+        val currentUser = securityService.getCurrentUser()
+        val user = findUserById(userId)
+
+        validateUserDeletion(currentUser, user)
+
+        user.apply {
+            isDeleted = true
+            deletedAt = LocalDateTime.now()
+            deletedBy = currentUser.id
+            email = "$email.deleted.${System.currentTimeMillis()}" // Ensure email uniqueness
+            isApproved = false
+        }
+
+        userRepository.save(user)
+    }
+
     private fun validateUserCreation(
         currentUser: User,
         request: CreateUserRequest,
@@ -217,6 +237,20 @@ class UserService(
 
             admin.isWardAdmin() && admin.wardNumber != user.wardNumber ->
                 throw UnauthorizedException("Ward admin can only deactivate users in their ward")
+        }
+    }
+
+    private fun validateUserDeletion(
+        admin: User,
+        user: User,
+    ) {
+        when {
+            user.isDeleted ->
+                throw UserDeletionException("User is already deleted")
+            user.isMunicipalityAdmin() && !admin.isMunicipalityAdmin() ->
+                throw UnauthorizedException("Only municipality admins can delete municipality admins")
+            admin.isWardAdmin() && admin.wardNumber != user.wardNumber ->
+                throw UnauthorizedException("Ward admin can only delete users in their ward")
         }
     }
 

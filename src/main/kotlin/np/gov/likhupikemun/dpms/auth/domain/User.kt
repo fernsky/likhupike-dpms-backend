@@ -37,6 +37,12 @@ class User(
     var approvedBy: String? = null,
     @Column(name = "approved_at")
     var approvedAt: LocalDateTime? = null,
+    @Column(name = "is_deleted")
+    var isDeleted: Boolean = false,
+    @Column(name = "deleted_at")
+    var deletedAt: LocalDateTime? = null,
+    @Column(name = "deleted_by")
+    var deletedBy: String? = null,
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
@@ -58,7 +64,7 @@ class User(
 
     override fun isCredentialsNonExpired() = true
 
-    override fun isEnabled() = isApproved
+    override fun isEnabled() = isApproved && !isDeleted
 
     // Add this if you need to modify the password
     fun setPassword(newPassword: String) {

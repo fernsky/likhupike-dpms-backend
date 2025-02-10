@@ -9,8 +9,10 @@ spring:
         format_sql: true
   liquibase:
     enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.yaml
+    change-log: classpath:db/changelog/db.changelog-master.xml
     contexts: test
+    default-schema: public
+    drop-first: true # Be careful, this drops and recreates schema in test
   test:
     database:
       replace: none
@@ -30,6 +32,13 @@ spring:
         enabled: false
   main:
     allow-bean-definition-overriding: true
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+      schema: classpath:org/springframework/session/jdbc/schema-postgresql.sql
+      table-name: spring_session
+    timeout: 30m
 
 management:
   endpoints:

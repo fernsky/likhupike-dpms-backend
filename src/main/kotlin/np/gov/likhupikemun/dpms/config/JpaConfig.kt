@@ -12,6 +12,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableSpringDataWebSupport
 @EnableJpaRepositories(
     basePackages = ["np.gov.likhupikemun.dpms"],
-    repositoryImplementationPostfix = "Impl"
+    repositoryImplementationPostfix = "Impl",
 )
 class JpaConfig

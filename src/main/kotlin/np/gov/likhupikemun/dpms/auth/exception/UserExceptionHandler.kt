@@ -143,4 +143,19 @@ class UserExceptionHandler {
             ),
             HttpStatus.NOT_FOUND,
         )
+
+    @ExceptionHandler(UserDeletionException::class)
+    fun handleUserDeletionException(
+        ex: UserDeletionException,
+        request: WebRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val errorResponse =
+            ErrorResponse(
+                code = ex.errorCode,
+                message = ex.message ?: "Error deleting user",
+                statusCode = ex.statusCode,
+                details = mapOf("details" to "The user deletion process failed. Please verify permissions and try again."),
+            )
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
 }
