@@ -1,5 +1,7 @@
 package np.gov.likhupikemun.dpms.shared.exception
 
+import np.gov.likhupikemun.dpms.shared.dto.ErrorDetails
+
 /**
  * Base exception class for all custom exceptions in the application.
  * Provides standard fields for error code, message, and HTTP status code.

@@ -94,7 +94,18 @@ class UserService(
             }
 
         val pageable = PageRequest.of(criteria.page, criteria.pageSize, sortOrder)
-        return userRepository.searchUsers(criteria, pageable).map { it.toResponse() }
+
+        return userRepository
+            .searchUsers(
+                wardNumberFrom = criteria.wardNumberFrom,
+                wardNumberTo = criteria.wardNumberTo,
+                searchTerm = criteria.searchTerm,
+                roles = criteria.roles ?: emptySet(),
+                officePosts = criteria.officePosts ?: emptySet(),
+                isApproved = criteria.isApproved,
+                isMunicipalityLevel = criteria.isMunicipalityLevel,
+                pageable = pageable,
+            ).map { it.toResponse() }
     }
 
     @Transactional

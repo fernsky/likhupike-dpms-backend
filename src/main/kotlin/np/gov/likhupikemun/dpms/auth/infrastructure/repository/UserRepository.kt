@@ -1,11 +1,12 @@
 package np.gov.likhupikemun.dpms.auth.infrastructure.repository
 
-import np.gov.likhupikemun.dpms.auth.api.dto.request.UserSearchCriteria
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 
 interface UserRepository : JpaRepository<User, String> {
     fun findByEmail(email: String): User?
@@ -14,10 +15,10 @@ interface UserRepository : JpaRepository<User, String> {
 
     @Query(
         """
-        SELECT u FROM User u 
+        SELECT u FROM user u 
         WHERE u.isApproved = false 
         AND (:wardNumber IS NULL OR u.wardNumber = :wardNumber)
-    """,
+        """,
     )
     fun findPendingUsers(
         wardNumber: Int?,
@@ -25,32 +26,44 @@ interface UserRepository : JpaRepository<User, String> {
     ): Page<User>
 
     @Query(
-        """
-        SELECT u FROM User u 
-        WHERE (:#{#criteria.wardNumberFrom} IS NULL OR u.wardNumber >= :#{#criteria.wardNumberFrom})
-        AND (:#{#criteria.wardNumberTo} IS NULL OR u.wardNumber <= :#{#criteria.wardNumberTo})
-        AND (:#{#criteria.searchTerm} IS NULL 
-            OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :#{#criteria.searchTerm}, '%'))
-            OR LOWER(u.fullNameNepali) LIKE LOWER(CONCAT('%', :#{#criteria.searchTerm}, '%'))
-            OR LOWER(u.email) LIKE LOWER(CONCAT('%', :#{#criteria.searchTerm}, '%')))
-        AND (:#{#criteria.roles} IS NULL OR u.roles IN :#{#criteria.roles})
-        AND (:#{#criteria.officePosts} IS NULL OR u.officePost IN :#{#criteria.officePosts})
-        AND (:#{#criteria.isApproved} IS NULL OR u.isApproved = :#{#criteria.isApproved})
-        AND (:#{#criteria.isMunicipalityLevel} IS NULL OR u.isMunicipalityLevel = :#{#criteria.isMunicipalityLevel})
-        ORDER BY
-        CASE :#{#criteria.sortBy} 
-            WHEN 'FULL_NAME' THEN u.fullName
-            WHEN 'FULL_NAME_NEPALI' THEN u.fullNameNepali
-            WHEN 'WARD_NUMBER' THEN CAST(u.wardNumber AS string)
-            WHEN 'OFFICE_POST' THEN u.officePost
-            WHEN 'EMAIL' THEN u.email
-            WHEN 'APPROVAL_STATUS' THEN CAST(u.isApproved AS string)
-            ELSE u.createdAt
-        END :#{#criteria.sortDirection}
-    """,
+        value = """
+        SELECT DISTINCT u FROM user u 
+        WHERE 1=1
+        AND (:wardNumberFrom IS NULL OR u.wardNumber >= :wardNumberFrom)
+        AND (:wardNumberTo IS NULL OR u.wardNumber <= :wardNumberTo)
+        AND (:searchTerm IS NULL OR :searchTerm = '' 
+            OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR LOWER(u.fullNameNepali) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+        AND (COALESCE(:roles, NULL) IS NULL OR SIZE(:roles) = 0 OR u.roles IN (:roles))
+        AND (COALESCE(:officePosts, NULL) IS NULL OR SIZE(:officePosts) = 0 OR u.officePost IN (:officePosts))
+        AND (:isApproved IS NULL OR u.isApproved = :isApproved)
+        AND (:isMunicipalityLevel IS NULL OR u.isMunicipalityLevel = :isMunicipalityLevel)
+        ORDER BY u.createdAt DESC
+        """,
+        countQuery = """
+        SELECT COUNT(DISTINCT u) FROM user u 
+        WHERE 1=1
+        AND (:wardNumberFrom IS NULL OR u.wardNumber >= :wardNumberFrom)
+        AND (:wardNumberTo IS NULL OR u.wardNumber <= :wardNumberTo)
+        AND (:searchTerm IS NULL OR :searchTerm = '' 
+            OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR LOWER(u.fullNameNepali) LIKE LOWER(CONCAT('%', :searchTerm, '%'))
+            OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))
+        AND (COALESCE(:roles, NULL) IS NULL OR SIZE(:roles) = 0 OR u.roles IN (:roles))
+        AND (COALESCE(:officePosts, NULL) IS NULL OR SIZE(:officePosts) = 0 OR u.officePost IN (:officePosts))
+        AND (:isApproved IS NULL OR u.isApproved = :isApproved)
+        AND (:isMunicipalityLevel IS NULL OR u.isMunicipalityLevel = :isMunicipalityLevel)
+        """,
     )
     fun searchUsers(
-        criteria: UserSearchCriteria,
+        @Param("wardNumberFrom") wardNumberFrom: Int?,
+        @Param("wardNumberTo") wardNumberTo: Int?,
+        @Param("searchTerm") searchTerm: String?,
+        @Param("roles") roles: Set<RoleType> = emptySet(),
+        @Param("officePosts") officePosts: Set<String> = emptySet(),
+        @Param("isApproved") isApproved: Boolean?,
+        @Param("isMunicipalityLevel") isMunicipalityLevel: Boolean?,
         pageable: Pageable,
     ): Page<User>
 }

@@ -40,7 +40,7 @@ class JwtService(
         generateToken(
             mapOf(
                 "email" to user.email,
-                "roles" to user.roles.map { it.name },
+                "roles" to user.roles.map { it.roleType.toString() },
             ),
             user,
         )
@@ -138,4 +138,6 @@ class JwtService(
         } catch (e: Exception) {
             null
         }
+
+    private fun getRoles(user: User): List<String> = user.roles.map { it.roleType.getAuthority() }
 }

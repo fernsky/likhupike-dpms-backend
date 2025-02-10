@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import jakarta.validation.ConstraintViolationException
+import np.gov.likhupikemun.dpms.shared.dto.ApiResponse
+import np.gov.likhupikemun.dpms.shared.dto.ErrorDetails
+import np.gov.likhupikemun.dpms.shared.dto.ErrorResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -45,27 +48,30 @@ class BaseExceptionHandler {
         ex: MethodArgumentNotValidException,
         request: WebRequest,
     ): ResponseEntity<ErrorResponse> {
-        val errors = mutableMapOf<String, String>()
+        val validationErrors = mutableMapOf<String, String>()
 
         ex.bindingResult.fieldErrors.forEach { error ->
             val fieldName = error.field
             val errorMessage = error.defaultMessage ?: "Invalid value"
-            errors[fieldName] = errorMessage
+            validationErrors[fieldName] = errorMessage
         }
 
         ex.bindingResult.globalErrors.forEach { error ->
             val objectName = error.objectName
             val errorMessage = error.defaultMessage ?: "Invalid value"
-            errors[objectName] = errorMessage
+            validationErrors[objectName] = errorMessage
         }
 
         val errorResponse =
             ErrorResponse(
+                code = "VALIDATION_ERROR",
                 message = "Validation failed for ${ex.bindingResult.objectName}",
-                errorCode = "VALIDATION_ERROR",
                 statusCode = HttpStatus.BAD_REQUEST.value(),
-                errors = errors,
-                details = "Please check the individual field errors for more details",
+                details =
+                    mapOf(
+                        "validationErrors" to validationErrors,
+                        "details" to "Please check the individual field errors for more details",
+                    ),
             )
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
     }
@@ -75,13 +81,13 @@ class BaseExceptionHandler {
         ex: ConstraintViolationException,
         request: WebRequest,
     ): ResponseEntity<ErrorResponse> {
-        val errors = ex.constraintViolations.map { it.propertyPath.toString() to it.message }.toMap()
+        val validationErrors = ex.constraintViolations.map { it.propertyPath.toString() to it.message }.toMap()
         val errorResponse =
             ErrorResponse(
+                code = "VALIDATION_ERROR",
                 message = "Validation failed",
-                errorCode = "VALIDATION_ERROR",
                 statusCode = HttpStatus.BAD_REQUEST.value(),
-                errors = errors,
+                details = mapOf("validationErrors" to validationErrors),
             )
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
     }
@@ -111,10 +117,10 @@ class BaseExceptionHandler {
             }
         val errorResponse =
             ErrorResponse(
+                code = "INVALID_REQUEST_FORMAT",
                 message = "Request body is not readable or does not match the expected format",
-                errorCode = "INVALID_REQUEST_FORMAT",
                 statusCode = HttpStatus.BAD_REQUEST.value(),
-                errors = errors,
+                details = errors?.let { mapOf("validationErrors" to it) },
             )
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
     }
@@ -126,8 +132,8 @@ class BaseExceptionHandler {
     ): ResponseEntity<ErrorResponse> {
         val errorResponse =
             ErrorResponse(
+                code = "INVALID_DATA_FORMAT",
                 message = "Request contains invalid data format",
-                errorCode = "INVALID_DATA_FORMAT",
                 statusCode = HttpStatus.BAD_REQUEST.value(),
             )
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
@@ -140,8 +146,8 @@ class BaseExceptionHandler {
     ): ResponseEntity<ErrorResponse> {
         val errorResponse =
             ErrorResponse(
+                code = "UNRECOGNIZED_FIELD",
                 message = "Request contains unrecognized fields: ${ex.propertyName}",
-                errorCode = "UNRECOGNIZED_FIELD",
                 statusCode = HttpStatus.BAD_REQUEST.value(),
             )
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)

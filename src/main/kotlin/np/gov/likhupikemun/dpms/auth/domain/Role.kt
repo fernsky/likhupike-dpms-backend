@@ -1,29 +1,38 @@
 package np.gov.likhupikemun.dpms.auth.domain
 
-import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.persistence.*
+
+enum class RoleType {
+    SUPER_ADMIN,
+    MUNICIPALITY_ADMIN,
+    WARD_ADMIN,
+    EDITOR,
+    VIEWER,
+    ;
+
+    fun getAuthority() = "ROLE_${this.name}"
+}
 
 @Entity
 @Table(name = "roles")
 class Role(
-    @Enumerated(EnumType.STRING)
-    @Column(name = "name", nullable = false, unique = true)
-    val roleType: RoleType,
     @Id
-    val id: String = roleType.name,
-)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: String? = null,
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    var roleType: RoleType,
+    @Column(length = 50)
+    var description: String? = null,
+) {
+    fun getAuthority() = roleType.getAuthority()
 
-@Schema(description = "Available user roles")
-enum class RoleType {
-    @Schema(description = "Municipality level administrator")
-    MUNICIPALITY_ADMIN,
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as Role
+        return roleType == other.roleType
+    }
 
-    @Schema(description = "Ward level administrator")
-    WARD_ADMIN,
-
-    @Schema(description = "Content editor")
-    EDITOR,
-
-    @Schema(description = "Read-only access")
-    VIEWER,
+    override fun hashCode(): Int = roleType.hashCode()
 }

@@ -7,6 +7,8 @@ import np.gov.likhupikemun.dpms.auth.api.dto.LoginRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.RegisterRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.RequestPasswordResetRequest
 import np.gov.likhupikemun.dpms.auth.api.dto.ResetPasswordRequest
+import np.gov.likhupikemun.dpms.auth.domain.Role
+import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.*
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.UserRepository
@@ -202,7 +204,7 @@ class AuthServiceImpl(
         refreshToken = tokenPair.refreshToken,
         userId = user.id!!,
         email = user.email,
-        roles = user.roles.map { it.name },
+        roles = user.roles.map { it.roleType }, // Remove toString() call
         expiresIn = tokenPair.expiresIn,
     )
 
@@ -226,4 +228,7 @@ class AuthServiceImpl(
 
         mailSender.send(message)
     }
+
+    // Remove or fix unused method if not needed
+    private fun convertToRoleType(role: Role): RoleType = role.roleType
 }

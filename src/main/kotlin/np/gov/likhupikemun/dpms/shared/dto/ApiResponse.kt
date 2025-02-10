@@ -2,6 +2,7 @@ package np.gov.likhupikemun.dpms.shared.dto
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import io.swagger.v3.oas.annotations.media.Schema
+import org.springframework.data.domain.Page
 import java.time.LocalDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -48,93 +49,6 @@ data class ApiResponse<T>(
     enum class Status {
         SUCCESS,
         ERROR,
-    }
-}
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "Error details when API response indicates an error")
-data class ErrorDetails(
-    @Schema(
-        description = "Error code for client reference",
-        example = "USER_NOT_FOUND",
-    )
-    val code: String,
-    @Schema(
-        description = "Human readable error message",
-        example = "User with ID 123 was not found",
-    )
-    val message: String,
-    @Schema(
-        description = "Additional error details or validation errors",
-        example = "{\"field\": \"email\", \"error\": \"must be a valid email address\"}",
-    )
-    val details: Map<String, Any>? = null,
-    @Schema(
-        description = "HTTP status code",
-        example = "404",
-    )
-    val status: Int,
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "Paginated response wrapper")
-data class PagedResponse<T>(
-    @Schema(description = "List of items in current page")
-    val content: List<T>,
-    @Schema(
-        description = "Total number of items",
-        example = "100",
-    )
-    val totalElements: Long,
-    @Schema(
-        description = "Total number of pages",
-        example = "10",
-    )
-    val totalPages: Int,
-    @Schema(
-        description = "Current page number (0-based)",
-        example = "0",
-    )
-    val pageNumber: Int,
-    @Schema(
-        description = "Number of items per page",
-        example = "10",
-    )
-    val pageSize: Int,
-    @Schema(
-        description = "Whether this is the first page",
-        example = "true",
-    )
-    val isFirst: Boolean,
-    @Schema(
-        description = "Whether this is the last page",
-        example = "false",
-    )
-    val isLast: Boolean,
-    @Schema(
-        description = "Whether there are more pages",
-        example = "true",
-    )
-    val hasNext: Boolean,
-    @Schema(
-        description = "Whether there are previous pages",
-        example = "false",
-    )
-    val hasPrevious: Boolean,
-) {
-    companion object {
-        fun <T> from(page: Page<T>): PagedResponse<T> =
-            PagedResponse(
-                content = page.content,
-                totalElements = page.totalElements,
-                totalPages = page.totalPages,
-                pageNumber = page.number,
-                pageSize = page.size,
-                isFirst = page.isFirst,
-                isLast = page.isLast,
-                hasNext = page.hasNext(),
-                hasPrevious = page.hasPrevious(),
-            )
     }
 }
 
