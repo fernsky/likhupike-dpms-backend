@@ -11,6 +11,7 @@ import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.UserRepository
+import np.gov.likhupikemun.dpms.auth.infrastructure.repository.specifications.UserSpecifications
 import np.gov.likhupikemun.dpms.shared.exception.*
 import np.gov.likhupikemun.dpms.shared.service.FileService
 import np.gov.likhupikemun.dpms.shared.service.SecurityService
@@ -73,7 +74,7 @@ class UserService(
         pageable: Pageable,
     ): Page<UserResponse> =
         userRepository
-            .findPendingUsers(wardNumber, pageable)
+            .findByIsApprovedFalseAndWardNumberOrWardNumberIsNull(wardNumber, pageable)
             .map { it.toResponse() }
 
     @Transactional(readOnly = true)
@@ -94,18 +95,9 @@ class UserService(
             }
 
         val pageable = PageRequest.of(criteria.page, criteria.pageSize, sortOrder)
+        val specification = UserSpecifications.fromCriteria(criteria)
 
-        return userRepository
-            .searchUsers(
-                wardNumberFrom = criteria.wardNumberFrom,
-                wardNumberTo = criteria.wardNumberTo,
-                searchTerm = criteria.searchTerm,
-                roles = criteria.roles ?: emptySet(),
-                officePosts = criteria.officePosts ?: emptySet(),
-                isApproved = criteria.isApproved,
-                isMunicipalityLevel = criteria.isMunicipalityLevel,
-                pageable = pageable,
-            ).map { it.toResponse() }
+        return userRepository.findAll(specification, pageable).map { it.toResponse() }
     }
 
     @Transactional
