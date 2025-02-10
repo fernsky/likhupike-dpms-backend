@@ -12,7 +12,3 @@ class UserNotApprovedException(
 ) : ApiException("User account not yet approved: $email", "USER_NOT_APPROVED", 403)
 
 class InvalidCredentialsException : ApiException("Invalid email or password", "INVALID_CREDENTIALS", 401)
-
-class EmailAlreadyExistsException(
-    email: String,
-) : ApiException("Email already exists: $email", "EMAIL_EXISTS", 409)

@@ -8,6 +8,7 @@ import np.gov.likhupikemun.dpms.auth.api.dto.request.UserSortField
 import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
+import np.gov.likhupikemun.dpms.auth.exception.EmailAlreadyExistsException
 import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
 import np.gov.likhupikemun.dpms.auth.exception.UserDeletionException
 import np.gov.likhupikemun.dpms.auth.exception.UserNotFoundException

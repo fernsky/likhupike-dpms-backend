@@ -13,9 +13,9 @@ import java.time.LocalDateTime
 abstract class AuditableEntity {
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    lateinit var createdAt: LocalDateTime
+    var createdAt: LocalDateTime = LocalDateTime.now()
 
     @LastModifiedDate
     @Column(nullable = true)
-    var updatedAt: LocalDateTime? = null
+    var updatedAt: LocalDateTime = LocalDateTime.now()
 }

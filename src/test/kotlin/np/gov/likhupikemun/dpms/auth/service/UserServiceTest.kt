@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -64,7 +65,10 @@ class UserServiceTest {
             officePost = "Admin",
             isApproved = true,
             roles = mutableSetOf(municipalityAdminRole),
-        )
+        ).apply {
+            createdAt = LocalDateTime.now()
+            updatedAt = LocalDateTime.now()
+        }
 
     private val wardAdmin =
         User(
@@ -79,7 +83,10 @@ class UserServiceTest {
             wardNumber = 1,
             isApproved = true,
             roles = mutableSetOf(wardAdminRole),
-        )
+        ).apply {
+            createdAt = LocalDateTime.now()
+            updatedAt = LocalDateTime.now()
+        }
 
     @BeforeEach
     fun setUp() {
@@ -108,13 +115,31 @@ class UserServiceTest {
         every { userRepository.existsByEmail(any()) } returns false
         every { passwordEncoder.encode(any()) } returns "encoded_password"
         every { roleRepository.findByNameIn(any()) } returns listOf(viewerRole)
-        every { userRepository.save(any()) } answers { firstArg() }
+        every { userRepository.save(any()) } answers {
+            User(
+                id = "generated-id",
+                email = firstArg<User>().email,
+                password = firstArg<User>().password,
+                fullName = firstArg<User>().fullName,
+                fullNameNepali = firstArg<User>().fullNameNepali,
+                dateOfBirth = firstArg<User>().dateOfBirth,
+                address = firstArg<User>().address,
+                officePost = firstArg<User>().officePost,
+                wardNumber = firstArg<User>().wardNumber,
+                roles = firstArg<User>().roles,
+                isApproved = firstArg<User>().isApproved,
+            ).apply {
+                createdAt = LocalDateTime.now()
+                updatedAt = LocalDateTime.now()
+            }
+        }
 
         // Act
         val result = userService.createUser(request)
 
         // Assert
         assertNotNull(result)
+        assertNotNull(result.id)
         verify { userRepository.save(any()) }
     }
 
@@ -237,7 +262,13 @@ class UserServiceTest {
             )
 
         every { securityService.getCurrentUser() } returns municipalityAdmin
-        every { userRepository.findById(any()) } returns Optional.of(wardAdmin)
+        every { userRepository.findById(any()) } returns
+            Optional.of(
+                wardAdmin.apply {
+                    createdAt = LocalDateTime.now()
+                    updatedAt = LocalDateTime.now()
+                },
+            )
         every { userRepository.save(any()) } answers { firstArg() }
 
         // Act
