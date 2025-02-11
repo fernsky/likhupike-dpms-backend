@@ -38,6 +38,7 @@ class UserController(
     @PreAuthorize("hasAnyRole('MUNICIPALITY_ADMIN', 'WARD_ADMIN', 'VIEWER')")
     fun searchUsers(
         @Parameter(description = "Search criteria with filters")
+        @ModelAttribute
         @Valid criteria: UserSearchCriteria,
     ): ResponseEntity<ApiResponse<PagedResponse<UserResponse>>> {
         val searchResults = userService.searchUsers(criteria)

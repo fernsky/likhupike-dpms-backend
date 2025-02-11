@@ -51,18 +51,19 @@ data class UserSearchCriteria(
     val dateOfBirthTo: LocalDate? = null,
     val isApproved: Boolean? = null,
     val isMunicipalityLevel: Boolean? = null,
-    @field:Pattern(regexp = "^[a-zA-Z_]+$")
     @field:Schema(
         description = "Field to sort by",
         example = "FULL_NAME",
         defaultValue = "CREATED_AT",
     )
+    @field:NotNull
     val sortBy: UserSortField = UserSortField.CREATED_AT,
     @field:Schema(
         description = "Sort direction",
         example = "ASC",
         defaultValue = "DESC",
     )
+    @field:NotNull
     val sortDirection: Sort.Direction = Sort.Direction.DESC,
     @field:Min(1) @field:Max(100)
     val pageSize: Int = 20,
@@ -80,6 +81,15 @@ data class UserSearchCriteria(
             throw InvalidSearchCriteriaException("dateOfBirthFrom cannot be after dateOfBirthTo")
         }
     }
+
+    override fun toString(): String =
+        "UserSearchCriteria(page=$page, pageSize=$pageSize, sortBy=$sortBy, " +
+            "sortDirection=$sortDirection, searchTerm=$searchTerm, " +
+            "wardNumberFrom=$wardNumberFrom, wardNumberTo=$wardNumberTo, " +
+            "roles=$roles, officePosts=$officePosts, isApproved=$isApproved, " +
+            "isMunicipalityLevel=$isMunicipalityLevel, " +
+            "createdAfter=$createdAfter, createdBefore=$createdBefore, " +
+            "dateOfBirthFrom=$dateOfBirthFrom, dateOfBirthTo=$dateOfBirthTo)"
 }
 
 @Schema(description = "Sort field options for user search")
