@@ -2,11 +2,44 @@
 
 ## Prerequisites
 
-- JDK 17 or later
+- OpenJDK 21
 - Gradle 8.x
 - Docker (for running dependencies locally)
 - Your favorite IDE (IntelliJ IDEA recommended)
 - Git
+
+### Installing OpenJDK 21 on macOS
+
+1. Install using Homebrew:
+
+   ```bash
+   brew install openjdk@21
+   ```
+
+2. Create a symbolic link (requires sudo):
+
+   ```bash
+   sudo ln -sfn $(brew --prefix)/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+   ```
+
+3. Add to your shell profile (~/.zshrc or ~/.bash_profile):
+
+   ```bash
+   export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"
+   export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+   ```
+
+4. Reload your shell profile:
+
+   ```bash
+   source ~/.zshrc  # or source ~/.bash_profile
+   ```
+
+5. Verify installation:
+   ```bash
+   java --version
+   echo $JAVA_HOME
+   ```
 
 ## Project Structure
 
