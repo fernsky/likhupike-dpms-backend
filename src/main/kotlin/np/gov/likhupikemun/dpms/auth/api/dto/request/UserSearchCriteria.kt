@@ -15,19 +15,19 @@ data class UserSearchCriteria(
         description = "Minimum ward number",
         example = "1",
         minimum = "1",
-        maximum = "32",
+        maximum = "5",  // Changed from 32 to 5
     )
     @field:Min(1)
-    @field:Max(32)
+    @field:Max(5)      // Changed from 32 to 5
     val wardNumberFrom: Int? = null,
     @field:Schema(
         description = "Maximum ward number",
         example = "5",
         minimum = "1",
-        maximum = "32",
+        maximum = "5",  // Changed from 32 to 5
     )
     @field:Min(1)
-    @field:Max(32)
+    @field:Max(5)      // Changed from 32 to 5
     val wardNumberTo: Int? = null,
     @field:Schema(
         description = "Search term for name or email",
@@ -71,6 +71,12 @@ data class UserSearchCriteria(
     val page: Int = 0,
 ) {
     fun validate() {
+        if (wardNumberFrom != null && (wardNumberFrom < 1 || wardNumberFrom > 5)) {
+            throw InvalidSearchCriteriaException("Ward number must be between 1 and 5")
+        }
+        if (wardNumberTo != null && (wardNumberTo < 1 || wardNumberTo > 5)) {
+            throw InvalidSearchCriteriaException("Ward number must be between 1 and 5")
+        }
         if (wardNumberFrom != null && wardNumberTo != null && wardNumberFrom > wardNumberTo) {
             throw InvalidSearchCriteriaException("wardNumberFrom cannot be greater than wardNumberTo")
         }

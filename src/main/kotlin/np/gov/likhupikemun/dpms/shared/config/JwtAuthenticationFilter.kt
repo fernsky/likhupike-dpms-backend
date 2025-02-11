@@ -29,26 +29,48 @@ class JwtAuthenticationFilter(
             }
 
             val jwt = authHeader.substring(7)
-            val userEmail = jwtService.extractUsername(jwt)
 
-            if (userEmail != null && SecurityContextHolder.getContext().authentication == null) {
-                val userDetails = userDetailsService.loadUserByUsername(userEmail)
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    val authToken =
-                        UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.authorities,
-                        )
-                    authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
-                    SecurityContextHolder.getContext().authentication = authToken
-                }
+            try {
+                processJwtAuthentication(jwt, request)
+            } catch (e: Exception) {
+                logger.error("JWT Authentication failed", e)
+                throw JwtAuthenticationException(
+                    details =
+                        mapOf(
+                            "token" to jwt,
+                            "error" to (e.message ?: "Unknown error"),
+                        ),
+                )
             }
-        } catch (e: Exception) {
-            // Log the error but don't throw it
-            logger.error("JWT Authentication error", e)
+        } catch (e: AuthenticationException) {
+            SecurityContextHolder.clearContext()
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.message)
+            return
         }
 
         filterChain.doFilter(request, response)
+    }
+
+    private fun processJwtAuthentication(
+        jwt: String,
+        request: HttpServletRequest,
+    ) {
+        val userEmail = jwtService.extractUsername(jwt)
+
+        if (userEmail != null && SecurityContextHolder.getContext().authentication == null) {
+            val userDetails = userDetailsService.loadUserByUsername(userEmail)
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                val authToken =
+                    UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.authorities,
+                    )
+                authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
+                SecurityContextHolder.getContext().authentication = authToken
+            } else {
+                throw JwtAuthenticationException("Invalid JWT token")
+            }
+        }
     }
 }

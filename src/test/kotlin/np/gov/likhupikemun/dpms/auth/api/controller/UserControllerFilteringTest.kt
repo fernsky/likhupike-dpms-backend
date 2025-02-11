@@ -190,4 +190,48 @@ class UserControllerFilteringTest {
             .andExpect(jsonPath("$.data.content[0].id").value("1"))
             .andExpect(jsonPath("$.data.totalElements").value(1))
     }
+
+    @Test
+    @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
+    fun `invalid ward number too high should return 400`() {
+        mockMvc
+            .perform(
+                get("/api/v1/users/search")
+                    .param("wardNumberFrom", "6"),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
+    fun `invalid ward number too low should return 400`() {
+        mockMvc
+            .perform(
+                get("/api/v1/users/search")
+                    .param("wardNumberFrom", "0"),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
+    fun `valid ward number range should return 200`() {
+        whenever(userService.searchUsers(any())).thenReturn(PageImpl(testUsers))
+
+        mockMvc
+            .perform(
+                get("/api/v1/users/search")
+                    .param("wardNumberFrom", "1")
+                    .param("wardNumberTo", "5"),
+            ).andExpect(status().isOk)
+    }
+
+    @Test
+    @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
+    fun `ward number range with invalid to value should return 400`() {
+        mockMvc
+            .perform(
+                get("/api/v1/users/search")
+                    .param("wardNumberFrom", "1")
+                    .param("wardNumberTo", "6"),
+            ).andExpect(status().isBadRequest)
+    }
 }

@@ -1,65 +1,61 @@
 package np.gov.likhupikemun.dpms.auth.exception
 
-abstract class AuthException(
-    message: String,
-    val errorCode: String,
-    val statusCode: Int,
-) : RuntimeException(message)
+import np.gov.likhupikemun.dpms.shared.exception.BaseException
 
 class EmailAlreadyExistsException(
     email: String,
-) : AuthException(
-        message = "User with email $email already exists",
-        errorCode = "AUTH_001",
-        statusCode = 409,
+) : BaseException(
+        "User with email $email already exists",
+        AuthErrorCode.EMAIL_ALREADY_EXISTS.code,
+        AuthErrorCode.EMAIL_ALREADY_EXISTS.statusCode,
     )
 
 class InvalidCredentialsException :
-    AuthException(
-        message = "Invalid email or password",
-        errorCode = "AUTH_002",
-        statusCode = 401,
+    BaseException(
+        AuthErrorCode.INVALID_CREDENTIALS.message,
+        AuthErrorCode.INVALID_CREDENTIALS.code,
+        AuthErrorCode.INVALID_CREDENTIALS.statusCode,
     )
 
 class UserNotFoundException(
     identifier: String,
-) : AuthException(
-        message = "User not found with identifier: $identifier",
-        errorCode = "AUTH_003",
-        statusCode = 404,
+) : BaseException(
+        "User not found with identifier: $identifier",
+        AuthErrorCode.USER_NOT_FOUND.code,
+        AuthErrorCode.USER_NOT_FOUND.statusCode,
     )
 
 class UserNotApprovedException :
-    AuthException(
-        message = "User account is pending approval",
-        errorCode = "AUTH_004",
-        statusCode = 403,
+    BaseException(
+        AuthErrorCode.USER_NOT_APPROVED.message,
+        AuthErrorCode.USER_NOT_APPROVED.code,
+        AuthErrorCode.USER_NOT_APPROVED.statusCode,
     )
 
 class TokenExpiredException :
-    AuthException(
-        message = "Authentication token has expired",
-        errorCode = "AUTH_005",
-        statusCode = 401,
+    BaseException(
+        AuthErrorCode.TOKEN_EXPIRED.message,
+        AuthErrorCode.TOKEN_EXPIRED.code,
+        AuthErrorCode.TOKEN_EXPIRED.statusCode,
     )
 
 class InvalidTokenException :
-    AuthException(
-        message = "Invalid authentication token",
-        errorCode = "AUTH_006",
-        statusCode = 401,
+    BaseException(
+        AuthErrorCode.INVALID_TOKEN.message,
+        AuthErrorCode.INVALID_TOKEN.code,
+        AuthErrorCode.INVALID_TOKEN.statusCode,
     )
 
 class InvalidPasswordResetTokenException :
-    AuthException(
-        message = "Invalid or expired password reset token",
-        errorCode = "AUTH_007",
-        statusCode = 400,
+    BaseException(
+        AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN.message,
+        AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN.code,
+        AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN.statusCode,
     )
 
 class PasswordResetLimitExceededException :
-    AuthException(
-        message = "Password reset request limit exceeded. Please try again later",
-        errorCode = "AUTH_008",
-        statusCode = 429,
+    BaseException(
+        AuthErrorCode.PASSWORD_RESET_LIMIT_EXCEEDED.message,
+        AuthErrorCode.PASSWORD_RESET_LIMIT_EXCEEDED.code,
+        AuthErrorCode.PASSWORD_RESET_LIMIT_EXCEEDED.statusCode,
     )

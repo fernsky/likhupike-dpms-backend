@@ -39,10 +39,11 @@ data class ApiResponse<T>(
             message = message,
         )
 
-        fun error(error: ErrorDetails) =
-            ApiResponse<Nothing>(
+        fun <T> error(error: ErrorDetails): ApiResponse<T> =
+            ApiResponse(
                 status = Status.ERROR,
                 error = error,
+                data = null,
             )
     }
 

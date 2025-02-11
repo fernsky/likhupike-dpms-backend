@@ -107,3 +107,16 @@ class InvalidInputException(
         errorCode = "INVALID_INPUT",
         statusCode = 400,
     )
+
+/**
+ * Exception for internal server errors
+ */
+class InternalServerException(
+    message: String,
+    details: Map<String, String>? = null,
+) : BaseException(
+        message = message,
+        errorCode = DEFAULT_ERROR_CODE,
+        statusCode = DEFAULT_STATUS_CODE,
+        details = details,
+    )

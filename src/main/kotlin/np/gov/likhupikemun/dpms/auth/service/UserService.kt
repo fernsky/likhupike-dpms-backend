@@ -9,7 +9,6 @@ import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.EmailAlreadyExistsException
-import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
 import np.gov.likhupikemun.dpms.auth.exception.UserDeletionException
 import np.gov.likhupikemun.dpms.auth.exception.UserNotFoundException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
@@ -57,11 +56,7 @@ class UserService(
         val currentUser = securityService.getCurrentUser()
         val user = findUserById(userId)
 
-        when {
-            user.isApproved -> throw UserApprovalException("User is already approved")
-            !canApproveUser(currentUser, user) ->
-                throw UnauthorizedException("Not authorized to approve this user")
-        }
+        validateUserApproval(currentUser, user)
 
         return user
             .apply {
@@ -178,10 +173,12 @@ class UserService(
         when {
             request.isMunicipalityLevel && !currentUser.isMunicipalityAdmin() ->
                 throw UnauthorizedException("Only municipality admins can create municipality-level users")
-            request.wardNumber != null && !currentUser.isWardAdmin() && !currentUser.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only ward admins can create ward-level users")
-            request.wardNumber != null && currentUser.isWardAdmin() && request.wardNumber != currentUser.wardNumber ->
+            currentUser.isWardAdmin() && request.isMunicipalityLevel ->
+                throw UnauthorizedException("Ward admin cannot create municipality-level users")
+            currentUser.isWardAdmin() && request.wardNumber != currentUser.wardNumber ->
                 throw UnauthorizedException("Ward admin can only create users for their own ward")
+            request.wardNumber != null && !currentUser.isWardAdmin() && !currentUser.isMunicipalityAdmin() ->
+                throw UnauthorizedException("Only ward admins or municipality admins can create ward-level users")
         }
     }
 
@@ -249,9 +246,11 @@ class UserService(
         when {
             user.isDeleted ->
                 throw UserDeletionException("User is already deleted")
+            user.isMunicipalityLevel && !admin.isMunicipalityAdmin() ->
+                throw UnauthorizedException("Only municipality admins can delete municipality-level users")
             user.isMunicipalityAdmin() && !admin.isMunicipalityAdmin() ->
                 throw UnauthorizedException("Only municipality admins can delete municipality admins")
-            admin.isWardAdmin() && admin.wardNumber != user.wardNumber ->
+            admin.isWardAdmin() && (user.isMunicipalityLevel || admin.wardNumber != user.wardNumber) ->
                 throw UnauthorizedException("Ward admin can only delete users in their ward")
         }
     }
