@@ -54,6 +54,11 @@ data class UserResponse(
     )
     val status: UserStatus,
     @field:Schema(
+        description = "Indicates if the user is at the municipality level",
+        example = "true",
+    )
+    val isMunicipalityLevel: Boolean,
+    @field:Schema(
         description = "User creation timestamp",
         example = "2024-01-20T10:30:00",
     )

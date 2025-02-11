@@ -44,6 +44,7 @@ class UserControllerSortingTest {
                 profilePictureUrl = null,
                 createdAt = LocalDateTime.now().minusDays(1),
                 updatedAt = LocalDateTime.now(),
+                isMunicipalityLevel = false,
             ),
             UserResponse(
                 id = "2",
@@ -57,6 +58,7 @@ class UserControllerSortingTest {
                 profilePictureUrl = null,
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now(),
+                isMunicipalityLevel = false,
             ),
         )
 

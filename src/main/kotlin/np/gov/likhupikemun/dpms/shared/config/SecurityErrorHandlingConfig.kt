@@ -23,9 +23,9 @@ class JwtAuthenticationEntryPoint(
 
         val errorResponse =
             ErrorResponse(
-                status = "UNAUTHORIZED",
                 message = "Authentication required",
                 code = "AUTHENTICATION_REQUIRED",
+                statusCode = HttpServletResponse.SC_UNAUTHORIZED,
                 details =
                     mapOf(
                         "path" to request.requestURI,

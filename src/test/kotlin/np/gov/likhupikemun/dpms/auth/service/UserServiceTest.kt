@@ -14,7 +14,7 @@ import np.gov.likhupikemun.dpms.auth.exception.EmailAlreadyExistsException
 import np.gov.likhupikemun.dpms.auth.exception.UserNotFoundException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.UserRepository
-import np.gov.likhupikemun.dpms.shared.exception.UnauthorizedException
+import np.gov.likhupikemun.dpms.shared.exception.ForbiddenException
 import np.gov.likhupikemun.dpms.shared.service.FileService
 import np.gov.likhupikemun.dpms.shared.service.SecurityService
 import org.junit.jupiter.api.BeforeEach
@@ -164,7 +164,7 @@ class UserServiceTest {
         every { securityService.getCurrentUser() } returns wardAdmin
 
         // Act & Assert
-        assertThrows<UnauthorizedException> {
+        assertThrows<ForbiddenException> {
             userService.createUser(request)
         }
     }
@@ -243,7 +243,7 @@ class UserServiceTest {
         every { userRepository.findById(any()) } returns Optional.of(municipalityAdmin)
 
         // Act & Assert
-        assertThrows<UnauthorizedException> {
+        assertThrows<ForbiddenException> {
             userService.deactivateUser(municipalityAdmin.id!!)
         }
     }
@@ -298,6 +298,36 @@ class UserServiceTest {
         // Act & Assert
         assertThrows<UserNotFoundException> {
             userService.updateUser("non-existent-id", updateRequest)
+        }
+    }
+
+    @Test
+    fun `approveUser - ward admin cannot approve user from different ward`() {
+        // Arrange
+        val otherWardUser =
+            User(
+                id = "other-ward-user",
+                email = "ward2.viewer@municipality.gov.np",
+                password = "encoded_password",
+                fullName = "Ward 2 Viewer",
+                fullNameNepali = "वडा २ भ्युवर",
+                dateOfBirth = LocalDate.now(),
+                address = "Ward 2",
+                officePost = "Viewer",
+                wardNumber = 2,
+                isApproved = false,
+                roles = mutableSetOf(viewerRole),
+            ).apply {
+                createdAt = LocalDateTime.now()
+                updatedAt = LocalDateTime.now()
+            }
+
+        every { securityService.getCurrentUser() } returns wardAdmin
+        every { userRepository.findById(any()) } returns Optional.of(otherWardUser)
+
+        // Act & Assert
+        assertThrows<ForbiddenException> {
+            userService.approveUser(otherWardUser.id!!)
         }
     }
 }

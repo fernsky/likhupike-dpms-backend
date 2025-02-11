@@ -18,6 +18,7 @@ fun User.toResponse(): UserResponse {
         roles = dtoRoles,
         status = if (isApproved) UserStatus.ACTIVE else UserStatus.PENDING,
         profilePictureUrl = profilePicture?.let { "/uploads/profiles/$it" },
+        isMunicipalityLevel = isMunicipalityLevel,
         createdAt = createdAt ?: LocalDateTime.now(),
         updatedAt = updatedAt ?: LocalDateTime.now(),
     )

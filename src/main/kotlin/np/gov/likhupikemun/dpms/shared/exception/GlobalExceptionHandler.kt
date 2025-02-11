@@ -38,10 +38,20 @@ class GlobalExceptionHandler : BaseExceptionHandler() {
 
     @ExceptionHandler(AccessDeniedException::class)
     fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ErrorResponse> =
-        createErrorResponse(
-            UnauthorizedException("Access denied"),
-            getErrorDetails(SharedErrorDetailType.UNAUTHORIZED_ACCESS),
-        )
+        ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(
+                ErrorResponse(
+                    message = "Access denied: insufficient permissions",
+                    code = "AUTHORIZATION_FAILED",
+                    statusCode = HttpStatus.FORBIDDEN.value(),
+                    details =
+                        mapOf(
+                            "error" to (ex.message ?: "Insufficient permissions"),
+                            "required_roles" to "Required roles information not available",
+                        ),
+                ),
+            )
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationExceptions(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
@@ -64,7 +74,23 @@ class GlobalExceptionHandler : BaseExceptionHandler() {
             ),
         )
 
-    @ExceptionHandler(UnauthorizedException::class)
-    fun handleUnauthorizedException(ex: UnauthorizedException): ResponseEntity<ApiResponse<Unit>> =
-        createApiErrorResponse<Unit>(ex, HttpStatus.FORBIDDEN)
+    @ExceptionHandler(AuthenticationException::class)
+    fun handleAuthenticationException(ex: AuthenticationException): ResponseEntity<ApiResponse<Nothing>> =
+        ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(
+                ApiResponse.error(
+                    error = ex.toErrorDetails(),
+                ),
+            )
+
+    @ExceptionHandler(ForbiddenException::class)
+    fun handleForbiddenException(ex: ForbiddenException): ResponseEntity<ApiResponse<Nothing>> =
+        ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(
+                ApiResponse.error(
+                    error = ex.toErrorDetails(),
+                ),
+            )
 }

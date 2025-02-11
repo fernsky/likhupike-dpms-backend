@@ -3,6 +3,8 @@ package np.gov.likhupikemun.dpms.shared.config
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import np.gov.likhupikemun.dpms.shared.exception.AuthenticationException
+import np.gov.likhupikemun.dpms.shared.exception.JwtAuthenticationException
 import np.gov.likhupikemun.dpms.shared.security.jwt.JwtService
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken

@@ -1,6 +1,6 @@
 package np.gov.likhupikemun.dpms.shared.exception
 
-class AuthenticationException(
+open class AuthenticationException(
     message: String,
     details: Map<String, Any>? = null,
 ) : BaseException(
@@ -10,11 +10,7 @@ class AuthenticationException(
         details = details,
     )
 
-class JwtAuthenticationException(
+open class JwtAuthenticationException(
     message: String = "Invalid or expired JWT token",
     details: Map<String, Any>? = null,
 ) : AuthenticationException(message, details)
-
-class InvalidCredentialsException(
-    message: String = "Invalid credentials",
-) : AuthenticationException(message)

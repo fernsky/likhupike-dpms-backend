@@ -9,14 +9,17 @@ import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.exception.EmailAlreadyExistsException
+import np.gov.likhupikemun.dpms.auth.exception.UserApprovalException
 import np.gov.likhupikemun.dpms.auth.exception.UserDeletionException
 import np.gov.likhupikemun.dpms.auth.exception.UserNotFoundException
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.RoleRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.UserRepository
 import np.gov.likhupikemun.dpms.auth.infrastructure.repository.specifications.UserSpecifications
 import np.gov.likhupikemun.dpms.shared.exception.*
+import np.gov.likhupikemun.dpms.shared.exception.ForbiddenException
 import np.gov.likhupikemun.dpms.shared.service.FileService
 import np.gov.likhupikemun.dpms.shared.service.SecurityService
+import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
@@ -37,6 +40,8 @@ class UserService(
     private val fileService: FileService,
     private val securityService: SecurityService,
 ) {
+    private val logger = LoggerFactory.getLogger(UserService::class.java)
+
     @Transactional
     fun createUser(request: CreateUserRequest): UserResponse {
         val currentUser = securityService.getCurrentUser()
@@ -53,17 +58,38 @@ class UserService(
 
     @Transactional
     fun approveUser(userId: String): UserResponse {
+        logger.debug("Attempting to approve user with ID: {}", userId)
+
         val currentUser = securityService.getCurrentUser()
+        logger.debug(
+            "Current user: {} (Ward: {}, MunicipalityAdmin: {})",
+            currentUser.email,
+            currentUser.wardNumber,
+            currentUser.isMunicipalityAdmin(),
+        )
+
         val user = findUserById(userId)
+        logger.debug(
+            "Found user to approve: {} (Ward: {}, MunicipalityLevel: {})",
+            user.email,
+            user.wardNumber,
+            user.isMunicipalityLevel,
+        )
 
         validateUserApproval(currentUser, user)
+        logger.debug("User approval validation passed")
 
         return user
             .apply {
                 isApproved = true
                 approvedBy = currentUser.id
                 approvedAt = LocalDateTime.now()
-            }.let { userRepository.save(it).toResponse() }
+                logger.debug("Setting approval details - approvedBy: {}, approvedAt: {}", approvedBy, approvedAt)
+            }.let {
+                val savedUser = userRepository.save(it)
+                logger.debug("User successfully approved and saved")
+                savedUser.toResponse()
+            }
     }
 
     @Transactional(readOnly = true)
@@ -172,30 +198,69 @@ class UserService(
     ) {
         when {
             request.isMunicipalityLevel && !currentUser.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only municipality admins can create municipality-level users")
-            currentUser.isWardAdmin() && request.isMunicipalityLevel ->
-                throw UnauthorizedException("Ward admin cannot create municipality-level users")
-            currentUser.isWardAdmin() && request.wardNumber != currentUser.wardNumber ->
-                throw UnauthorizedException("Ward admin can only create users for their own ward")
+                throw ForbiddenException("Only municipality admins can create municipality-level users")
             request.wardNumber != null && !currentUser.isWardAdmin() && !currentUser.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only ward admins or municipality admins can create ward-level users")
+                throw ForbiddenException("Only ward admins can create ward-level users")
+            request.wardNumber != null && currentUser.isWardAdmin() && request.wardNumber != currentUser.wardNumber ->
+                throw ForbiddenException("Ward admin can only create users for their own ward")
         }
     }
 
     private fun validateUserApproval(
-        approver: User,
+        currentUser: User,
         userToApprove: User,
     ) {
+        logger.debug(
+            "Validating user approval - Approver: {} (Ward: {}), User: {} (Ward: {})",
+            currentUser.email,
+            currentUser.wardNumber,
+            userToApprove.email,
+            userToApprove.wardNumber,
+        )
+
         when {
-            userToApprove.isApproved ->
-                throw InvalidOperationException("User is already approved")
-            userToApprove.isMunicipalityLevel && !approver.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only municipality admins can approve municipality-level users")
-            !userToApprove.isMunicipalityLevel &&
-                !approver.isMunicipalityAdmin() &&
-                (!approver.isWardAdmin() || approver.wardNumber != userToApprove.wardNumber) ->
-                throw UnauthorizedException("Ward admin can only approve users from their ward")
+            userToApprove.isApproved -> {
+                logger.debug("Validation failed: User is already approved")
+                throw UserApprovalException("User is already approved")
+            }
+
+            userToApprove.isMunicipalityLevel && !currentUser.isMunicipalityAdmin() -> {
+                logger.debug("Validation failed: Non-municipality admin attempting to approve municipality-level user")
+                throw ForbiddenException(
+                    message = "Only municipality admins can approve municipality-level users",
+                    details =
+                        mapOf(
+                            "userType" to "MUNICIPALITY_LEVEL",
+                            "requiredRole" to "MUNICIPALITY_ADMIN",
+                        ),
+                )
+            }
+
+            !currentUser.isMunicipalityAdmin() && !currentUser.isWardAdmin() -> {
+                logger.debug("Validation failed: Non-admin user attempting to approve")
+                throw ForbiddenException(
+                    message = "Only admins can approve users",
+                    details =
+                        mapOf(
+                            "requiredRole" to "MUNICIPALITY_ADMIN or WARD_ADMIN",
+                        ),
+                )
+            }
+
+            currentUser.isWardAdmin() && userToApprove.wardNumber != currentUser.wardNumber -> {
+                logger.debug("Validation failed: Ward admin attempting to approve user from different ward")
+                throw ForbiddenException(
+                    message = "Ward admin can only approve users in their ward",
+                    details =
+                        mapOf(
+                            "adminWard" to currentUser.wardNumber!!,
+                            "userWard" to (userToApprove.wardNumber ?: "none"),
+                        ),
+                )
+            }
         }
+
+        logger.debug("User approval validation successful")
     }
 
     private fun validateRoleAssignment(
@@ -208,15 +273,15 @@ class UserService(
 
         when {
             !isMunicipalityAdmin && !isWardAdmin ->
-                throw UnauthorizedException("Only admins can assign roles")
+                throw ForbiddenException("Only admins can assign roles")
 
             newRoles.contains(RoleType.MUNICIPALITY_ADMIN) && !isMunicipalityAdmin ->
-                throw UnauthorizedException("Only municipality admins can assign municipality admin role")
+                throw ForbiddenException("Only municipality admins can assign municipality admin role")
 
             newRoles.contains(RoleType.WARD_ADMIN) &&
                 !isMunicipalityAdmin &&
                 (admin.wardNumber != user.wardNumber) ->
-                throw UnauthorizedException("Ward admin can only assign roles in their ward")
+                throw ForbiddenException("Ward admin can only assign roles in their ward")
         }
 
         val persistentRoles = roleRepository.findByNameIn(newRoles)
@@ -229,13 +294,13 @@ class UserService(
     ) {
         when {
             user.isMunicipalityAdmin() && !admin.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only municipality admins can deactivate municipality admins")
+                throw ForbiddenException("Only municipality admins can deactivate municipality admins")
 
             user.isWardAdmin() && !admin.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only municipality admins can deactivate ward admins")
+                throw ForbiddenException("Only municipality admins can deactivate ward admins")
 
             admin.isWardAdmin() && admin.wardNumber != user.wardNumber ->
-                throw UnauthorizedException("Ward admin can only deactivate users in their ward")
+                throw ForbiddenException("Ward admin can only deactivate users in their ward")
         }
     }
 
@@ -247,11 +312,34 @@ class UserService(
             user.isDeleted ->
                 throw UserDeletionException("User is already deleted")
             user.isMunicipalityLevel && !admin.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only municipality admins can delete municipality-level users")
+                throw ForbiddenException(
+                    message = "Only municipality admins can delete municipality-level users",
+                    details =
+                        mapOf(
+                            "userId" to (user.id ?: ""),
+                            "requiredRole" to "MUNICIPALITY_ADMIN",
+                            "userType" to "MUNICIPALITY_LEVEL",
+                        ),
+                )
             user.isMunicipalityAdmin() && !admin.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only municipality admins can delete municipality admins")
-            admin.isWardAdmin() && (user.isMunicipalityLevel || admin.wardNumber != user.wardNumber) ->
-                throw UnauthorizedException("Ward admin can only delete users in their ward")
+                throw ForbiddenException(
+                    message = "Only municipality admins can delete municipality admins",
+                    details =
+                        mapOf(
+                            "userId" to user.id!!,
+                            "requiredRole" to "MUNICIPALITY_ADMIN",
+                        ),
+                )
+            admin.isWardAdmin() && admin.wardNumber != user.wardNumber ->
+                throw ForbiddenException(
+                    message = "Ward admin can only delete users in their ward",
+                    details =
+                        mapOf(
+                            "userId" to user.id!!,
+                            "requestedWard" to (user.wardNumber?.toString() ?: "none"),
+                            "adminWard" to admin.wardNumber.toString(), // Convert Int to String
+                        ),
+                )
         }
     }
 
@@ -261,9 +349,9 @@ class UserService(
     ) {
         when {
             user.isMunicipalityAdmin() && !admin.isMunicipalityAdmin() ->
-                throw UnauthorizedException("Only municipality admins can update municipality admin users")
+                throw ForbiddenException("Only municipality admins can update municipality admin users")
             admin.isWardAdmin() && admin.wardNumber != user.wardNumber ->
-                throw UnauthorizedException("Ward admin can only update users in their ward")
+                throw ForbiddenException("Ward admin can only update users in their ward")
         }
     }
 
@@ -273,17 +361,17 @@ class UserService(
     ) {
         when {
             !currentUser.isMunicipalityAdmin() && criteria.isMunicipalityLevel == true ->
-                throw UnauthorizedException("Only municipality admins can search municipality-level users")
+                throw ForbiddenException("Only municipality admins can search municipality-level users")
 
             currentUser.isWardAdmin() &&
                 criteria.wardNumberFrom != null &&
                 criteria.wardNumberFrom != currentUser.wardNumber ->
-                throw UnauthorizedException("Ward admin can only search users in their ward")
+                throw ForbiddenException("Ward admin can only search users in their ward")
 
             currentUser.isWardAdmin() &&
                 criteria.wardNumberTo != null &&
                 criteria.wardNumberTo != currentUser.wardNumber ->
-                throw UnauthorizedException("Ward admin can only search users in their ward")
+                throw ForbiddenException("Ward admin can only search users in their ward")
         }
     }
 
@@ -317,18 +405,6 @@ class UserService(
         return user
     }
 
-    private fun canApproveUser(
-        approver: User,
-        userToApprove: User,
-    ): Boolean =
-        when {
-            approver.isMunicipalityAdmin() -> true
-            approver.isWardAdmin() ->
-                !userToApprove.isMunicipalityLevel &&
-                    approver.wardNumber == userToApprove.wardNumber
-            else -> false
-        }
-
     private fun findUserById(userId: String): User =
         userRepository
             .findById(userId)
@@ -345,6 +421,7 @@ class UserService(
             roles = roles.map { it.roleType }.toSet(),
             status = if (isApproved) UserStatus.ACTIVE else UserStatus.PENDING,
             profilePictureUrl = profilePicture?.let { "/uploads/profiles/$it" },
+            isMunicipalityLevel = isMunicipalityLevel, // Add this field
             createdAt = createdAt ?: LocalDateTime.now(),
             updatedAt = updatedAt ?: LocalDateTime.now(),
         )

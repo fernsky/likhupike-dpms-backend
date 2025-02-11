@@ -44,12 +44,14 @@ class ResourceNotFoundException(
 /**
  * Exception thrown when the user lacks necessary permissions
  */
-class UnauthorizedException(
+class ForbiddenException(
     message: String,
+    details: Map<String, Any>? = null,
 ) : BaseException(
         message = message,
-        errorCode = "UNAUTHORIZED",
+        errorCode = "FORBIDDEN",
         statusCode = 403,
+        details = details,
     )
 
 /**
