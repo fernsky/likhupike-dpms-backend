@@ -2,20 +2,19 @@ package np.gov.likhupikemun.dpms.shared.storage
 
 import io.minio.*
 import np.gov.likhupikemun.dpms.config.SharedTestConfiguration
+import np.gov.likhupikemun.dpms.config.TestConfig
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.ActiveProfiles
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.NONE,
-)
-@Import(SharedTestConfiguration::class)
+@WebMvcTest
+@Import(TestConfig::class, SharedTestConfiguration::class)
 @ActiveProfiles("test")
 class StorageServiceTest {
     @Autowired

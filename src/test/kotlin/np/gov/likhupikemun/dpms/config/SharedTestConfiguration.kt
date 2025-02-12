@@ -10,17 +10,23 @@ import np.gov.likhupikemun.dpms.shared.storage.StorageService
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
+import org.testcontainers.containers.wait.strategy.Wait
+import java.time.Duration
 
 @TestConfiguration
 class SharedTestConfiguration {
     private val minioContainer =
         MinioContainer(
             credentials = MinioContainer.CredentialsProvider(ACCESS_KEY, SECRET_KEY),
-        )
+        ).apply {
+            withStartupTimeout(Duration.ofSeconds(30))
+            waitingFor(Wait.forHttp("/minio/health/ready").forPort(9000))
+        }
 
     @PostConstruct
     fun startContainer() {
         minioContainer.start()
+        Thread.sleep(2000) // Increased delay to ensure container is ready
     }
 
     @PreDestroy
@@ -30,12 +36,36 @@ class SharedTestConfiguration {
 
     @Bean
     @Primary
-    fun minioClient(): MinioClient =
-        MinioClient
-            .builder()
-            .endpoint("http://${minioContainer.hostAddress}")
-            .credentials(ACCESS_KEY, SECRET_KEY)
-            .build()
+    fun minioClient(): MinioClient {
+        val client =
+            MinioClient
+                .builder()
+                .endpoint("http://${minioContainer.hostAddress}")
+                .credentials(ACCESS_KEY, SECRET_KEY)
+                .build()
+
+        // Verify connection and create bucket if needed
+        try {
+            if (!client.bucketExists(
+                    io.minio.BucketExistsArgs
+                        .builder()
+                        .bucket(TEST_BUCKET)
+                        .build(),
+                )
+            ) {
+                client.makeBucket(
+                    io.minio.MakeBucketArgs
+                        .builder()
+                        .bucket(TEST_BUCKET)
+                        .build(),
+                )
+            }
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to initialize MinIO client and bucket", e)
+        }
+
+        return client
+    }
 
     @Bean
     @Primary

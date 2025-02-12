@@ -50,6 +50,7 @@ class TestConfig {
             .withDatabaseName("dpms_test")
             .withUsername("test")
             .withPassword("test")
+            .withInitScript("init-postgis.sql")
             .apply { start() }
     }
 
@@ -80,11 +81,11 @@ class TestConfig {
         em.jpaVendorAdapter = vendorAdapter
 
         val properties = Properties()
-        properties["hibernate.hbm2ddl.auto"] = "create-drop"
+        properties["hibernate.hbm2ddl.auto"] = "update" // Changed from create-drop
         properties["hibernate.dialect"] = "org.hibernate.dialect.PostgreSQLDialect"
         properties["hibernate.show_sql"] = "true"
         properties["hibernate.format_sql"] = "true"
-        properties["javax.persistence.schema-generation.database.action"] = "create"
+        properties["javax.persistence.schema-generation.database.action"] = "update" // Changed from create
         properties["javax.persistence.schema-generation.create-source"] = "metadata"
         em.setJpaProperties(properties)
 

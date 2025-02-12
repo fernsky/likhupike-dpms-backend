@@ -12,7 +12,7 @@ spring:
       hibernate:
         format_sql: true
   liquibase:
-    enabled: true
+    enabled: false
     change-log: classpath:db/changelog/db.changelog-master.xml
     contexts: test
     default-schema: public
