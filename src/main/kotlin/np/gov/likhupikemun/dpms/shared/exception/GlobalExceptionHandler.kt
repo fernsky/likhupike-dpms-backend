@@ -7,6 +7,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -37,21 +38,38 @@ class GlobalExceptionHandler : BaseExceptionHandler() {
         )
 
     @ExceptionHandler(AccessDeniedException::class)
-    fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ErrorResponse> =
-        ResponseEntity
-            .status(HttpStatus.FORBIDDEN)
-            .body(
-                ErrorResponse(
-                    message = "Access denied: insufficient permissions",
-                    code = "AUTHORIZATION_FAILED",
-                    statusCode = HttpStatus.FORBIDDEN.value(),
-                    details =
-                        mapOf(
-                            "error" to (ex.message ?: "Insufficient permissions"),
-                            "required_roles" to "Required roles information not available",
-                        ),
-                ),
-            )
+    fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ErrorResponse> {
+        val authentication = SecurityContextHolder.getContext().authentication
+        val isAuthenticated = authentication != null && authentication.isAuthenticated
+
+        return if (!isAuthenticated) {
+            ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(
+                    ErrorResponse(
+                        message = "Authentication required",
+                        code = "AUTHENTICATION_REQUIRED",
+                        statusCode = HttpStatus.UNAUTHORIZED.value(),
+                        details = mapOf("error" to "User not authenticated"),
+                    ),
+                )
+        } else {
+            ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(
+                    ErrorResponse(
+                        message = "Access denied: insufficient permissions",
+                        code = "AUTHORIZATION_FAILED",
+                        statusCode = HttpStatus.FORBIDDEN.value(),
+                        details =
+                            mapOf(
+                                "error" to (ex.message ?: "Insufficient permissions"),
+                                "required_roles" to "Required roles information not available",
+                            ),
+                    ),
+                )
+        }
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationExceptions(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {

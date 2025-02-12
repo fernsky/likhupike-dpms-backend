@@ -24,6 +24,7 @@ import java.util.*
 @RequestMapping("/api/v1/families")
 @Tag(name = "Family Management", description = "APIs for managing family information")
 @Validated
+@PreAuthorize("isAuthenticated()")
 class FamilyController(
     private val familyService: FamilyService,
 ) {

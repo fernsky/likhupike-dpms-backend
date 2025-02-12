@@ -22,6 +22,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val authenticationProvider: AuthenticationProvider,
+    private val authenticationEntryPoint: CustomAuthenticationEntryPoint,
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
@@ -31,7 +32,9 @@ class SecurityConfig(
         http
             .csrf { it.disable() }
             .cors { it.configurationSource(corsConfigurationSource()) }
-            .authorizeHttpRequests {
+            .exceptionHandling {
+                it.authenticationEntryPoint(authenticationEntryPoint)
+            }.authorizeHttpRequests {
                 it
                     .requestMatchers(
                         "/api/v1/auth/**",

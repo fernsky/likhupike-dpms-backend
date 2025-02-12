@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/users")
 @Tag(name = "User Management", description = "APIs for managing municipality and ward users")
 @Validated
+@PreAuthorize("isAuthenticated()")
 class UserController(
     private val userService: UserService,
 ) {
