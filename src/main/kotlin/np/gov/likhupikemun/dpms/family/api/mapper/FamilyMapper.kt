@@ -95,7 +95,7 @@ object FamilyMapper {
             photos = family.photos.map { toPhotoResponse(it) },
         )
 
-    private fun toPhotoResponse(photo: FamilyPhoto): FamilyPhotoResponse =
+    fun toPhotoResponse(photo: FamilyPhoto): FamilyPhotoResponse =
         FamilyPhotoResponse(
             id = photo.id!!,
             familyId = photo.family.id!!,

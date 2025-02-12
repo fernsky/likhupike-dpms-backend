@@ -8,6 +8,7 @@ import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.service.UserService
 import np.gov.likhupikemun.dpms.auth.test.UserTestDataFactory
+import np.gov.likhupikemun.dpms.config.SharedTestConfiguration
 import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import np.gov.likhupikemun.dpms.shared.service.SecurityService
 import org.junit.jupiter.api.Test
@@ -28,7 +29,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.time.LocalDate
 
 @WebMvcTest(UserController::class)
-@Import(TestSecurityConfig::class)
+@Import(TestSecurityConfig::class, SharedTestConfiguration::class)
 @ActiveProfiles("test")
 class UserControllerTest {
     @Autowired

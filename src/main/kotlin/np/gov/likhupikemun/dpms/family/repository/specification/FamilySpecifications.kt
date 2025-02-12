@@ -1,5 +1,6 @@
 package np.gov.likhupikemun.dpms.family.repository.specification
 
+import jakarta.persistence.criteria.Predicate
 import np.gov.likhupikemun.dpms.family.api.dto.request.FamilySearchCriteria
 import np.gov.likhupikemun.dpms.family.domain.Family
 import org.springframework.data.jpa.domain.Specification
@@ -7,7 +8,7 @@ import org.springframework.data.jpa.domain.Specification
 object FamilySpecifications {
     fun withSearchCriteria(criteria: FamilySearchCriteria): Specification<Family> =
         Specification { root, _, criteriaBuilder ->
-            val predicates = mutableListOf<javax.persistence.criteria.Predicate>()
+            val predicates = mutableListOf<Predicate>()
 
             criteria.headOfFamily?.let { name ->
                 predicates.add(

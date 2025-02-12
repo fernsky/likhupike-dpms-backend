@@ -24,6 +24,7 @@ class TestRedisConfig {
     fun startContainer() {
         redisContainer =
             GenericContainer(DockerImageName.parse("redis:7.2-alpine"))
+                .withReuse(true)
                 .withExposedPorts(6379)
                 .withReuse(true)
                 .waitingFor(Wait.forListeningPort())

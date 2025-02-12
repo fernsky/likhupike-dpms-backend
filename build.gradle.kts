@@ -174,6 +174,12 @@ dependencies {
     // Additional dependencies
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+
+    // Apache Commons FileUpload
+    implementation("commons-fileupload:commons-fileupload:1.5")
+
+    // Spring Boot configuration processor
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 }
 
 // Spring Modulith BOM

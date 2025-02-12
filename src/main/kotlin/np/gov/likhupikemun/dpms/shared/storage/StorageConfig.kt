@@ -2,10 +2,12 @@ package np.gov.likhupikemun.dpms.shared.storage
 
 import io.minio.MinioClient
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
+@EnableConfigurationProperties(StorageProperties::class)
 class StorageConfig(
     private val storageProperties: StorageProperties,
 ) {
@@ -21,11 +23,4 @@ class StorageConfig(
 @ConfigurationProperties(prefix = "dpms")
 data class StorageProperties(
     val minio: MinioProperties,
-)
-
-data class MinioProperties(
-    val endpoint: String,
-    val accessKey: String,
-    val secretKey: String,
-    val bucket: String,
 )

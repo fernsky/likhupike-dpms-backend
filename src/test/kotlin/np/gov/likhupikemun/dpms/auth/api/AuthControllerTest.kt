@@ -14,6 +14,7 @@ import np.gov.likhupikemun.dpms.auth.exception.InvalidPasswordResetTokenExceptio
 import np.gov.likhupikemun.dpms.auth.exception.TokenExpiredException
 import np.gov.likhupikemun.dpms.auth.exception.UserNotFoundException
 import np.gov.likhupikemun.dpms.auth.service.AuthService
+import np.gov.likhupikemun.dpms.config.SharedTestConfiguration
 import np.gov.likhupikemun.dpms.config.TestConfig
 import np.gov.likhupikemun.dpms.shared.security.jwt.JwtService
 import org.junit.jupiter.api.Test
@@ -35,7 +36,7 @@ import java.time.LocalDate
 import java.util.*
 
 @WebMvcTest(AuthController::class)
-@Import(TestConfig::class)
+@Import(TestConfig::class, SharedTestConfiguration::class)
 @ActiveProfiles("test")
 @WithMockUser
 class AuthControllerTest {

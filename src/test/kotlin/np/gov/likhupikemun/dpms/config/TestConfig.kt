@@ -46,6 +46,7 @@ class TestConfig {
                 .parse("postgis/postgis:16-3.4")
                 .asCompatibleSubstituteFor("postgres")
         return PostgreSQLContainer(postgisImage)
+            .withReuse(true)
             .withDatabaseName("dpms_test")
             .withUsername("test")
             .withPassword("test")

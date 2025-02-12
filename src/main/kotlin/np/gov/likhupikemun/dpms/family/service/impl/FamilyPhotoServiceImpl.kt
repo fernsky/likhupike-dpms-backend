@@ -67,7 +67,7 @@ class FamilyPhotoServiceImpl(
         photoRepository.findByFamilyId(familyId).map { FamilyMapper.toPhotoResponse(it) }
 
     private fun validateImageFile(file: MultipartFile) {
-        if (!file.contentType?.startsWith("image/") == true) {
+        if (file.contentType?.startsWith("image/") != true) {
             throw InvalidFileTypeException()
         }
     }
