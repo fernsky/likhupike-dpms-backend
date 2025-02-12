@@ -20,27 +20,43 @@ class SharedTestConfiguration {
             credentials = MinioContainer.CredentialsProvider(ACCESS_KEY, SECRET_KEY),
         ).apply {
             withStartupTimeout(Duration.ofSeconds(30))
-            waitingFor(Wait.forHttp("/minio/health/ready").forPort(9000))
+            // Use the mapped port in the health check
+            waitingFor(Wait.forHttp("/minio/health/ready"))
         }
 
     @PostConstruct
     fun startContainer() {
         minioContainer.start()
         Thread.sleep(2000) // Increased delay to ensure container is ready
+
+        // Update system properties to override application-test.yml
+        System.setProperty("dpms.minio.endpoint", "http://${minioContainer.hostAddress}")
+        System.setProperty("dpms.minio.accessKey", ACCESS_KEY)
+        System.setProperty("dpms.minio.secretKey", SECRET_KEY)
+        System.setProperty("dpms.minio.bucket", TEST_BUCKET)
     }
 
     @PreDestroy
     fun stopContainer() {
         minioContainer.stop()
+
+        // Clean up system properties
+        System.clearProperty("dpms.minio.endpoint")
+        System.clearProperty("dpms.minio.accessKey")
+        System.clearProperty("dpms.minio.secretKey")
+        System.clearProperty("dpms.minio.bucket")
     }
 
     @Bean
     @Primary
     fun minioClient(): MinioClient {
+        val endpoint = "http://${minioContainer.hostAddress}"
+        println("Connecting to MinIO at: $endpoint") // Add logging for debugging
+
         val client =
             MinioClient
                 .builder()
-                .endpoint("http://${minioContainer.hostAddress}")
+                .endpoint(endpoint)
                 .credentials(ACCESS_KEY, SECRET_KEY)
                 .build()
 
@@ -63,7 +79,9 @@ class SharedTestConfiguration {
             }
             // Verify connection works
             client.listBuckets()
+            println("Successfully connected to MinIO and verified bucket") // Add logging for debugging
         } catch (e: Exception) {
+            println("Failed to initialize MinIO client: ${e.message}") // Add logging for debugging
             throw IllegalStateException("Failed to initialize MinIO client and bucket", e)
         }
 

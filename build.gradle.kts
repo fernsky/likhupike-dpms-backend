@@ -245,17 +245,6 @@ tasks.withType<Test> {
     
     systemProperty("spring.profiles.active", "test")
     
-    testLogging {
-        events("passed", "skipped", "failed")
-        showExceptions = true
-        showStackTraces = true
-        showCauses = true
-        
-        // Output test results to console
-        outputs.upToDateWhen { false }
-        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-    }
-    
     // Parallel test execution
     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
 }
