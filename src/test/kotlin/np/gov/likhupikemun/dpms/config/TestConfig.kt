@@ -1,5 +1,7 @@
 package np.gov.likhupikemun.dpms.config
 
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
 import np.gov.likhupikemun.dpms.shared.security.jwt.JwtService
 import org.mockito.kotlin.mock
 import org.springframework.boot.test.context.TestConfiguration
@@ -37,6 +39,25 @@ class TestConfig {
             authorizeHttpRequests { authorize(anyRequest, permitAll) }
         }
         return http.build()
+    }
+
+    @PostConstruct
+    fun initializeContainer() {
+        val container = postgresContainer()
+        // Set system properties to override application properties
+        System.setProperty("spring.datasource.url", container.jdbcUrl)
+        System.setProperty("spring.datasource.username", container.username)
+        System.setProperty("spring.datasource.password", container.password)
+        System.setProperty("spring.datasource.driver-class-name", container.driverClassName)
+    }
+
+    @PreDestroy
+    fun cleanupContainer() {
+        // Clean up system properties
+        System.clearProperty("spring.datasource.url")
+        System.clearProperty("spring.datasource.username")
+        System.clearProperty("spring.datasource.password")
+        System.clearProperty("spring.datasource.driver-class-name")
     }
 
     @Bean

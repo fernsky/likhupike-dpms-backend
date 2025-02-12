@@ -9,23 +9,25 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class RedisConfig {
-    @Value("\${spring.data.redis.host}")
+    @Value("\${spring.data.redis.host:localhost}")
     private lateinit var host: String
 
-    @Value("\${spring.data.redis.port}")
+    @Value("\${spring.data.redis.port:6379}")
     private lateinit var port: String
 
-    @Value("\${spring.data.redis.password}")
-    private lateinit var password: String
+    @Value("\${spring.data.redis.password:#{null}}")
+    private var password: String? = null
 
     @Bean
     fun redissonClient(): RedissonClient {
         val config = Config()
+        val address = "redis://$host:$port"
         config
             .useSingleServer()
-            .setAddress("redis://$host:$port")
-            .setPassword(password)
-            .setConnectTimeout(10000)
+            .setAddress(address)
+            .apply {
+                password?.let { setPassword(it) }
+            }.setConnectTimeout(10000)
             .setTimeout(10000)
         return Redisson.create(config)
     }

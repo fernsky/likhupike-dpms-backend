@@ -1,11 +1,13 @@
 package np.gov.likhupikemun.dpms.config
 
 import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
 import org.redisson.Redisson
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.*
+import org.springframework.context.annotation.Profile
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
@@ -17,6 +19,7 @@ import org.testcontainers.utility.DockerImageName
 
 @TestConfiguration
 @Primary
+@Profile("test")
 class TestRedisConfig {
     private lateinit var redisContainer: GenericContainer<*>
 
@@ -26,9 +29,24 @@ class TestRedisConfig {
             GenericContainer(DockerImageName.parse("redis:7.2-alpine"))
                 .withReuse(true)
                 .withExposedPorts(6379)
-                .withReuse(true)
                 .waitingFor(Wait.forListeningPort())
         redisContainer.start()
+
+        // Set system properties to override application properties
+        System.setProperty("spring.data.redis.host", redisContainer.host)
+        System.setProperty("spring.data.redis.port", redisContainer.getMappedPort(6379).toString())
+        System.setProperty("spring.data.redis.database", "0")
+    }
+
+    @PreDestroy
+    fun cleanupContainer() {
+        if (this::redisContainer.isInitialized) {
+            redisContainer.stop()
+            // Clean up system properties
+            System.clearProperty("spring.redis.host")
+            System.clearProperty("spring.redis.port")
+            System.clearProperty("spring.redis.database")
+        }
     }
 
     @Bean
@@ -36,7 +54,6 @@ class TestRedisConfig {
     fun redissonClient(): RedissonClient {
         val config = Config()
         val redisAddress = "redis://${redisContainer.host}:${redisContainer.getMappedPort(6379)}"
-        println("Test Redis Container Address: $redisAddress")
         config
             .useSingleServer()
             .setAddress(redisAddress)
