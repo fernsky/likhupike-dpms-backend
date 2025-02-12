@@ -44,8 +44,8 @@ class SharedTestConfiguration {
                 .credentials(ACCESS_KEY, SECRET_KEY)
                 .build()
 
-        // Verify connection and create bucket if needed
         try {
+            // Test connection and create bucket
             if (!client.bucketExists(
                     io.minio.BucketExistsArgs
                         .builder()
@@ -57,9 +57,12 @@ class SharedTestConfiguration {
                     io.minio.MakeBucketArgs
                         .builder()
                         .bucket(TEST_BUCKET)
+                        .region("us-east-1")
                         .build(),
                 )
             }
+            // Verify connection works
+            client.listBuckets()
         } catch (e: Exception) {
             throw IllegalStateException("Failed to initialize MinIO client and bucket", e)
         }

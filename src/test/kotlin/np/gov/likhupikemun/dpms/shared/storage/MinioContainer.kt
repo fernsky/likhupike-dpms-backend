@@ -20,7 +20,14 @@ class MinioContainer(
         credentials?.let {
             withEnv(MINIO_ACCESS_KEY, it.accessKey)
             withEnv(MINIO_SECRET_KEY, it.secretKey)
+            // Add API version environment variable
+            withEnv("MINIO_API_SELECT_SUPPORTED", "true")
         }
+        // Add additional MinIO configurations
+        withEnv("MINIO_BROWSER", "on")
+        withEnv("MINIO_DOMAIN", "localhost")
+        withEnv("MINIO_REGION", "us-east-1")
+
         withCommand("server", DEFAULT_STORAGE_DIRECTORY)
         setWaitStrategy(
             HttpWaitStrategy()
@@ -36,7 +43,7 @@ class MinioContainer(
     companion object {
         private const val DEFAULT_PORT = 9000
         private const val DEFAULT_IMAGE = "minio/minio"
-        private const val DEFAULT_TAG = "edge"
+        private const val DEFAULT_TAG = "RELEASE.2024-01-18T22-51-28Z" // Use specific version instead of edge
         private const val MINIO_ACCESS_KEY = "MINIO_ACCESS_KEY"
         private const val MINIO_SECRET_KEY = "MINIO_SECRET_KEY"
         private const val DEFAULT_STORAGE_DIRECTORY = "/data"
