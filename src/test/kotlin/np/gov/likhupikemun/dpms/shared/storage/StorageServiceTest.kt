@@ -1,10 +1,12 @@
 package np.gov.likhupikemun.dpms.shared.storage
 
-import np.gov.likhupikemun.dpms.config.SharedTestConfiguration
+import io.minio.BucketExistsArgs
+import io.minio.MakeBucketArgs
+import io.minio.MinioClient
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.context.annotation.Import
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.ActiveProfiles
 import kotlin.test.assertEquals
@@ -13,11 +15,35 @@ import kotlin.test.assertTrue
 @WebMvcTest(
     properties = ["spring.main.allow-bean-definition-overriding=true"],
 )
-@Import(SharedTestConfiguration::class)
 @ActiveProfiles("test")
 class StorageServiceTest {
     @Autowired
     private lateinit var storageService: StorageService
+
+    @Autowired
+    private lateinit var minioClient: MinioClient
+
+    @Autowired
+    private lateinit var storageProperties: StorageProperties
+
+    @BeforeEach
+    fun setUp() {
+        // Ensure bucket exists before each test
+        if (!minioClient.bucketExists(
+                BucketExistsArgs
+                    .builder()
+                    .bucket(storageProperties.minio.bucket)
+                    .build(),
+            )
+        ) {
+            minioClient.makeBucket(
+                MakeBucketArgs
+                    .builder()
+                    .bucket(storageProperties.minio.bucket)
+                    .build(),
+            )
+        }
+    }
 
     @Test
     fun `should upload file successfully`() {
