@@ -4,6 +4,9 @@ variables:
   DOCKER_REGISTRY: docker.io
   DOCKER_IMAGE: isresearch/dpms-api
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GIT_STRATEGY: clone
+  GIT_DEPTH: 1
+  GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY"
   # Add these production environment variables
   SPRING_PROFILES_ACTIVE: prod
   POSTGRES_USER: dpms_prod
@@ -34,6 +37,16 @@ cache:
   paths:
     - .gradle/wrapper
     - .gradle/caches
+
+before_script:
+  - |
+    # Set up SSH
+    eval $(ssh-agent -s)
+    echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    mkdir -p ~/.ssh
+    chmod 700 ~/.ssh
+    echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    chmod 644 ~/.ssh/known_hosts
 
 test:
   stage: test
