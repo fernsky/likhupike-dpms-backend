@@ -180,6 +180,9 @@ dependencies {
 
     // Spring Boot configuration processor
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+    // H2 database
+    testRuntimeOnly("com.h2database:h2")
 }
 
 // Spring Modulith BOM
