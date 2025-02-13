@@ -1,6 +1,7 @@
 package np.gov.likhupikemun.dpms.shared.storage
 
 import io.minio.*
+import okhttp3.Headers
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,6 +12,8 @@ import org.springframework.context.annotation.Import
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.ContextConfiguration
 import java.io.ByteArrayInputStream
+import java.io.FilterInputStream
+import java.io.InputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -52,11 +55,19 @@ class StorageServiceTest {
         // Given
         val content = "test content"
         val path = "test-path/test.txt"
+        val testStream = TestInputStream(ByteArrayInputStream(content.toByteArray()))
+
+        val mockResponse =
+            GetObjectResponse(
+                Headers.Builder().build(),
+                "test-bucket",
+                "test-region",
+                path,
+                testStream,
+            )
 
         // When
-        whenever(minioClient.getObject(any())).thenAnswer {
-            ByteArrayInputStream(content.toByteArray())
-        }
+        whenever(minioClient.getObject(any())).thenReturn(mockResponse)
         val result = storageService.getFile(path)
 
         // Then
@@ -75,5 +86,31 @@ class StorageServiceTest {
 
         // Then
         verify(minioClient).removeObject(any<RemoveObjectArgs>())
+    }
+
+    private class TestInputStream(
+        inputStream: InputStream,
+    ) : FilterInputStream(inputStream) {
+        override fun available(): Int = `in`.available()
+
+        override fun read(): Int = `in`.read()
+
+        override fun read(b: ByteArray): Int = `in`.read(b)
+
+        override fun read(
+            b: ByteArray,
+            off: Int,
+            len: Int,
+        ): Int = `in`.read(b, off, len)
+
+        override fun skip(n: Long): Long = `in`.skip(n)
+
+        override fun markSupported(): Boolean = `in`.markSupported()
+
+        override fun mark(readlimit: Int) = `in`.mark(readlimit)
+
+        override fun reset() = `in`.reset()
+
+        override fun close() = `in`.close()
     }
 }
