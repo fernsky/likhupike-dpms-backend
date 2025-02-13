@@ -37,14 +37,21 @@ cache:
 
 test:
   stage: test
+  tags:
+    - docker
+    - gradle
   script:
     - gradle test
   artifacts:
     reports:
       junit: build/test-results/test/**/TEST-*.xml
+  
 
 build:
   stage: build
+  tags:
+    - docker
+    - gradle
   script:
     - gradle bootJar
   artifacts:
@@ -54,6 +61,9 @@ build:
 
 publish:
   stage: publish
+  tags:
+    - docker
+    - shell
   services:
     - docker:dind
   variables:
@@ -83,6 +93,8 @@ publish:
 
 deploy:
   stage: deploy
+  tags:
+    - shell
   environment:
     name: production
   variables:
