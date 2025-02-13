@@ -1,9 +1,13 @@
 pipeline {
     agent any
     
+    environment {
+        JAVA_HOME = '/var/jenkins_home/tools/hudson.model.JDK/JDK_21/jdk-21.0.5'
+        PATH = "${JAVA_HOME}/bin:${PATH}"
+    }
+    
     tools {
         gradle 'Gradle 8.13'
-        jdk 'JDK 21'
     }
     
     stages {
