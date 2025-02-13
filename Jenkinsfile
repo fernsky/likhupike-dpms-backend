@@ -26,14 +26,6 @@ pipeline {
                     gradle test
                 '''
             }
-            post {
-                success {
-                    junit(
-                        allowEmptyResults: true,
-                        testResults: '**/build/test-results/test/*.xml'
-                    )
-                }
-            }
         }
         
         stage('Docker Test') {
