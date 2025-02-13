@@ -19,15 +19,20 @@ pipeline {
             }
         }
         
-        stage('Build') {
+        stage('Build and Test') {
             steps {
-                sh 'gradle clean build -x test'
+                sh '''
+                    gradle clean build
+                    gradle test
+                '''
             }
-        }
-        
-        stage('Test') {
-            steps {
-                sh 'gradle test'
+            post {
+                success {
+                    junit(
+                        allowEmptyResults: true,
+                        testResults: '**/build/test-results/test/*.xml'
+                    )
+                }
             }
         }
         
@@ -65,7 +70,6 @@ pipeline {
     
     post {
         always {
-            junit '**/build/test-results/test/*.xml'
             cleanWs()
         }
     }
