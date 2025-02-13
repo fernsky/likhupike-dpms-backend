@@ -31,6 +31,17 @@ pipeline {
             }
         }
         
+        stage('Docker Test') {
+            steps {
+                sh """
+                    docker --version
+                    docker info
+                    echo ${DOCKER_CREDENTIALS_PSW} | docker login -u ${DOCKER_CREDENTIALS_USR} --password-stdin
+                    docker logout
+                """
+            }
+        }
+        
         stage('Docker Build') {
             steps {
                 sh """
