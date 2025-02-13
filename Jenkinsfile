@@ -57,15 +57,7 @@ pipeline {
                     echo ${DOCKER_CREDENTIALS_PSW} | docker login -u ${DOCKER_CREDENTIALS_USR} --password-stdin
                     docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
                     docker push ${DOCKER_IMAGE}:latest
-                """
-            }
-        }
-        
-        stage('Deploy') {
-            steps {
-                sh """
-                    docker-compose -f docker-compose.prod.yaml pull
-                    docker-compose -f docker-compose.prod.yaml up -d
+                    docker logout
                 """
             }
         }
