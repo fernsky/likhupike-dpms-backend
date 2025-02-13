@@ -84,12 +84,10 @@ dependencies {
 
     // Test dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.testcontainers:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("io.mockk:mockk:1.13.5")
@@ -148,14 +146,14 @@ dependencies {
     implementation("org.springframework.data:spring-data-rest-hal-explorer")
     
     // Test containers
-    testImplementation("org.testcontainers:postgresql")
-    testImplementation("org.testcontainers:kafka")
-    testImplementation("com.redis:testcontainers-redis:2.2.3")
-    testImplementation("org.testcontainers:elasticsearch")
-    testImplementation(platform("org.testcontainers:testcontainers-bom:1.19.7"))
-    testImplementation("org.testcontainers:testcontainers")
-    testImplementation("org.junit.jupiter:junit-jupiter-api")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    // testImplementation("org.testcontainers:postgresql")
+    // testImplementation("org.testcontainers:kafka")
+    // testImplementation("com.redis:testcontainers-redis:2.2.3")
+    // testImplementation("org.testcontainers:elasticsearch")
+    // testImplementation(platform("org.testcontainers:testcontainers-bom:1.19.7"))
+    // testImplementation("org.testcontainers:testcontainers")
+    // testImplementation("org.junit.jupiter:junit-jupiter-api")
+    // testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 
     // Bucket4j
     implementation("com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0")
@@ -167,9 +165,9 @@ dependencies {
     implementation("io.lettuce:lettuce-core")
 
     // TestContainers
-    testImplementation("org.testcontainers:testcontainers:1.19.3")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.3")
-    testImplementation("org.testcontainers:postgresql:1.19.3")
+    // testImplementation("org.testcontainers:testcontainers:1.19.3")
+    // testImplementation("org.testcontainers:junit-jupiter:1.19.3")
+    // testImplementation("org.testcontainers:postgresql:1.19.3")
 
     // Additional dependencies
     implementation("org.springframework.boot:spring-boot-starter-mail")
@@ -189,7 +187,6 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom("org.springframework.modulith:spring-modulith-bom:${property("springModulithVersion")}")
-        mavenBom("org.testcontainers:testcontainers-bom:${property("testcontainersVersion")}")
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
     }
 }

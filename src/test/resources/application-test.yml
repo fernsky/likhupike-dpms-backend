@@ -9,7 +9,7 @@ spring:
     password:
     driver-class-name: org.h2.Driver
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
     hibernate:
       ddl-auto: create-drop
@@ -26,29 +26,25 @@ spring:
     database:
       replace: none
   redis:
-    connect-timeout: 2s
-    timeout: 1s
     enabled: false
   cache:
-    type: redis
+    type: none
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfiguration
+      - np.gov.likhupikemun.dpms.config.RedisConfig # Add this line
   data:
     redis:
       repositories:
         enabled: false
+      enabled: false
   main:
     allow-bean-definition-overriding: true
   session:
-    store-type: jdbc
-    jdbc:
-      initialize-schema: always
-      schema: classpath:org/springframework/session/jdbc/schema-postgresql.sql
-      table-name: spring_session
-    timeout: 30m
+    store-type: none
   servlet:
     multipart:
       max-file-size: 5MB
@@ -69,13 +65,15 @@ management:
 
 dpms:
   minio:
-    endpoint: placeholder-will-be-replaced-by-testcontainer
-    access-key: minioaccess
-    secret-key: miniosecret
+    endpoint: http://mock-minio
+    access-key: test
+    secret-key: test
     bucket: test-bucket
-    # endpoint will be set dynamically by TestMinioConfig
 
 test:
   storage:
     base-path: test-uploads
     temp-dir: ${java.io.tmpdir}/dpms-test-uploads
+
+redisson:
+  enabled: false

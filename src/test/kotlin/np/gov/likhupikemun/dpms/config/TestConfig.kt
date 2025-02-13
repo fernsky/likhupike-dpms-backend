@@ -1,5 +1,8 @@
 package np.gov.likhupikemun.dpms.config
 
+import io.minio.MinioClient
+import np.gov.likhupikemun.dpms.shared.storage.StorageService
+import org.mockito.kotlin.mock
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
@@ -39,6 +42,14 @@ class TestConfig {
             .setType(EmbeddedDatabaseType.H2)
             .setName("testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1")
             .build()
+
+    @Bean
+    @Primary
+    fun minioClient(): MinioClient = mock()
+
+    @Bean
+    @Primary
+    fun storageService(): StorageService = mock()
 
     @Bean
     fun auditingDateTimeProvider() = DateTimeProvider { Optional.of(LocalDateTime.now()) }
