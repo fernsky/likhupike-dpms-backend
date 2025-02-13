@@ -1,6 +1,7 @@
 package np.gov.likhupikemun.dpms.config
 
 import io.minio.MinioClient
+import np.gov.likhupikemun.dpms.shared.security.jwt.JwtService
 import np.gov.likhupikemun.dpms.shared.storage.StorageService
 import org.mockito.kotlin.mock
 import org.springframework.boot.test.context.TestConfiguration
@@ -26,6 +27,10 @@ import javax.sql.DataSource
 @TestConfiguration(proxyBeanMethods = false)
 @EnableJpaAuditing(dateTimeProviderRef = "auditingDateTimeProvider")
 class TestConfig {
+    @Bean
+    @Primary
+    fun mockJwtService(): JwtService = mock()
+
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http {

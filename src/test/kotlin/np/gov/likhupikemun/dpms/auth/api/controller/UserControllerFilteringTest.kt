@@ -4,7 +4,6 @@ import np.gov.likhupikemun.dpms.auth.api.dto.UserStatus
 import np.gov.likhupikemun.dpms.auth.api.dto.response.UserResponse
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import np.gov.likhupikemun.dpms.auth.service.UserService
-import np.gov.likhupikemun.dpms.config.SharedTestConfiguration
 import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -22,7 +21,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.time.LocalDateTime
 
 @WebMvcTest(UserController::class)
-@Import(TestSecurityConfig::class, SharedTestConfiguration::class)
+@Import(TestSecurityConfig::class)
 @ActiveProfiles("test")
 class UserControllerFilteringTest {
     @Autowired

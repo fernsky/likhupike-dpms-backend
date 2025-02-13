@@ -1,49 +1,29 @@
 package np.gov.likhupikemun.dpms.shared.storage
 
-import io.minio.BucketExistsArgs
-import io.minio.MakeBucketArgs
-import io.minio.MinioClient
-import org.junit.jupiter.api.BeforeEach
+import io.minio.*
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.mock.web.MockMultipartFile
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
+import java.io.ByteArrayInputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@WebMvcTest(
-    properties = ["spring.main.allow-bean-definition-overriding=true"],
-)
-@ActiveProfiles("test")
+@WebMvcTest(StorageService::class)
+@Import(StorageTestConfig::class)
+@EnableAutoConfiguration(exclude = [RedisAutoConfiguration::class])
+@ContextConfiguration(classes = [StorageTestConfig::class])
 class StorageServiceTest {
     @Autowired
     private lateinit var storageService: StorageService
 
     @Autowired
     private lateinit var minioClient: MinioClient
-
-    @Autowired
-    private lateinit var storageProperties: StorageProperties
-
-    @BeforeEach
-    fun setUp() {
-        // Ensure bucket exists before each test
-        if (!minioClient.bucketExists(
-                BucketExistsArgs
-                    .builder()
-                    .bucket(storageProperties.minio.bucket)
-                    .build(),
-            )
-        ) {
-            minioClient.makeBucket(
-                MakeBucketArgs
-                    .builder()
-                    .bucket(storageProperties.minio.bucket)
-                    .build(),
-            )
-        }
-    }
 
     @Test
     fun `should upload file successfully`() {
@@ -58,53 +38,42 @@ class StorageServiceTest {
         val path = "test-path"
 
         // When
+        whenever(minioClient.putObject(any())).thenReturn(null)
         val result = storageService.uploadFile(file, path)
 
         // Then
         assertTrue(result.startsWith("$path/"))
         assertTrue(result.endsWith(file.originalFilename!!))
+        verify(minioClient).putObject(any<PutObjectArgs>())
     }
 
     @Test
     fun `should get file successfully`() {
         // Given
         val content = "test content"
-        val file =
-            MockMultipartFile(
-                "test-file",
-                "test.txt",
-                "text/plain",
-                content.toByteArray(),
-            )
-        val path = "test-path"
-        val objectName = storageService.uploadFile(file, path)
+        val path = "test-path/test.txt"
 
         // When
-        val result = storageService.getFile(objectName)
+        whenever(minioClient.getObject(any())).thenAnswer {
+            ByteArrayInputStream(content.toByteArray())
+        }
+        val result = storageService.getFile(path)
 
         // Then
         assertEquals(content, result.bufferedReader().use { it.readText() })
+        verify(minioClient).getObject(any<GetObjectArgs>())
     }
 
     @Test
     fun `should delete file successfully`() {
         // Given
-        val file =
-            MockMultipartFile(
-                "test-file",
-                "test.txt",
-                "text/plain",
-                "test content".toByteArray(),
-            )
-        val path = "test-path"
-        val objectName = storageService.uploadFile(file, path)
+        val path = "test-path/test.txt"
+        doNothing().whenever(minioClient).removeObject(any())
 
         // When
-        storageService.deleteFile(objectName)
+        storageService.deleteFile(path)
 
         // Then
-        org.junit.jupiter.api.assertThrows<Exception> {
-            storageService.getFile(objectName)
-        }
+        verify(minioClient).removeObject(any<RemoveObjectArgs>())
     }
 }

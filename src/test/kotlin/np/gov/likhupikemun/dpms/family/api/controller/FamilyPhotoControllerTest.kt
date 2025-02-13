@@ -1,6 +1,5 @@
 package np.gov.likhupikemun.dpms.family.api.controller
 
-import np.gov.likhupikemun.dpms.config.SharedTestConfiguration
 import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import np.gov.likhupikemun.dpms.family.service.FamilyPhotoService
 import org.junit.jupiter.api.Test
@@ -17,7 +16,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.*
 
 @WebMvcTest(FamilyPhotoController::class)
-@Import(TestSecurityConfig::class, SharedTestConfiguration::class)
+@Import(TestSecurityConfig::class)
 class FamilyPhotoControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc

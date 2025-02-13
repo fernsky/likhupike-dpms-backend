@@ -1,7 +1,6 @@
 package np.gov.likhupikemun.dpms.family.api.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import np.gov.likhupikemun.dpms.config.SharedTestConfiguration
 import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import np.gov.likhupikemun.dpms.family.service.FamilyService
 import np.gov.likhupikemun.dpms.family.test.fixtures.FamilyTestFixtures
@@ -18,7 +17,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(FamilyController::class)
-@Import(TestSecurityConfig::class, SharedTestConfiguration::class) // Add this line
+@Import(TestSecurityConfig::class) // Add this line
 @ActiveProfiles("test")
 class FamilyControllerTest {
     @Autowired
