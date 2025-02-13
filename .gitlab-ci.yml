@@ -6,6 +6,7 @@ variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   GIT_STRATEGY: clone
   GIT_DEPTH: 1
+  GIT_FETCH_TIMEOUT: "600" 
   GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY"
   # Add these production environment variables
   SPRING_PROFILES_ACTIVE: prod
