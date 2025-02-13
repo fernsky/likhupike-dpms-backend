@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:postgres}:5432/${POSTGRES_DB:dpms}
+    username: ${POSTGRES_USER:dpms}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    show-sql: true
+  liquibase:
+    contexts: staging
+
+logging:
+  level:
+    root: INFO
+    np.gov.likhupikemun.dpms: DEBUG
+    org.springframework: INFO

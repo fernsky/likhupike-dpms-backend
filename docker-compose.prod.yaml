@@ -1,13 +1,11 @@
 services:
   # Main Application
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: isresearch/dpms-api:${TAG:-latest} # Use Docker Hub image instead of building
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dpms
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
@@ -172,7 +170,10 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
     ports:
       - "9200:9200"
     volumes:
@@ -186,6 +187,8 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.12.2
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     networks:
@@ -195,6 +198,11 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.12.2
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_PASSWORD}
     ports:
       - "5601:5601"
     networks:
