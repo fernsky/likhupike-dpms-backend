@@ -204,6 +204,9 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
 }
 
+// Get active profile from project property or default to 'local'
+val activeProfile = project.findProperty("profile") ?: "local"
+
 // Test configuration
 tasks.withType<Test> {
     useJUnitPlatform()
@@ -242,7 +245,7 @@ tasks.withType<Test> {
         }
     }))
     
-    systemProperty("spring.profiles.active", "test")
+    systemProperty("spring.profiles.active", activeProfile)
     
     // Parallel test execution
     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
@@ -300,8 +303,14 @@ tasks.bootRun {
     jvmArgs = listOf(
         "-XX:+AllowRedefinitionToAddDeleteMethods",
         "-Dspring.devtools.restart.enabled=true",
-        "-Dspring.profiles.active=local",
+        "-Dspring.profiles.active=$activeProfile",
         "-Dspring.devtools.restart.poll-interval=2s",
         "-Dspring.devtools.restart.quiet-period=1s"
     )
+}
+
+tasks.bootJar {
+    manifest {
+        attributes["Spring-Boot-Active-Profiles"] = activeProfile
+    }
 }
