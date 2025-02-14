@@ -204,8 +204,6 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
 }
 
-// Get active profile from project property or default to 'local'
-// val activeProfile = project.findProperty("profile") ?: "local"
 
 // Test configuration
 tasks.withType<Test> {
@@ -245,7 +243,7 @@ tasks.withType<Test> {
         }
     }))
     
-    systemProperty("spring.profiles.active", activeProfile)
+    systemProperty("spring.profiles.active", "test")
     
     // Parallel test execution
     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
@@ -311,6 +309,6 @@ tasks.bootRun {
 
 tasks.bootJar {
     manifest {
-        attributes["Spring-Boot-Active-Profiles"] = activeProfile
+        attributes["Spring-Boot-Active-Profiles"] = "prod"
     }
 }
