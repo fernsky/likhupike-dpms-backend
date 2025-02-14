@@ -50,7 +50,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_likhupike_dpms:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - dpms-network
@@ -230,4 +230,4 @@ volumes:
   # prometheus-data:
   # grafana-data:
   # elasticsearch-data:
-  postgres_data:
+  postgres_data_likhupike_dpms:
