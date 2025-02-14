@@ -2,8 +2,6 @@ services:
   # Main Application
   app:
     image: isresearch/dpms-api:${TAG:-latest} # Use Docker Hub image instead of building
-    ports:
-      - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-dpms}
