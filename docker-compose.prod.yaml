@@ -6,16 +6,22 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dpms
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-dpms}
       SPRING_REDIS_HOST: ${SPRING_REDIS_HOST:-redis}
       SPRING_REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redisSecurePass123!}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MINIO_ENDPOINT: http://minio:9000
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: ${POSTGRES_DB:-dpms}
-      POSTGRES_USER: ${POSTGRES_USER:-dpms}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dpmsSecurePass123!}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-dpms_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-dpms_prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
