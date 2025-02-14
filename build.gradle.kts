@@ -299,8 +299,8 @@ jib {
 tasks.bootRun {
     jvmArgs = listOf(
         "-XX:+AllowRedefinitionToAddDeleteMethods",
-        "-Dspring.devtools.restart.enabled=true",
-        "-Dspring.profiles.active=local",
+        "-Dspring.devtools.restart.enabled=false",
+        "-Dspring.profiles.active=prod",
         "-Dspring.devtools.restart.poll-interval=2s",
         "-Dspring.devtools.restart.quiet-period=1s"
     )
