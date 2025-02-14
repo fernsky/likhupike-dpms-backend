@@ -63,7 +63,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"email\": \"test@municipality.gov.np\",\n    \"password\": \"Test@123\",\n    \"fullName\": \"Test User\",\n    \"fullNameNepali\": \"टेस्ट युजर\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"address\": \"Test Address\",\n    \"officePost\": \"CHIEF_ADMINISTRATIVE_OFFICER\",\n    \"wardNumber\": null\n}"
+          "raw": "{\n    \"email\": \"test@municipality.gov.np\",\n    \"password\": \"Test@123\",\n    \"fullName\": \"Test User\",\n    \"fullNameNepali\": \"टेस्ट युजर\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"address\": \"Test Address\",\n    \"officePost\": \"Chief Administrative Officer\",\n    \"wardNumber\": null\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/v1/auth/register",
