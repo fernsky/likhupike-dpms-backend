@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:postgres}:5432/${POSTGRES_DB:dpms}
-    username: ${POSTGRES_USER:dpms}
-    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://${POSTGRES_HOST:postgres}:5432/${POSTGRES_DB:dpms_prod}
+    username: ${POSTGRES_USER:dpms_prod}
+    password: ${POSTGRES_PASSWORD:P@ssw0rd_j8K9m2N4p5Q7r9S!}
   data:
     redis:
       host: ${SPRING_REDIS_HOST:redis}

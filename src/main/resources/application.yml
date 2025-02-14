@@ -31,9 +31,9 @@ spring:
       table-name: spring_session
     timeout: 30m
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:5432/${POSTGRES_DB:dpms}
-    username: ${POSTGRES_USER:dpms}
-    password: ${POSTGRES_PASSWORD:dpmsSecurePass123!}
+    url: jdbc:postgresql://${POSTGRES_HOST:postgres}:5432/${POSTGRES_DB:dpms_prod}
+    username: ${POSTGRES_USER:dpms_prod}
+    password: ${POSTGRES_PASSWORD:P@ssw0rd_j8K9m2N4p5Q7r9S!}
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 20000
