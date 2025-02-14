@@ -56,7 +56,7 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
-    contexts: ${SPRING_PROFILES_ACTIVE:local}
+    contexts: ${SPRING_PROFILES_ACTIVE:prod}
     default-schema: public
     parameters:
       textColumnType: text
