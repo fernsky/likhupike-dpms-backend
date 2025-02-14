@@ -1,22 +1,21 @@
 -- Create database if not exists
 DO $$ 
 BEGIN
-    IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'dpms') THEN
-        CREATE DATABASE dpms WITH OWNER dpms;
+    IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'dpms_prod') THEN
+        CREATE DATABASE dpms_prod WITH OWNER dpms;
     END IF;
 END $$;
 
 -- Create extensions
-\c dpms
+\c dpms_prod
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Set up permissions
-ALTER ROLE dpms WITH PASSWORD 'dpmsSecurePass123!';
-GRANT ALL PRIVILEGES ON DATABASE dpms TO dpms;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO dpms;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO dpms;
+GRANT ALL PRIVILEGES ON DATABASE dpms_prod TO dpms_prod;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO dpms_prod;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO dpms_prod;
 
 -- Create schema for versioning
 CREATE SCHEMA IF NOT EXISTS audit;
