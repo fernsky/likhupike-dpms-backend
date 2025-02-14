@@ -7,7 +7,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dpms
-      SPRING_REDIS_HOST: ${SPRING_REDIS_HOST:-redisSecurePass123!}
+      SPRING_REDIS_HOST: ${SPRING_REDIS_HOST:-redis}
       SPRING_REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redisSecurePass123!}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -148,71 +148,71 @@ services:
       retries: 3
 
   # Monitoring
-  prometheus:
-    image: prom/prometheus:v2.50.1
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus:/etc/prometheus
-      - prometheus-data:/prometheus
-    networks:
-      - dpms-network
+  # prometheus:
+  #   image: prom/prometheus:v2.50.1
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./prometheus:/etc/prometheus
+  #     - prometheus-data:/prometheus
+  #   networks:
+  #     - dpms-network
 
-  grafana:
-    image: grafana/grafana:10.4.0
-    ports:
-      - "3005:3000"
-    volumes:
-      - grafana-data:/var/lib/grafana
-    networks:
-      - dpms-network
-    depends_on:
-      - prometheus
+  # grafana:
+  #   image: grafana/grafana:10.4.0
+  #   ports:
+  #     - "3005:3000"
+  #   volumes:
+  #     - grafana-data:/var/lib/grafana
+  #   networks:
+  #     - dpms-network
+  #   depends_on:
+  #     - prometheus
 
   # Logging
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=true
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-    ports:
-      - "9200:9200"
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    networks:
-      - dpms-network
-    deploy:
-      resources:
-        limits:
-          memory: 2G
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=true
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #     - bootstrap.memory_lock=true
+  #     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+  #   ports:
+  #     - "9200:9200"
+  #   volumes:
+  #     - elasticsearch-data:/usr/share/elasticsearch/data
+  #   networks:
+  #     - dpms-network
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 2G
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.12.2
-    environment:
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-    volumes:
-      - ./logstash/pipeline:/usr/share/logstash/pipeline
-    networks:
-      - dpms-network
-    depends_on:
-      - elasticsearch
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:8.12.2
+  #   environment:
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #   volumes:
+  #     - ./logstash/pipeline:/usr/share/logstash/pipeline
+  #   networks:
+  #     - dpms-network
+  #   depends_on:
+  #     - elasticsearch
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.12.2
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - ELASTICSEARCH_USERNAME=elastic
-      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
-      - KIBANA_SYSTEM_PASSWORD=${KIBANA_PASSWORD}
-    ports:
-      - "5601:5601"
-    networks:
-      - dpms-network
-    depends_on:
-      - elasticsearch
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:8.12.2
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #     - ELASTICSEARCH_USERNAME=elastic
+  #     - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+  #     - KIBANA_SYSTEM_PASSWORD=${KIBANA_PASSWORD}
+  #   ports:
+  #     - "5601:5601"
+  #   networks:
+  #     - dpms-network
+  #   depends_on:
+  #     - elasticsearch
 
 networks:
   dpms-network:
@@ -222,7 +222,7 @@ volumes:
   postgres-data:
   redis-data:
   minio-data:
-  prometheus-data:
-  grafana-data:
-  elasticsearch-data:
+  # prometheus-data:
+  # grafana-data:
+  # elasticsearch-data:
   postgres_data:
