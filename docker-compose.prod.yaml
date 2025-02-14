@@ -7,7 +7,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dpms
-      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_HOST: ${SPRING_REDIS_HOST:-redisSecurePass123!}
       SPRING_REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redisSecurePass123!}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -64,11 +64,15 @@ services:
     image: redis:7.2-alpine
     ports:
       - "6379:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD:-redisSecurePass123!}
+    command: >
+      redis-server 
+      --requirepass ${REDIS_PASSWORD:-redisSecurePass123!}
     volumes:
       - redis-data:/data
     networks:
       - dpms-network
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     healthcheck:
       test:
         [

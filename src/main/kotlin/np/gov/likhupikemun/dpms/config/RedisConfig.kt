@@ -9,27 +9,25 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 
 @Configuration
-@Profile("!test") // Add this line to exclude from test profile
+@Profile("!test")
 class RedisConfig {
-    @Value("\${spring.data.redis.host:localhost}")
+    @Value("\${spring.data.redis.host}")
     private lateinit var host: String
 
-    @Value("\${spring.data.redis.port:6379}")
+    @Value("\${spring.data.redis.port}")
     private lateinit var port: String
 
-    @Value("\${spring.data.redis.password:#{null}}")
-    private var password: String? = null
+    @Value("\${spring.data.redis.password}")
+    private lateinit var password: String
 
     @Bean
     fun redissonClient(): RedissonClient {
         val config = Config()
-        val address = "redis://$host:$port"
         config
             .useSingleServer()
-            .setAddress(address)
-            .apply {
-                password?.let { setPassword(it) }
-            }.setConnectTimeout(10000)
+            .setAddress("redis://$host:$port")
+            .setPassword(password)
+            .setConnectTimeout(10000)
             .setTimeout(10000)
         return Redisson.create(config)
     }

@@ -4,8 +4,8 @@
 CREATE TABLE
     roles (
         id VARCHAR(36) PRIMARY KEY,
-        name VARCHAR(50) NOT NULL UNIQUE,
-        description VARCHAR(255),
+        role_type VARCHAR(20) NOT NULL UNIQUE,
+        description VARCHAR(50),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP,
         created_by VARCHAR(36),

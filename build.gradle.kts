@@ -76,7 +76,6 @@ dependencies {
 
     // Development tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 
     // Runtime dependencies
     runtimeOnly("org.springframework.modulith:spring-modulith-actuator")
