@@ -12,7 +12,12 @@ spring:
   jpa:
     show-sql: false
   liquibase:
+    enabled: true
+    url: jdbc:postgresql://${POSTGRES_HOST:postgres}:5432/${POSTGRES_DB:dpms}
+    user: ${POSTGRES_USER:dpms}
+    password: ${POSTGRES_PASSWORD}
     contexts: prod
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 logging:
   level:
