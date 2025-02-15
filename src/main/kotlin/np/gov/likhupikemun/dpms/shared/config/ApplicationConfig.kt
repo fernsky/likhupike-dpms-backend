@@ -13,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 @Configuration
 class ApplicationConfig(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder, // Inject PasswordEncoder
 ) {
     @Bean
     fun userDetailsService(): UserDetailsService =

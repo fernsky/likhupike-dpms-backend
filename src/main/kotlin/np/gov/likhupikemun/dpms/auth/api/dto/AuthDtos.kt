@@ -87,16 +87,21 @@ data class RegisterRequest(
 data class AuthResponse(
     @Schema(description = "JWT access token")
     val token: String,
+    
+    @Schema(description = "JWT refresh token")
+    val refreshToken: String?,
+    
     @Schema(description = "User identifier")
     val userId: String,
+    
     @Schema(description = "User email")
     val email: String,
+    
     @Schema(description = "User roles")
-    val roles: List<RoleType>,
+    val roles: Set<RoleType>,  // Changed from List to Set
+    
     @Schema(description = "Token expiration time in seconds")
-    val expiresIn: Long,
-    @Schema(description = "Refresh token")
-    val refreshToken: String?,
+    val expiresIn: Long
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

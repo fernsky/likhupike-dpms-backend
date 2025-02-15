@@ -3,8 +3,8 @@ package np.gov.likhupikemun.dpms.family.domain.enums
 enum class WaterSource {
     TAP_WATER,
     WELL,
-    RIVER,
     SPRING,
-    RAINWATER_HARVESTING,
+    RIVER,
+    RAINWATER,
     OTHER,
 }

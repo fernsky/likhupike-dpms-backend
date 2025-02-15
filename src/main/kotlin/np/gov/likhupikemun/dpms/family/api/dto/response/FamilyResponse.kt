@@ -5,7 +5,7 @@ import np.gov.likhupikemun.dpms.family.domain.enums.SocialCategory
 import np.gov.likhupikemun.dpms.family.domain.enums.WaterSource
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class FamilyResponse(
     val id: UUID,
@@ -13,13 +13,13 @@ data class FamilyResponse(
     val wardNumber: Int,
     val socialCategory: SocialCategory,
     val totalMembers: Int,
-    val waterDetails: WaterDetailsResponse,
+    val waterDetails: WaterDetailsResponse?,
     val housingDetails: HousingDetailsResponse,
     val economicDetails: EconomicDetailsResponse,
     val agriculturalDetails: AgriculturalDetailsResponse,
     val latitude: Double?,
     val longitude: Double?,
-    val createdAt: LocalDateTime,
+    val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?,
     val photos: List<FamilyPhotoResponse>,
 )

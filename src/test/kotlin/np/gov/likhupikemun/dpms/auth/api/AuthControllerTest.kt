@@ -58,7 +58,7 @@ class AuthControllerTest {
             token = "test-token",
             refreshToken = "test-refresh-token",
             expiresIn = 3600,
-            roles = listOf(RoleType.VIEWER),
+            roles = setOf(RoleType.VIEWER),
         )
 
     private val baseRegisterRequest =

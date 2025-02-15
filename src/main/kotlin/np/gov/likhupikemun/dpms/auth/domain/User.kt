@@ -1,57 +1,79 @@
 package np.gov.likhupikemun.dpms.auth.domain
 
 import jakarta.persistence.*
-import np.gov.likhupikemun.dpms.shared.domain.AuditableEntity
+import np.gov.likhupikemun.dpms.common.entity.BaseEntity
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "users")
-class User(
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
-    val id: String? = null,
+@Table(
+    name = "users",
+    indexes = [
+        Index(name = "idx_users_email", columnList = "email"),
+        Index(name = "idx_users_full_name", columnList = "full_name"),
+    ],
+)
+class User :
+    BaseEntity(),
+    UserDetails {
     @Column(nullable = false, unique = true)
-    var email: String,
+    var email: String? = null
+
     @Column(nullable = false)
-    private var password: String,
+    private var password: String? = null
+
     @Column(name = "full_name", nullable = false)
-    var fullName: String,
+    var fullName: String? = null
+
     @Column(name = "full_name_np", nullable = false)
-    var fullNameNepali: String,
+    var fullNameNepali: String? = null
+
     @Column(name = "date_of_birth")
-    var dateOfBirth: LocalDate,
-    var address: String,
+    var dateOfBirth: LocalDate? = null
+
+    var address: String? = null
+
     @Column(name = "profile_picture")
-    var profilePicture: String? = null,
+    var profilePicture: String? = null
+
     @Column(name = "office_post")
-    var officePost: String,
+    var officePost: String? = null
+
     @Column(name = "ward_number")
-    var wardNumber: Int? = null,
+    var wardNumber: Int? = null
+
     @Column(name = "is_municipality_level")
-    var isMunicipalityLevel: Boolean = false,
+    var isMunicipalityLevel: Boolean = false
+
     @Column(name = "is_approved")
-    var isApproved: Boolean = false,
+    var isApproved: Boolean = false
+
     @Column(name = "approved_by")
-    var approvedBy: String? = null,
+    var approvedBy: String? = null
+
     @Column(name = "approved_at")
-    var approvedAt: LocalDateTime? = null,
+    var approvedAt: LocalDateTime? = null
+
     @Column(name = "is_deleted")
-    var isDeleted: Boolean = false,
+    var isDeleted: Boolean = false
+
     @Column(name = "deleted_at")
-    var deletedAt: LocalDateTime? = null,
+    var deletedAt: LocalDateTime? = null
+
     @Column(name = "deleted_by")
-    var deletedBy: String? = null,
+    var deletedBy: String? = null
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
         joinColumns = [JoinColumn(name = "user_id")],
         inverseJoinColumns = [JoinColumn(name = "role_id")],
     )
-    var roles: MutableSet<Role> = mutableSetOf(),
-) : AuditableEntity(),
-    UserDetails {
+    var roles: MutableSet<Role> = mutableSetOf()
+
+    // UserDetails implementation
     override fun getAuthorities() = roles.map { SimpleGrantedAuthority(it.getAuthority()) }
 
     override fun getPassword() = password
@@ -66,16 +88,17 @@ class User(
 
     override fun isEnabled() = isApproved && !isDeleted
 
-    // Add this if you need to modify the password
+    // Password management
     fun setPassword(newPassword: String) {
         password = newPassword
     }
 
-    fun hasRole(roleType: RoleType): Boolean = roles.any { it.roleType == roleType }
+    // Role checks
+    fun hasRole(roleType: RoleType) = roles.any { it.roleType == roleType }
 
-    fun isSuperAdmin(): Boolean = hasRole(RoleType.SUPER_ADMIN)
+    fun isSuperAdmin() = hasRole(RoleType.SUPER_ADMIN)
 
-    fun isMunicipalityAdmin(): Boolean = hasRole(RoleType.MUNICIPALITY_ADMIN)
+    fun isMunicipalityAdmin() = hasRole(RoleType.MUNICIPALITY_ADMIN)
 
-    fun isWardAdmin(): Boolean = hasRole(RoleType.WARD_ADMIN)
+    fun isWardAdmin() = hasRole(RoleType.WARD_ADMIN)
 }

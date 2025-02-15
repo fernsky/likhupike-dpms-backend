@@ -1,36 +1,48 @@
 package np.gov.likhupikemun.dpms.family.domain
 
 import jakarta.persistence.*
+import np.gov.likhupikemun.dpms.common.entity.BaseEntity
 import np.gov.likhupikemun.dpms.family.domain.enums.SocialCategory
-import java.time.LocalDateTime
-import java.util.*
+import org.hibernate.annotations.DynamicUpdate
 
 @Entity
-@Table(name = "families")
-class Family(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
-    @Column(nullable = false)
-    var headOfFamily: String,
-    @Column(nullable = false)
-    var wardNumber: Int,
-    @Enumerated(EnumType.STRING)
-    var socialCategory: SocialCategory,
-    var totalMembers: Int,
-    @Embedded
-    var waterDetails: WaterDetails,
-    @Embedded
-    var housingDetails: HousingDetails,
-    @Embedded
-    var economicDetails: EconomicDetails,
-    @Embedded
-    var agriculturalAssets: AgriculturalAssets,
-    var latitude: Double? = null,
-    var longitude: Double? = null,
-    @Column(nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(),
-    var updatedAt: LocalDateTime? = null,
-    @OneToMany(mappedBy = "family", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var photos: MutableList<FamilyPhoto> = mutableListOf(),
+@DynamicUpdate
+@Table(
+    name = "families",
+    indexes = [
+        Index(name = "idx_families_ward", columnList = "ward_number"),
+        Index(name = "idx_families_head", columnList = "head_of_family"),
+    ],
 )
+class Family : BaseEntity() {
+    @Column(name = "head_of_family", nullable = false)
+    var headOfFamily: String? = null
+
+    @Column(name = "ward_number", nullable = false)
+    var wardNumber: Int? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "social_category")
+    var socialCategory: SocialCategory? = null
+
+    @Column(name = "total_members")
+    var totalMembers: Int? = null
+
+    @Embedded
+    var waterDetails: WaterDetails? = null
+
+    @Embedded
+    var housingDetails: HousingDetails? = null
+
+    @Embedded
+    var economicDetails: EconomicDetails? = null
+
+    @Embedded
+    var agriculturalAssets: AgriculturalAssets? = null
+
+    var latitude: Double? = null
+    var longitude: Double? = null
+
+    @OneToMany(mappedBy = "family", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var photos: MutableList<FamilyPhoto> = mutableListOf()
+}

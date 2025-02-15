@@ -26,6 +26,7 @@ import org.springframework.data.jpa.domain.Specification
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -49,43 +50,53 @@ class UserServiceTest {
     @InjectMockKs
     private lateinit var userService: UserService
 
-    private val municipalityAdminRole = Role("1", RoleType.MUNICIPALITY_ADMIN)
-    private val wardAdminRole = Role("2", RoleType.WARD_ADMIN)
-    private val viewerRole = Role("3", RoleType.VIEWER)
+    private val municipalityAdminRole =
+        Role().apply {
+            id = UUID.randomUUID()
+            roleType = RoleType.MUNICIPALITY_ADMIN
+        }
+    private val wardAdminRole =
+        Role().apply {
+            id = UUID.randomUUID()
+            roleType = RoleType.WARD_ADMIN
+        }
+    private val viewerRole =
+        Role().apply {
+            id = UUID.randomUUID()
+            roleType = RoleType.VIEWER
+        }
 
     private val municipalityAdmin =
-        User(
-            id = "1",
-            email = "admin@municipality.gov.np",
-            password = "encoded_password",
-            fullName = "Municipality Admin",
-            fullNameNepali = "नगरपालिका एडमिन",
-            dateOfBirth = LocalDate.now(),
-            address = "Municipality",
-            officePost = "Admin",
-            isApproved = true,
-            roles = mutableSetOf(municipalityAdminRole),
-        ).apply {
-            createdAt = LocalDateTime.now()
-            updatedAt = LocalDateTime.now()
+        User().apply {
+            id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+            email = "admin@municipality.gov.np"
+            setPassword("encoded_password")
+            fullName = "Municipality Admin"
+            fullNameNepali = "नगरपालिका एडमिन"
+            dateOfBirth = LocalDate.now()
+            address = "Municipality"
+            officePost = "Admin"
+            isApproved = true
+            roles = mutableSetOf(municipalityAdminRole)
+            createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+            updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
         }
 
     private val wardAdmin =
-        User(
-            id = "2",
-            email = "ward1@municipality.gov.np",
-            password = "encoded_password",
-            fullName = "Ward Admin",
-            fullNameNepali = "वडा एडमिन",
-            dateOfBirth = LocalDate.now(),
-            address = "Ward 1",
-            officePost = "Ward Admin",
-            wardNumber = 1,
-            isApproved = true,
-            roles = mutableSetOf(wardAdminRole),
-        ).apply {
-            createdAt = LocalDateTime.now()
-            updatedAt = LocalDateTime.now()
+        User().apply {
+            id = UUID.fromString("123e4567-e89b-12d3-a456-426614174001")
+            email = "ward1@municipality.gov.np"
+            setPassword("encoded_password")
+            fullName = "Ward Admin"
+            fullNameNepali = "वडा एडमिन"
+            dateOfBirth = LocalDate.now()
+            address = "Ward 1"
+            officePost = "Ward Admin"
+            wardNumber = 1
+            isApproved = true
+            roles = mutableSetOf(wardAdminRole)
+            createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+            updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
         }
 
     @BeforeEach
@@ -114,23 +125,22 @@ class UserServiceTest {
         every { securityService.getCurrentUser() } returns municipalityAdmin
         every { userRepository.existsByEmail(any()) } returns false
         every { passwordEncoder.encode(any()) } returns "encoded_password"
-        every { roleRepository.findByNameIn(any()) } returns listOf(viewerRole)
+        every { roleRepository.findByRoleTypeIn(any()) } returns setOf(viewerRole)
         every { userRepository.save(any()) } answers {
-            User(
-                id = "generated-id",
-                email = firstArg<User>().email,
-                password = firstArg<User>().password,
-                fullName = firstArg<User>().fullName,
-                fullNameNepali = firstArg<User>().fullNameNepali,
-                dateOfBirth = firstArg<User>().dateOfBirth,
-                address = firstArg<User>().address,
-                officePost = firstArg<User>().officePost,
-                wardNumber = firstArg<User>().wardNumber,
-                roles = firstArg<User>().roles,
-                isApproved = firstArg<User>().isApproved,
-            ).apply {
-                createdAt = LocalDateTime.now()
-                updatedAt = LocalDateTime.now()
+            User().apply {
+                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174002")
+                email = firstArg<User>().email
+                setPassword(firstArg<User>().password!!)
+                fullName = firstArg<User>().fullName
+                fullNameNepali = firstArg<User>().fullNameNepali
+                dateOfBirth = firstArg<User>().dateOfBirth
+                address = firstArg<User>().address
+                officePost = firstArg<User>().officePost
+                wardNumber = firstArg<User>().wardNumber
+                roles = firstArg<User>().roles
+                isApproved = firstArg<User>().isApproved
+                createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+                updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
             }
         }
 
@@ -230,7 +240,7 @@ class UserServiceTest {
         every { userRepository.save(any()) } returns userToDeactivate
 
         // Act
-        userService.deactivateUser(userToDeactivate.id!!)
+        userService.deactivateUser(userToDeactivate.id!!.toString())
 
         // Assert
         verify { userRepository.save(match { !it.isApproved }) }
@@ -244,7 +254,7 @@ class UserServiceTest {
 
         // Act & Assert
         assertThrows<ForbiddenException> {
-            userService.deactivateUser(municipalityAdmin.id!!)
+            userService.deactivateUser(municipalityAdmin.id!!.toString())
         }
     }
 
@@ -265,14 +275,14 @@ class UserServiceTest {
         every { userRepository.findById(any()) } returns
             Optional.of(
                 wardAdmin.apply {
-                    createdAt = LocalDateTime.now()
-                    updatedAt = LocalDateTime.now()
+                    createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+                    updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
                 },
             )
         every { userRepository.save(any()) } answers { firstArg() }
 
         // Act
-        val result = userService.updateUser(wardAdmin.id!!, updateRequest)
+        val result = userService.updateUser(wardAdmin.id!!.toString(), updateRequest)
 
         // Assert
         assertEquals("Updated Name", result.fullName)
@@ -305,21 +315,20 @@ class UserServiceTest {
     fun `approveUser - ward admin cannot approve user from different ward`() {
         // Arrange
         val otherWardUser =
-            User(
-                id = "other-ward-user",
-                email = "ward2.viewer@municipality.gov.np",
-                password = "encoded_password",
-                fullName = "Ward 2 Viewer",
-                fullNameNepali = "वडा २ भ्युवर",
-                dateOfBirth = LocalDate.now(),
-                address = "Ward 2",
-                officePost = "Viewer",
-                wardNumber = 2,
-                isApproved = false,
-                roles = mutableSetOf(viewerRole),
-            ).apply {
-                createdAt = LocalDateTime.now()
-                updatedAt = LocalDateTime.now()
+            User().apply {
+                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174003")
+                email = "ward2.viewer@municipality.gov.np"
+                setPassword("encoded_password")
+                fullName = "Ward 2 Viewer"
+                fullNameNepali = "वडा २ भ्युवर"
+                dateOfBirth = LocalDate.now()
+                address = "Ward 2"
+                officePost = "Viewer"
+                wardNumber = 2
+                isApproved = false
+                roles = mutableSetOf(viewerRole)
+                createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+                updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
             }
 
         every { securityService.getCurrentUser() } returns wardAdmin
@@ -327,7 +336,7 @@ class UserServiceTest {
 
         // Act & Assert
         assertThrows<ForbiddenException> {
-            userService.approveUser(otherWardUser.id!!)
+            userService.approveUser(otherWardUser.id!!.toString())
         }
     }
 }

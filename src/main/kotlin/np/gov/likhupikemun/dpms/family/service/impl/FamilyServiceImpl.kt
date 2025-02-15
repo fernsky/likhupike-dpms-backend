@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 
 @Service
@@ -62,12 +63,12 @@ class FamilyServiceImpl(
         family.apply {
             headOfFamily = request.headOfFamily
             totalMembers = request.totalMembers
-            waterDetails.apply {
+            waterDetails?.apply {
                 primaryWaterSource = request.waterDetails.primaryWaterSource
                 hasWaterTreatmentSystem = request.waterDetails.hasWaterTreatmentSystem
                 distanceToWaterSource = request.waterDetails.distanceToWaterSource
             }
-            housingDetails.apply {
+            housingDetails?.apply {
                 constructionType = request.housingDetails.constructionType
                 totalRooms = request.housingDetails.totalRooms
                 hasElectricity = request.housingDetails.hasElectricity
@@ -75,7 +76,7 @@ class FamilyServiceImpl(
                 hasKitchenGarden = request.housingDetails.hasKitchenGarden
                 additionalDetails = request.housingDetails.additionalDetails
             }
-            economicDetails.apply {
+            economicDetails?.apply {
                 monthlyIncome = request.economicDetails.monthlyIncome
                 hasEmployedMembers = request.economicDetails.hasEmployedMembers
                 numberOfEmployedMembers = request.economicDetails.numberOfEmployedMembers
@@ -83,7 +84,7 @@ class FamilyServiceImpl(
                 hasBankAccount = request.economicDetails.hasBankAccount
                 hasLoans = request.economicDetails.hasLoans
             }
-            agriculturalAssets.apply {
+            agriculturalAssets?.apply {
                 landArea = request.agriculturalDetails.landArea
                 hasIrrigation = request.agriculturalDetails.hasIrrigation
                 livestockCount = request.agriculturalDetails.livestockCount
@@ -93,7 +94,7 @@ class FamilyServiceImpl(
             }
             latitude = request.latitude
             longitude = request.longitude
-            updatedAt = LocalDateTime.now()
+            updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
         }
     }
 }

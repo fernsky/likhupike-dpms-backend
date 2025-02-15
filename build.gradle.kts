@@ -7,6 +7,7 @@ plugins {
     id("org.asciidoctor.jvm.convert") version "3.3.2"
     id("org.openapi.generator") version "7.4.0"
     id("com.google.cloud.tools.jib") version "3.4.1"
+    id("org.liquibase.gradle") version "2.2.1"
     id("application")
 }
 
@@ -35,8 +36,21 @@ extra["snippetsDir"] = file("build/generated-snippets")
 extra["springModulithVersion"] = "1.3.1"
 extra["testcontainersVersion"] = "1.19.7"
 extra["springCloudVersion"] = "2023.0.0"
+extra["liquibaseHibernateVersion"] = "4.25.1"
 
 dependencies {
+    // Liquibase dependencies
+    liquibaseRuntime("org.liquibase:liquibase-core")
+    liquibaseRuntime("org.liquibase.ext:liquibase-hibernate6:${property("liquibaseHibernateVersion")}")
+    liquibaseRuntime("org.springframework.boot:spring-boot-starter-data-jpa")
+    liquibaseRuntime("org.postgresql:postgresql:42.7.5")
+    liquibaseRuntime("info.picocli:picocli:4.7.5")
+    liquibaseRuntime("org.springframework:spring-beans")
+    liquibaseRuntime("org.springframework:spring-core")
+    liquibaseRuntime("org.yaml:snakeyaml")
+    liquibaseRuntime(sourceSets.main.get().output)
+    liquibaseRuntime(sourceSets.main.get().runtimeClasspath)
+    
     // Spring Boot core dependencies
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -107,6 +121,7 @@ dependencies {
     implementation("org.hibernate.orm:hibernate-spatial")
     implementation("org.locationtech.jts:jts-core")
     implementation("org.liquibase:liquibase-core")
+    implementation("org.liquibase.ext:liquibase-hibernate6:${property("liquibaseHibernateVersion")}")
 
     // Caching
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
@@ -180,7 +195,214 @@ dependencies {
 
     // H2 database
     testRuntimeOnly("com.h2database:h2")
+
+    // Fix SLF4J bindings
+    configurations.all {
+        exclude(group = "org.slf4j", module = "slf4j-simple")
+    }
+    
+    // Ensure proper logging setup
+    implementation("ch.qos.logback:logback-classic")
+    implementation("org.slf4j:slf4j-api")
 }
+
+// Liquibase configuration
+liquibase {
+    activities {
+        register("main") {
+            arguments = mapOf(
+                "changeLogFile" to "src/main/resources/db/changelog/db.changelog-master.xml",
+                "url" to "jdbc:postgresql://localhost:5432/dpms",
+                "username" to "dpms",
+                "password" to "dpmsSecurePass123!",
+                "defaultSchemaName" to "public",
+                "logLevel" to "info",
+                "classpath" to "src/main/resources"
+            )
+        }
+        
+        register("prod") {
+            val dbUrl = (System.getenv("POSTGRES_URL") ?: "jdbc:postgresql://postgres:5432/dpms_prod").toString()
+            val dbUser = (System.getenv("POSTGRES_USER") ?: "dpms_prod").toString()
+            val dbPass = (System.getenv("POSTGRES_PASSWORD") ?: "P@ssw0rd_j8K9m2N4p5Q7r9S!").toString()
+            
+            arguments = mapOf(
+                "changeLogFile" to "src/main/resources/db/changelog/db.changelog-master.xml",
+                "url" to dbUrl,
+                "username" to dbUser,
+                "password" to dbPass,
+                "defaultSchemaName" to "public",
+                "logLevel" to "info",
+                "contexts" to "prod",
+                "classpath" to "src/main/resources"
+            )
+        }
+        
+        register("staging") {
+            val dbUrl = (System.getenv("POSTGRES_URL") ?: "jdbc:postgresql://postgres:5432/dpms_staging").toString()
+            val dbUser = (System.getenv("POSTGRES_USER") ?: "dpms_staging").toString()
+            val dbPass = (System.getenv("POSTGRES_PASSWORD") ?: "dpmsSecurePass123!").toString()
+            
+            arguments = mapOf(
+                "changeLogFile" to "src/main/resources/db/changelog/db.changelog-master.xml",
+                "url" to dbUrl,
+                "username" to dbUser,
+                "password" to dbPass,
+                "defaultSchemaName" to "public",
+                "logLevel" to "debug",
+                "contexts" to "staging",
+                "classpath" to "src/main/resources"
+            )
+        }
+
+        register("diffFromJPA") {
+            arguments = mapOf(
+                "changeLogFile" to "src/main/resources/db/changelog/generated/schema.xml",
+                "url" to "jdbc:postgresql://localhost:5432/dpms",
+                "username" to "dpms",
+                "password" to "dpmsSecurePass123!",
+                "defaultSchemaName" to "public",
+                "driver" to "org.postgresql.Driver",
+                "referenceUrl" to "hibernate:spring:np.gov.likhupikemun.dpms?" +
+                    "dialect=org.hibernate.dialect.PostgreSQLDialect&" +
+                    "hibernate.physical_naming_strategy=org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy&" +
+                    "hibernate.implicit_naming_strategy=org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl&" +
+                    "hibernate.show_sql=true&" +
+                    "hibernate.format_sql=true&" +
+                    "spring.config.name=application-schema", // Changed from springConfig to spring.config.name
+                "referenceDriver" to "liquibase.ext.hibernate.database.connection.HibernateDriver",
+                "referenceDefaultSchemaName" to "public",
+                "logLevel" to "debug"
+            )
+        }
+
+        register("dbDiff") {
+            arguments = mapOf(
+                "changeLogFile" to "src/main/resources/db/changelog/generated/diff.xml",
+                "url" to "jdbc:postgresql://localhost:5432/dpms",
+                "username" to "dpms",
+                "password" to "dpmsSecurePass123!",
+                "driver" to "org.postgresql.Driver",
+                "defaultSchemaName" to "public",
+                "logLevel" to "debug",
+                "referenceUrl" to "jdbc:postgresql://localhost:5432/dpms_reference",
+                "referenceUsername" to "dpms",
+                "referencePassword" to "dpmsSecurePass123!",
+                "referenceDriver" to "org.postgresql.Driver"
+            )
+        }
+
+        register("diff") {
+            this.arguments = mapOf(
+                "changeLogFile" to "src/main/resources/db/changelog/generated/diff.xml",
+                "username" to "dpms",
+                "password" to "dpmsSecurePass123!",
+                "url" to "jdbc:postgresql://localhost:5432/dpms",
+                "referenceUsername" to "dpms",
+                "referencePassword" to "dpmsSecurePass123!",
+                "referenceUrl" to "jdbc:postgresql://localhost:5432/dpms_reference",
+                "defaultSchemaName" to "public",
+                "referenceDefaultSchemaName" to "public",
+                "logLevel" to "debug"
+            )
+        }
+
+        register("diffChangelog") {
+            arguments = mapOf(
+                "changeLogFile" to "src/main/resources/db/changelog/generated/diff.xml",
+                "url" to "jdbc:postgresql://localhost:5432/dpms_reference",
+                "username" to "dpms",
+                "password" to "dpmsSecurePass123!",
+                "referenceUrl" to "jdbc:postgresql://localhost:5432/dpms",
+                "referenceUsername" to "dpms",
+                "referencePassword" to "dpmsSecurePass123!",
+                "driver" to "org.postgresql.Driver",
+                "referenceDriver" to "org.postgresql.Driver",
+                "defaultSchemaName" to "public",
+                "referenceDefaultSchemaName" to "public"
+            )
+        }
+    }
+    runList = project.properties["runList"]?.toString() ?: "main"
+}
+
+// Add convenience tasks for Liquibase operations
+tasks.register("dbUpdate") {
+    group = "Liquibase"
+    description = "Updates database to latest version"
+    dependsOn("update")
+}
+
+tasks.register("dbRollback") {
+    group = "Liquibase"
+    description = "Rolls back database to previous version or tag"
+    dependsOn("rollback")
+}
+
+tasks.register("dbGenerateChangelog") {
+    group = "Liquibase"
+    description = "Generates changelog from existing database"
+    dependsOn("generateChangelog")
+}
+
+tasks.register("dbDiff") {
+    group = "Liquibase"
+    description = "Generates a diff between two databases"
+    dependsOn("diffChangelog")
+
+    doFirst {
+        project.ext["runList"] = "diffChangelog"
+        mkdir("src/main/resources/db/changelog/generated")
+    }
+}
+
+// Add simple task to generate changelog from JPA entities
+tasks.register("generateJpaChangelog") {
+    group = "Liquibase"
+    description = "Generates changelog from JPA entities"
+    dependsOn("diffChangelog")  // Changed from diffChangeLog to diffChangelog
+    
+    doFirst {
+        mkdir("src/main/resources/db/changelog/generated")
+    }
+}
+
+// Add task to apply the generated changelog
+tasks.register("applyChangelog") {
+    group = "Liquibase"
+    description = "Applies the generated changelog to the database"
+    dependsOn("update")
+}
+
+// Remove or comment out the compareDatabases task since we're using dbDiff
+// tasks.register("compareDatabases") {
+//     group = "Liquibase"
+//     description = "Compare two databases and generate a diff report"
+//     dependsOn("diff")
+    
+//     doFirst {
+//         liquibase {
+//             activities {
+//                 register("diffDatabases") {
+//                     arguments = mapOf(
+//                         "changeLogFile" to "src/main/resources/db/changelog/generated/diff.xml",
+//                         "url" to "jdbc:postgresql://localhost:5432/dpms",
+//                         "username" to "dpms",
+//                         "password" to "dpmsSecurePass123!",
+//                         "referenceUrl" to "jdbc:postgresql://localhost:5432/dpms_reference",
+//                         "referenceUsername" to "dpms",
+//                         "referencePassword" to "dpmsSecurePass123!",
+//                         "defaultSchemaName" to "public",
+//                         "referenceDefaultSchemaName" to "public",
+//                         "driver" to "org.postgresql.Driver",
+//                         "logLevel" to "debug"
+//                     )
+//                 }
+//             }
+//             runList = "diffDatabases"
+//         }
+//     }
+// }
 
 // Spring Modulith BOM
 dependencyManagement {
@@ -301,7 +523,7 @@ tasks.bootRun {
     jvmArgs = listOf(
         "-XX:+AllowRedefinitionToAddDeleteMethods",
         "-Dspring.devtools.restart.enabled=false",
-        "-Dspring.profiles.active=prod",
+        "-Dspring.profiles.active=local",
         "-Dspring.devtools.restart.poll-interval=2s",
         "-Dspring.devtools.restart.quiet-period=1s"
     )
@@ -312,3 +534,4 @@ tasks.bootJar {
         attributes["Spring-Boot-Active-Profiles"] = "prod"
     }
 }
+

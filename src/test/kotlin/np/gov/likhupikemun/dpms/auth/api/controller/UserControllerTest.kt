@@ -43,30 +43,30 @@ class UserControllerTest {
     @MockBean
     private lateinit var securityService: SecurityService
 
-    // Test users via factory
+    // Test users via factory - using proper UUID strings
     private val municipalityAdmin =
         UserTestDataFactory.createMunicipalityAdmin(
-            id = "1",
+            id = "123e4567-e89b-12d3-a456-426614174000",
             email = "admin@municipality.gov.np",
         )
 
     private val wardAdmin =
         UserTestDataFactory.createWardAdmin(
-            id = "2",
+            id = "123e4567-e89b-12d3-a456-426614174001",
             email = "ward1.admin@municipality.gov.np",
             wardNumber = 1,
         )
 
     private val municipalityViewer =
         UserTestDataFactory.createViewer(
-            id = "3",
+            id = "123e4567-e89b-12d3-a456-426614174002",
             email = "viewer@municipality.gov.np",
             isMunicipalityLevel = true,
         )
 
     private val wardViewer =
         UserTestDataFactory.createViewer(
-            id = "4",
+            id = "123e4567-e89b-12d3-a456-426614174003",
             email = "ward1.viewer@municipality.gov.np",
             wardNumber = 1,
             isMunicipalityLevel = false,
@@ -185,7 +185,7 @@ class UserControllerTest {
     fun `approveUser - municipality admin can approve any user`() {
         // Arrange
         mockLoggedInUser(municipalityAdmin)
-        whenever(userService.approveUser(wardViewer.id!!)).thenReturn(wardViewer.toResponse())
+        whenever(userService.approveUser(wardViewer.id!!.toString())).thenReturn(wardViewer.toResponse())
 
         // Act & Assert
         mockMvc
@@ -194,36 +194,25 @@ class UserControllerTest {
             .andExpect(jsonPath("$.data.email").value(wardViewer.email))
     }
 
-    // TODO [TEST] ward admin can only approve their ward users
+    // TODO: Fix this test
 
     // @Test
     // fun `approveUser - ward admin can only approve their ward users`() {
     //     // Arrange
-    //     logger.debug("Setting up ward admin approval test")
-
     //     mockLoggedInUser(wardAdmin)
-    //     logger.debug("Mocked logged in ward admin: {} (Ward: {})", wardAdmin.email, wardAdmin.wardNumber)
 
     //     val otherWardUser =
     //         UserTestDataFactory.createViewer(
-    //             id = "other-ward-user",
+    //             id = "123e4567-e89b-12d3-a456-426614174004",
     //             email = "ward2.viewer@municipality.gov.np",
     //             wardNumber = 2,
     //             isMunicipalityLevel = false,
     //         )
-    //     logger.debug("Created test user from different ward: {}", otherWardUser.toResponse())
-    //     logger.debug("Ward admin attempting approval: {}", wardAdmin.toResponse())
 
     //     // Act & Assert
-    //     logger.debug("Executing approval request")
     //     mockMvc
     //         .perform(post("/api/v1/users/${otherWardUser.id}/approve"))
-    //         .andDo { result ->
-    //             logger.debug("Response status: {}", result.response.status)
-    //             logger.debug("Response body: {}", result.response.contentAsString)
-    //         }.andExpect(status().isForbidden)
-
-    //     logger.debug("Test completed")
+    //         .andExpect(status().isForbidden)
     // }
 
     companion object {

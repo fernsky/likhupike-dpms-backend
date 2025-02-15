@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import np.gov.likhupikemun.dpms.auth.api.dto.UserStatus
 import np.gov.likhupikemun.dpms.auth.domain.RoleType
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Schema(description = "User response data")
 data class UserResponse(
@@ -11,7 +12,7 @@ data class UserResponse(
         description = "Unique identifier of the user",
         example = "123e4567-e89b-12d3-a456-426614174000",
     )
-    val id: String,
+    val id: UUID,
     @field:Schema(
         description = "Email address of the user",
         example = "john.doe@example.com",
@@ -36,7 +37,7 @@ data class UserResponse(
         description = "Official post in the municipality/ward",
         example = "WARD_SECRETARY",
     )
-    val officePost: String,
+    val officePost: String?,
     @field:Schema(
         description = "User roles",
         example = "[\"WARD_ADMIN\", \"EDITOR\"]",

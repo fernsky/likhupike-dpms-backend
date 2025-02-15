@@ -1,7 +1,7 @@
 package np.gov.likhupikemun.dpms.family.api.dto.response
 
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class FamilyPhotoResponse(
     val id: UUID,
@@ -9,5 +9,7 @@ data class FamilyPhotoResponse(
     val fileName: String,
     val contentType: String,
     val fileSize: Long,
-    val createdAt: LocalDateTime,
+    val createdAt: LocalDateTime?, // Made nullable
+    val thumbnailUrl: String? = null,
+    val url: String? = null,
 )

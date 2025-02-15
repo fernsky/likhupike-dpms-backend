@@ -69,7 +69,7 @@ data class CreateUserRequest(
     )
     @field:NotBlank
     @field:Size(min = 5, max = 200)
-    val address: String,
+    val address: String?,
     @field:Schema(
         description = "Official post in municipality/ward",
         example = "WARD_SECRETARY",
@@ -77,7 +77,7 @@ data class CreateUserRequest(
         required = true,
     )
     @field:NotBlank
-    val officePost: String,
+    val officePost: String?,
     @field:Schema(
         description = "Ward number (1-32). Null for municipality level users",
         example = "5",
@@ -100,7 +100,7 @@ data class CreateUserRequest(
         format = "binary",
         nullable = true,
     )
-    val profilePicture: MultipartFile?,
+    val profilePicture: MultipartFile? = null,
     @field:Schema(
         example = "[\"EDITOR\", \"VIEWER\"]",
         defaultValue = "[\"VIEWER\"]",

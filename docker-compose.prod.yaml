@@ -1,6 +1,9 @@
 services:
   # Main Application
   app:
+    # build:
+    #   context: .
+    # dockerfile: Dockerfile
     image: isresearch/dpms-api:${TAG:-latest} # Use Docker Hub image instead of building
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}

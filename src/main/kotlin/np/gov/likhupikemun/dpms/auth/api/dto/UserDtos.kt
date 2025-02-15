@@ -88,18 +88,6 @@ data class UserSearchCriteria(
     val pageSize: Int = 20,
 )
 
-@Schema(description = "User account status")
-enum class UserStatus {
-    @Schema(description = "Awaiting approval")
-    PENDING,
-
-    @Schema(description = "Account active")
-    ACTIVE,
-
-    @Schema(description = "Account deactivated")
-    INACTIVE,
-}
-
 @Schema(description = "Available sort fields")
 enum class UserSortField {
     @Schema(description = "Sort by creation date")

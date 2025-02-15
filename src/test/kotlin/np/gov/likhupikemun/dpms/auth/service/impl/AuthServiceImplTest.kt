@@ -22,6 +22,7 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.LocalDate
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -50,20 +51,26 @@ class AuthServiceImplTest {
     @InjectMockKs
     private lateinit var authService: AuthServiceImpl
 
+    private val mockRole =
+        Role().apply {
+            id = UUID.randomUUID()
+            roleType = RoleType.VIEWER
+        }
+
     private val mockUser =
-        User(
-            id = "1", // Changed to String
-            email = "test@example.com",
-            password = "encoded_password",
-            fullName = "Test User",
-            fullNameNepali = "टेस्ट युजर",
-            dateOfBirth = LocalDate.now(),
-            address = "Test Address",
-            officePost = "Test Post",
-            wardNumber = 1,
-            isApproved = true,
-            roles = mutableSetOf(Role("1", RoleType.VIEWER)), // Fixed Role constructor call
-        )
+        User().apply {
+            id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+            email = "test@example.com"
+            setPassword("encoded_password")
+            fullName = "Test User"
+            fullNameNepali = "टेस्ट युजर"
+            dateOfBirth = LocalDate.now()
+            address = "Test Address"
+            officePost = "Test Post"
+            wardNumber = 1
+            isApproved = true
+            roles = mutableSetOf(mockRole)
+        }
 
     private val mockTokenPair =
         TokenPair(
@@ -189,19 +196,19 @@ class AuthServiceImplTest {
         val request = LoginRequest("test@example.com", "password123")
         val authToken = UsernamePasswordAuthenticationToken(request.email, request.password)
         val unapprovedUser =
-            User(
-                id = "1",
-                email = "test@example.com",
-                password = "encoded_password",
-                fullName = "Test User",
-                fullNameNepali = "टेस्ट युजर",
-                dateOfBirth = LocalDate.now(),
-                address = "Test Address",
-                officePost = "Test Post",
-                wardNumber = 1,
-                isApproved = false, // This is the key difference
-                roles = mutableSetOf(Role("1", RoleType.VIEWER)),
-            )
+            User().apply {
+                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174001")
+                email = "test@example.com"
+                setPassword("encoded_password")
+                fullName = "Test User"
+                fullNameNepali = "टेस्ट युजर"
+                dateOfBirth = LocalDate.now()
+                address = "Test Address"
+                officePost = "Test Post"
+                wardNumber = 1
+                isApproved = false
+                roles = mutableSetOf(mockRole)
+            }
 
         every { authenticationManager.authenticate(any()) } returns authToken
         every { userRepository.findByEmail(request.email) } returns unapprovedUser

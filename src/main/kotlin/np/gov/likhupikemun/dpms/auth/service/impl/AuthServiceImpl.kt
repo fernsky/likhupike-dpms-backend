@@ -118,19 +118,19 @@ class AuthServiceImpl(
 
     @Transactional
     override fun resetPassword(request: ResetPasswordRequest) {
-        val email =
+        val cachedEmail =
             resetTokenCache.getIfPresent(request.token)
                 ?: throw InvalidPasswordResetTokenException()
 
         val user =
-            userRepository.findByEmail(email)
-                ?: throw UserNotFoundException(email)
+            userRepository.findByEmail(cachedEmail)
+                ?: throw UserNotFoundException(cachedEmail)
 
-        user.password = passwordEncoder.encode(request.newPassword)
+        user.setPassword(passwordEncoder.encode(request.newPassword))
         userRepository.save(user)
 
         resetTokenCache.invalidate(request.token)
-        logger.info("Password reset successful for user: {}", email)
+        logger.info("Password reset successful for user: {}", cachedEmail)
     }
 
     private fun validateRegistration(request: RegisterRequest) {
@@ -140,95 +140,94 @@ class AuthServiceImpl(
         }
     }
 
-    private fun createUser(request: RegisterRequest) =
-        User(
-            email = request.email,
-            password = passwordEncoder.encode(request.password),
-            fullName = request.fullName,
-            fullNameNepali = request.fullNameNepali,
-            dateOfBirth = request.dateOfBirth,
-            address = request.address,
-            officePost = request.officePost,
-            wardNumber = request.wardNumber,
-            isApproved = false,
-        )
+    private fun createUser(request: RegisterRequest): User {
+        val user = User()
+        with(user) {
+            email = request.email
+            setPassword(passwordEncoder.encode(request.password))
+            fullName = request.fullName
+            fullNameNepali = request.fullNameNepali
+            dateOfBirth = request.dateOfBirth
+            address = request.address
+            officePost = request.officePost
+            wardNumber = request.wardNumber
+            isApproved = false
+            isMunicipalityLevel = false // Municipality level users should be created by admins
+        }
+        return user
+    }
 
     private fun authenticateAndGetUser(request: LoginRequest): User {
         try {
             authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken(request.email, request.password),
+                UsernamePasswordAuthenticationToken(
+                    request.email,
+                    request.password,
+                ),
             )
+            return userRepository
+                .findByEmail(request.email)
+                ?.takeIf { it.isApproved }
+                ?: throw UserNotFoundException(request.email)
         } catch (e: Exception) {
             val user = userRepository.findByEmail(request.email)
-            if (user != null && !user.isApproved) {
-                logger.warn("User is not approved: {}", request.email)
-                throw UserNotApprovedException()
+            when {
+                user == null -> throw UserNotFoundException(request.email)
+                !user.isApproved -> throw UserNotApprovedException()
+                else -> throw InvalidCredentialsException()
             }
-            logger.warn("Authentication failed for user: {}", request.email)
-            throw InvalidCredentialsException()
         }
-
-        val user =
-            userRepository.findByEmail(request.email)
-                ?: run {
-                    logger.warn("User not found: {}", request.email)
-                    throw UserNotFoundException(request.email)
-                }
-
-        if (!user.isApproved) {
-            logger.warn("User not approved: {}", request.email)
-            throw UserNotApprovedException()
-        }
-
-        return user
     }
 
     private fun validateRefreshTokenAndGetUser(refreshToken: String): User {
         if (!jwtService.validateToken(refreshToken)) {
-            logger.warn("Invalid refresh token")
             throw InvalidTokenException()
         }
 
-        val email = jwtService.extractEmail(refreshToken)
-        return userRepository.findByEmail(email) ?: run {
-            logger.warn("User not found for refresh token: {}", email)
-            throw UserNotFoundException(email)
-        }
+        val email =
+            jwtService.extractEmail(refreshToken)
+                ?: throw InvalidTokenException()
+
+        return userRepository.findByEmail(email)
+            ?: throw UserNotFoundException(email)
     }
 
     private fun createAuthResponse(
         user: User,
         tokenPair: TokenPair,
-    ) = AuthResponse(
-        token = tokenPair.accessToken,
-        refreshToken = tokenPair.refreshToken,
-        userId = user.id!!,
-        email = user.email,
-        roles = user.roles.map { it.roleType }, // Remove toString() call
-        expiresIn = tokenPair.expiresIn,
-    )
+    ): AuthResponse =
+        AuthResponse(
+            token = tokenPair.accessToken,
+            refreshToken = tokenPair.refreshToken,
+            userId = user.id?.toString() ?: throw IllegalStateException("User ID is null"),
+            email = user.email ?: throw IllegalStateException("Email is null"),
+            roles = user.roles.mapNotNull { it.roleType }.toSet(),
+            expiresIn = tokenPair.expiresIn,
+        )
 
     private fun generateResetToken(): String = UUID.randomUUID().toString()
 
     private fun sendPasswordResetEmail(
-        email: String,
+        email: String?,
         token: String,
     ) {
-        val message = SimpleMailMessage()
-        message.setTo(email)
-        message.setSubject("Password Reset Request")
-        message.setText(
-            """
-            You have requested to reset your password.
-            Please use the following token to reset your password: $token
-            
-            If you did not request this, please ignore this email.
-            """.trimIndent(),
-        )
-
+        val userEmail = email ?: throw IllegalArgumentException("Email cannot be null")
+        val message =
+            SimpleMailMessage().apply {
+                setTo(userEmail)
+                setSubject("Password Reset Request")
+                setText(
+                    """
+                    You have requested to reset your password.
+                    Please use the following token to reset your password: $token
+                    
+                    If you did not request this, please ignore this email.
+                    """.trimIndent(),
+                )
+            }
         mailSender.send(message)
     }
 
     // Remove or fix unused method if not needed
-    private fun convertToRoleType(role: Role): RoleType = role.roleType
+    private fun convertToRoleType(role: Role): RoleType = role.roleType ?: throw IllegalStateException("Role type cannot be null")
 }

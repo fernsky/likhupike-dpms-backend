@@ -13,15 +13,16 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
     properties:
       hibernate:
         format_sql: true
   liquibase:
-    enabled: false
+    enabled: false # Disable for tests
     change-log: classpath:db/changelog/db.changelog-master.xml
-    contexts: test
     default-schema: public
-    drop-first: true # Be careful, this drops and recreates schema in test
   test:
     database:
       replace: none

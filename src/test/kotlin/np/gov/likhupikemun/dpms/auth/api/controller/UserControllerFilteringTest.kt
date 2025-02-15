@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.time.LocalDateTime
+import java.util.UUID
 
 @WebMvcTest(UserController::class)
 @Import(TestSecurityConfig::class)
@@ -33,7 +34,7 @@ class UserControllerFilteringTest {
     private val testUsers =
         listOf(
             UserResponse(
-                id = "1",
+                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
                 email = "ward1@municipality.gov.np",
                 fullName = "Ward One User",
                 fullNameNepali = "वडा एक प्रयोगकर्ता",
@@ -47,7 +48,7 @@ class UserControllerFilteringTest {
                 isMunicipalityLevel = false, // Add for ward user
             ),
             UserResponse(
-                id = "2",
+                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174001"),
                 email = "admin@municipality.gov.np",
                 fullName = "Municipality Admin",
                 fullNameNepali = "नगरपालिका एडमिन",
@@ -191,7 +192,7 @@ class UserControllerFilteringTest {
                     .param("roles", "WARD_ADMIN")
                     .param("officePosts", "Ward Officer"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].id").value("1"))
+            .andExpect(jsonPath("$.data.content[0].id").value("123e4567-e89b-12d3-a456-426614174000"))
             .andExpect(jsonPath("$.data.totalElements").value(1))
     }
 

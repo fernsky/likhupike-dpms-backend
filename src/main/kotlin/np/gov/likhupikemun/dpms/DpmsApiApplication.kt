@@ -1,5 +1,6 @@
 package np.gov.likhupikemun.dpms
 
+import np.gov.likhupikemun.dpms.config.JpaConfig
 import np.gov.likhupikemun.dpms.shared.config.*
 import np.gov.likhupikemun.dpms.shared.security.config.SecurityConfig
 import org.springframework.boot.autoconfigure.SpringBootApplication

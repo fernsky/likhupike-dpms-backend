@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Service
 class UserService(
@@ -82,7 +83,7 @@ class UserService(
         return user
             .apply {
                 isApproved = true
-                approvedBy = currentUser.id
+                approvedBy = currentUser.id?.toString()
                 approvedAt = LocalDateTime.now()
                 logger.debug("Setting approval details - approvedBy: {}, approvedAt: {}", approvedBy, approvedAt)
             }.let {
@@ -152,7 +153,7 @@ class UserService(
 
         request.roles?.let { newRoles ->
             validateRoleAssignment(currentUser, user, newRoles)
-            user.roles = roleRepository.findByNameIn(newRoles).toMutableSet()
+            user.roles = roleRepository.findByRoleTypeIn(newRoles).toMutableSet()
         }
 
         return userRepository.save(user).toResponse()
@@ -184,7 +185,7 @@ class UserService(
         user.apply {
             isDeleted = true
             deletedAt = LocalDateTime.now()
-            deletedBy = currentUser.id
+            deletedBy = currentUser.id?.toString()
             email = "$email.deleted.${System.currentTimeMillis()}" // Ensure email uniqueness
             isApproved = false
         }
@@ -284,7 +285,7 @@ class UserService(
                 throw ForbiddenException("Ward admin can only assign roles in their ward")
         }
 
-        val persistentRoles = roleRepository.findByNameIn(newRoles)
+        val persistentRoles = roleRepository.findByRoleTypeIn(newRoles)
         user.roles = persistentRoles.toMutableSet()
     }
 
@@ -375,67 +376,69 @@ class UserService(
         }
     }
 
-    private fun createUserFromRequest(request: CreateUserRequest): User {
-        val user =
-            User(
-                email = request.email,
-                password = passwordEncoder.encode(request.password),
-                fullName = request.fullName,
-                fullNameNepali = request.fullNameNepali,
-                dateOfBirth = LocalDate.parse(request.dateOfBirth),
-                address = request.address,
-                officePost = request.officePost,
-                wardNumber = request.wardNumber,
-                isMunicipalityLevel = request.isMunicipalityLevel,
-            )
+    private fun createUserFromRequest(request: CreateUserRequest): User =
+        User().apply {
+            email = request.email
+            setPassword(passwordEncoder.encode(request.password))
+            fullName = request.fullName
+            fullNameNepali = request.fullNameNepali
+            dateOfBirth = LocalDate.parse(request.dateOfBirth)
+            address = request.address
+            officePost = request.officePost
+            wardNumber = request.wardNumber
+            isMunicipalityLevel = request.isMunicipalityLevel
 
-        request.profilePicture?.let {
-            user.profilePicture = fileService.storeFile(it)
-        }
-
-        val domainRoles =
-            if (request.roles.isEmpty()) {
-                setOf(RoleType.VIEWER)
-            } else {
-                request.roles.map { convertToEntityRole(it) }.toSet()
+            request.profilePicture?.let {
+                profilePicture = fileService.storeFile(it)
             }
 
-        val persistentRoles = roleRepository.findByNameIn(domainRoles)
-        user.roles = persistentRoles.toMutableSet()
-        return user
-    }
+            val domainRoles =
+                if (request.roles.isEmpty()) {
+                    setOf(RoleType.VIEWER)
+                } else {
+                    request.roles
+                }
+
+            roles = roleRepository.findByRoleTypeIn(domainRoles).toMutableSet()
+        }
 
     private fun findUserById(userId: String): User =
         userRepository
             .findById(userId)
             .orElseThrow { UserNotFoundException(userId) }
 
-    private fun User.toResponse(): UserResponse =
-        UserResponse(
-            id = id!!,
-            email = email,
-            fullName = fullName,
-            fullNameNepali = fullNameNepali,
+    private fun User.toResponse(): UserResponse {
+        val dtoRoles = roles.mapNotNull { it.roleType }.toSet()
+        val now = LocalDateTime.now()
+
+        return UserResponse(
+            id = id ?: throw IllegalStateException("User ID cannot be null"),
+            email = email ?: throw IllegalStateException("Email cannot be null"),
+            fullName = fullName ?: throw IllegalStateException("Full name cannot be null"),
+            fullNameNepali = fullNameNepali ?: throw IllegalStateException("Nepali full name cannot be null"),
             wardNumber = wardNumber,
             officePost = officePost,
-            roles = roles.map { it.roleType }.toSet(),
+            roles = dtoRoles,
             status = if (isApproved) UserStatus.ACTIVE else UserStatus.PENDING,
             profilePictureUrl = profilePicture?.let { "/uploads/profiles/$it" },
-            isMunicipalityLevel = isMunicipalityLevel, // Add this field
-            createdAt = createdAt ?: LocalDateTime.now(),
-            updatedAt = updatedAt ?: LocalDateTime.now(),
+            isMunicipalityLevel = isMunicipalityLevel,
+            createdAt = createdAt?.toLocalDateTime() ?: now,
+            updatedAt = updatedAt?.toLocalDateTime() ?: now,
         )
+    }
 
     private fun updateUserRoles(
         user: User,
         newDtoRoles: Set<RoleType>,
     ) {
         val domainRoleTypes = newDtoRoles.map { convertToEntityRole(it) }
-        val persistentRoles = roleRepository.findByNameIn(domainRoleTypes)
+        val persistentRoles = roleRepository.findByRoleTypeIn(domainRoleTypes)
         user.roles = persistentRoles.toMutableSet()
     }
 
     private fun convertToEntityRole(dtoRole: RoleType): RoleType = RoleType.valueOf(dtoRole.name)
 
     private fun convertToDtoRole(entityRole: RoleType): RoleType = RoleType.valueOf(entityRole.name)
+
+    private fun java.time.Instant.toLocalDateTime(): LocalDateTime = LocalDateTime.ofInstant(this, ZoneId.systemDefault())
 }

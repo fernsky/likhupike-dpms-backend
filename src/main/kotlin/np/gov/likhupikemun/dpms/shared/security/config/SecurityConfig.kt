@@ -25,9 +25,6 @@ class SecurityConfig(
     private val authenticationEntryPoint: CustomAuthenticationEntryPoint,
 ) {
     @Bean
-    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
-
-    @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }

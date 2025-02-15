@@ -39,7 +39,7 @@ class JwtService(
     fun generateToken(user: User): String =
         generateToken(
             mapOf(
-                "email" to user.email,
+                "email" to (user.email ?: ""),
                 "roles" to user.roles.map { it.roleType.toString() },
             ),
             user,
@@ -48,7 +48,7 @@ class JwtService(
     fun generateRefreshToken(user: User): String =
         generateToken(
             mapOf(
-                "email" to user.email,
+                "email" to (user.email ?: ""),
                 "type" to "refresh",
             ),
             user,
@@ -139,5 +139,5 @@ class JwtService(
             null
         }
 
-    private fun getRoles(user: User): List<String> = user.roles.map { it.roleType.getAuthority() }
+    private fun getRoles(user: User): List<String> = user.roles.mapNotNull { it.roleType?.getAuthority() }
 }
