@@ -9,6 +9,7 @@ plugins {
     id("com.google.cloud.tools.jib") version "3.4.1"
     id("org.liquibase.gradle") version "2.2.1"
     id("application")
+    id("org.jetbrains.kotlin.kapt") version "1.9.25"
 }
 
 springBoot {
@@ -204,6 +205,10 @@ dependencies {
     // Ensure proper logging setup
     implementation("ch.qos.logback:logback-classic")
     implementation("org.slf4j:slf4j-api")
+
+    // Add Hibernate metamodel generator
+    annotationProcessor("org.hibernate.orm:hibernate-jpamodelgen:6.4.4.Final")
+    kapt("org.hibernate.orm:hibernate-jpamodelgen:6.4.4.Final")
 }
 
 // Liquibase configuration
