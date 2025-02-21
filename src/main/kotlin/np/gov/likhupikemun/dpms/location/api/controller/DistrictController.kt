@@ -42,7 +42,7 @@ class DistrictController(
         ],
     )
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')") // This expects ROLE_SUPER_ADMIN in Spring Security
     fun createDistrict(
         @Parameter(description = "District creation details", required = true)
         @Valid

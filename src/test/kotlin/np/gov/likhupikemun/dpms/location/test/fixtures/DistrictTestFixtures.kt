@@ -124,4 +124,29 @@ object DistrictTestFixtures {
         nameNepali = nameNepali,
         municipalityCount = municipalityCount,
     )
+
+    fun createDistrictDetailResponse(
+        code: String = "TEST-D1",
+        name: String = "Test District",
+        nameNepali: String = "परीक्षण जिल्ला",
+        area: BigDecimal = BigDecimal("1000.50"),
+        population: Long = 100000L,
+        headquarter: String = "Test Headquarter",
+        headquarterNepali: String = "परीक्षण सदरमुकाम",
+        provinceCode: String,
+    ) = DistrictDetailResponse(
+        code = code,
+        name = name,
+        nameNepali = nameNepali,
+        area = area,
+        population = population,
+        headquarter = headquarter,
+        headquarterNepali = headquarterNepali,
+        province =
+            ProvinceTestFixtures.createProvinceSummaryResponse(
+                code = provinceCode,
+                name = "Test Province",
+            ),
+        municipalities = emptyList(),
+    )
 }

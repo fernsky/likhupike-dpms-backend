@@ -12,7 +12,7 @@ data class CreateDistrictRequest(
     @field:Size(max = 100, message = "Nepali name must not exceed 100 characters")
     val nameNepali: String,
     @field:NotBlank(message = "Code is required")
-    @field:Pattern(regexp = "^[A-Z0-9]{1,10}$", message = "Code must be 1-10 uppercase letters or numbers")
+    @field:Pattern(regexp = "^[A-Z0-9_-]{1,10}$", message = "Code must be 1-10 uppercase letters, numbers, dashes or underscores")
     val code: String,
     @field:NotNull(message = "Province Code is required")
     val provinceCode: String,

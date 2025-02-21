@@ -31,4 +31,8 @@ enum class SharedErrorDetailType(
     OPERATION_FAILED("The requested operation failed to complete"),
     INVALID_STATE("The operation cannot be performed in the current state"),
     SYSTEM_ERROR("An internal system error occurred"),
+
+    // Operation restrictions
+    OPERATION_NOT_ALLOWED("This operation is not allowed in the current context"),
+    INVALID_INPUT("The provided input data is invalid"),
 }

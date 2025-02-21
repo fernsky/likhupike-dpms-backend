@@ -16,7 +16,7 @@ object UserTestDataFactory {
         }
 
     fun createMunicipalityAdmin(
-        id: String = "1",
+        id: String = "550e8400-e29b-41d4-a716-446655440001",
         email: String = "admin@municipality.gov.np",
     ) = User().apply {
         this.id = UUID.fromString(id)
@@ -35,7 +35,7 @@ object UserTestDataFactory {
     }
 
     fun createWardAdmin(
-        id: String = "2",
+        id: String = "550e8400-e29b-41d4-a716-446655440002",
         email: String = "ward.admin@municipality.gov.np",
         wardNumber: Int = 1,
     ) = User().apply {
@@ -56,7 +56,7 @@ object UserTestDataFactory {
     }
 
     fun createViewer(
-        id: String = "3",
+        id: String = "550e8400-e29b-41d4-a716-446655440003",
         email: String = "viewer@municipality.gov.np",
         wardNumber: Int? = null,
         isMunicipalityLevel: Boolean = false,
@@ -73,6 +73,25 @@ object UserTestDataFactory {
         this.isMunicipalityLevel = isMunicipalityLevel
         isApproved = true
         roles = mutableSetOf(createRole(RoleType.VIEWER))
+        createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+        updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+    }
+
+    fun createSuperAdmin(
+        id: String = "550e8400-e29b-41d4-a716-446655440000",
+        email: String = "super.admin@likhupike.gov.np",
+    ) = User().apply {
+        this.id = UUID.fromString(id)
+        this.email = email
+        setPassword("encoded_password")
+        fullName = "Super Admin"
+        fullNameNepali = "सुपर एडमिन"
+        dateOfBirth = LocalDate.now()
+        address = "Likhu Pike Municipality"
+        officePost = "Super Admin"
+        isMunicipalityLevel = true
+        isApproved = true
+        roles = mutableSetOf(createRole(RoleType.SUPER_ADMIN))
         createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
         updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
     }

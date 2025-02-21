@@ -17,7 +17,7 @@ data class CreateMunicipalityRequest(
     @Schema(description = "Name of the municipality in Nepali", example = "पोखरा")
     val nameNepali: String,
     @field:NotBlank(message = "Municipality code is required")
-    @field:Pattern(regexp = "^[A-Z0-9]{3,10}$", message = "Invalid municipality code format")
+    @field:Pattern(regexp = "^[A-Z0-9_-]{1,10}$", message = "Code must be 1-10 uppercase letters, numbers, dashes or underscores")
     @Schema(description = "Unique code for the municipality", example = "PKR001")
     val code: String,
     @field:NotNull(message = "Municipality type is required")
