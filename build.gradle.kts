@@ -195,11 +195,12 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     // H2GIS dependencies for testing
-    testImplementation("com.h2database:h2:1.4.200")  // Specific version that works well with H2GIS
+    testImplementation("com.h2database:h2:1.4.197")  // Specific version that works well with H2GIS
     testImplementation("org.orbisgis:h2gis:1.5.0") {
         exclude(group = "org.slf4j", module = "slf4j-simple")
     }
     testImplementation("org.orbisgis:h2gis-ext:1.3.0")
+    testImplementation("org.orbisgis:h2gis-functions:1.3.2")
     testImplementation("org.orbisgis:h2gis-utilities:1.5.0")
 
     // Fix SLF4J bindings
