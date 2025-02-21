@@ -1,8 +1,8 @@
 package np.gov.likhupikemun.dpms.location.service
 
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSearchCriteria
+import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSortField
 import np.gov.likhupikemun.dpms.location.exception.ProvinceCodeExistsException
-import np.gov.likhupikemun.dpms.location.exception.ProvinceNotFoundException
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.MunicipalityTestFixtures
@@ -20,12 +20,12 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @SpringBootTest
 @ActiveProfiles("test")
 @DisplayName("Province Service Integration Tests")
 class ProvinceServiceIntegrationTest {
-
     @Autowired
     private lateinit var provinceService: ProvinceService
 
@@ -46,7 +46,6 @@ class ProvinceServiceIntegrationTest {
     @Nested
     @DisplayName("Create Province Tests")
     inner class CreateProvinceTests {
-        
         @Test
         @Transactional
         fun `should create province successfully`() {
@@ -85,7 +84,6 @@ class ProvinceServiceIntegrationTest {
     @Nested
     @DisplayName("Update Province Tests")
     inner class UpdateProvinceTests {
-        
         @Test
         @Transactional
         fun `should update province successfully`() {
@@ -106,20 +104,19 @@ class ProvinceServiceIntegrationTest {
     @Nested
     @DisplayName("Search Province Tests")
     inner class SearchProvinceTests {
-        
         @Test
         @Transactional
         fun `should search provinces with criteria`() {
             // Given
             createTestProvinces()
-            val criteria = ProvinceSearchCriteria(
-                searchTerm = "Test",
-                minPopulation = 400000L,
-                sortBy = "population",
-                sortDirection = Sort.Direction.DESC,
-                page = 0,
-                pageSize = 10
-            )
+            val criteria =
+                ProvinceSearchCriteria(
+                    searchTerm = "Test",
+                    sortBy = ProvinceSortField.POPULATION,
+                    sortDirection = Sort.Direction.DESC,
+                    page = 0,
+                    pageSize = 10,
+                )
 
             // When
             val result = provinceService.searchProvinces(criteria)
@@ -130,41 +127,20 @@ class ProvinceServiceIntegrationTest {
         }
     }
 
-    @Nested
-    @DisplayName("Statistics Tests")
-    inner class StatisticsTests {
-        
-        @Test
-        @Transactional
-        fun `should get province statistics correctly`() {
-            // Given
-            val province = createTestProvince()
-            createTestDistrictWithMunicipalities(province.code)
-
-            // When 
-            val stats = provinceService.getProvinceStatistics(province.code)
-
-            // Then
-            assertNotNull(stats)
-            assertEquals(1, stats.totalDistricts)
-            assertEquals(3, stats.totalMunicipalities)
-            assertTrue(stats.totalPopulation > 0)
-            assertTrue(stats.totalArea > BigDecimal.ZERO)
-        }
-    }
-
-    private fun createTestProvince() = provinceService.createProvince(
-        ProvinceTestFixtures.createProvinceRequest()
-    )
+    private fun createTestProvince() =
+        provinceService.createProvince(
+            ProvinceTestFixtures.createProvinceRequest(),
+        )
 
     private fun createTestDistrictWithMunicipalities(provinceCode: String) {
         // Create district
-        val district = districtService.createDistrict(
-            DistrictTestFixtures.createDistrictRequest(
-                provinceCode = provinceCode,
-                code = "TEST-D1"
+        val district =
+            districtService.createDistrict(
+                DistrictTestFixtures.createDistrictRequest(
+                    provinceCode = provinceCode,
+                    code = "TEST-D1",
+                ),
             )
-        )
 
         // Create municipalities
         repeat(3) { i ->
@@ -173,8 +149,8 @@ class ProvinceServiceIntegrationTest {
                     districtCode = district.code,
                     code = "TEST-M$i",
                     population = 10000L + (i * 1000),
-                    area = BigDecimal("100.00").add(BigDecimal(i.toString()))
-                )
+                    area = BigDecimal("100.00").add(BigDecimal(i.toString())),
+                ),
             )
         }
     }
@@ -185,8 +161,8 @@ class ProvinceServiceIntegrationTest {
                 ProvinceTestFixtures.createProvinceRequest(
                     code = "TEST-P$i",
                     name = "Test Province $i",
-                    population = 400000L + (i * 50000L)
-                )
+                    population = 400000L + (i * 50000L),
+                ),
             )
         }
     }

@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -75,7 +76,7 @@ class MunicipalityControllerIntegrationTest {
             // Arrange
             val request =
                 MunicipalityTestFixtures.createMunicipalityRequest(
-                    districtId = testDistrict.id!!,
+                    districtCode = testDistrict.code!!,
                     totalWards = 0, // Invalid ward count
                 )
 
@@ -219,7 +220,7 @@ class MunicipalityControllerIntegrationTest {
     private fun createTestMunicipalityWithLocation() {
         municipalityService.createMunicipality(
             MunicipalityTestFixtures.createMunicipalityRequest(
-                districtId = testDistrict.id!!,
+                districtCode = testDistrict.code!!,
                 code = "GEO-TEST",
                 latitude = BigDecimal("27.7172"),
                 longitude = BigDecimal("85.3240"),

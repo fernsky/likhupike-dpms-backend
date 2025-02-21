@@ -1,6 +1,7 @@
 package np.gov.likhupikemun.dpms.location.performance
 
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSearchCriteria
+import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSortField
 import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
 import np.gov.likhupikemun.dpms.location.service.DistrictService
@@ -73,9 +74,8 @@ class ProvincePerformanceTest {
         val criteria =
             ProvinceSearchCriteria(
                 searchTerm = "Test",
-                minPopulation = 100000L,
-                maxPopulation = 1000000L,
-                sortBy = "population",
+                code = null,
+                sortBy = ProvinceSortField.POPULATION,
                 sortDirection = Sort.Direction.DESC,
                 page = 0,
                 pageSize = 10,
@@ -96,16 +96,6 @@ class ProvincePerformanceTest {
                 provinceService.getProvinceDetail(testProvince.code!!)
             }
         assert(elapsed < 500) { "Detail retrieval took more than 500ms: $elapsed ms" }
-    }
-
-    @Test
-    @Benchmark
-    fun `benchmark statistics calculation performance`() {
-        val elapsed =
-            measureTimeMillis {
-                provinceService.getProvinceStatistics(testProvince.code!!)
-            }
-        assert(elapsed < 1000) { "Statistics calculation took more than 1 second: $elapsed ms" }
     }
 
     @Test

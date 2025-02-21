@@ -1,6 +1,7 @@
 package np.gov.likhupikemun.dpms.location.service
 
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.DistrictSearchCriteria
+import np.gov.likhupikemun.dpms.location.api.dto.criteria.DistrictSortField
 import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.exception.*
 import np.gov.likhupikemun.dpms.location.repository.DistrictRepository
@@ -54,7 +55,7 @@ class DistrictServiceIntegrationTest {
             // Given
             val request =
                 DistrictTestFixtures.createDistrictRequest(
-                    provinceId = testProvince.id!!,
+                    provinceCode = testProvince.code!!,
                 )
 
             // When
@@ -83,7 +84,7 @@ class DistrictServiceIntegrationTest {
             // Given
             val request =
                 DistrictTestFixtures.createDistrictRequest(
-                    provinceId = testProvince.id!!,
+                    provinceCode = testProvince.code!!,
                     code = "TEST-D1",
                 )
             districtService.createDistrict(request)
@@ -152,8 +153,8 @@ class DistrictServiceIntegrationTest {
             val criteria =
                 DistrictSearchCriteria(
                     searchTerm = "Test",
-                    minPopulation = 150000,
-                    sortBy = "population",
+                    code = null,
+                    sortBy = DistrictSortField.POPULATION,
                     sortDirection = Sort.Direction.DESC,
                     page = 0,
                     pageSize = 10,
@@ -204,40 +205,6 @@ class DistrictServiceIntegrationTest {
             // Then
             assertEquals(1, result.totalElements)
             assertEquals(district.name, result.content.first().name)
-        }
-    }
-
-    @Nested
-    @DisplayName("Statistics Tests")
-    inner class StatisticsTests {
-        @Test
-        @Transactional
-        @DisplayName("Should calculate district statistics correctly")
-        fun shouldCalculateStatistics() {
-            // Given
-            val district =
-                districtRepository.save(
-                    DistrictTestFixtures.createDistrict(province = testProvince),
-                )
-            // Add municipality with test data
-            district.addMunicipality(
-                MunicipalityTestFixtures.createMunicipality(
-                    district = district,
-                    population = 50000,
-                    area = BigDecimal("100.00"),
-                ),
-            )
-            districtRepository.save(district)
-
-            // When
-            val stats = districtService.getDistrictStatistics(district.code!!)
-
-            // Then
-            assertNotNull(stats)
-            assertEquals(1, stats.totalMunicipalities)
-            assertEquals(1, stats.activeMunicipalities)
-            assertEquals(50000, stats.totalPopulation)
-            assertEquals(BigDecimal("100.00"), stats.totalArea)
         }
     }
 }

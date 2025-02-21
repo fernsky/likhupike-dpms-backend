@@ -85,9 +85,9 @@ class WardServiceIntegrationTest {
         val updateRequest = createUpdateRequest()
 
         // Act
-        val response = wardService.updateWard(ward.wardNumber, testMunicipality.code, updateRequest)
+        val response = wardService.updateWard(ward.wardNumber, testMunicipality.code!!, updateRequest)
 
-        // Assert
+        // Then
         assertEquals(updateRequest.area, response.area)
         assertEquals(updateRequest.population, response.population)
         assertEquals(updateRequest.latitude, response.latitude)
@@ -103,10 +103,11 @@ class WardServiceIntegrationTest {
         createTestWards()
         val criteria =
             WardSearchCriteria(
-                municipalityCode = testMunicipality.code,
+                municipalityCode = testMunicipality.code!!,
                 minPopulation = 1000L,
                 maxPopulation = 2000L,
-                includeInactive = false,
+                page = 0,
+                pageSize = 10,
             )
 
         // Act
@@ -138,7 +139,7 @@ class WardServiceIntegrationTest {
 
     private fun createWardRequest() =
         CreateWardRequest(
-            municipalityCode = testMunicipality.code,
+            municipalityCode = testMunicipality.code!!,
             wardNumber = 1,
             area = BigDecimal("10.00"),
             population = 1000L,
@@ -168,7 +169,6 @@ class WardServiceIntegrationTest {
                 area = BigDecimal("100.00")
                 population = 10000L
                 totalWards = 10
-                isActive = true
             }
         return municipalityRepository.save(municipality)
     }
@@ -177,7 +177,7 @@ class WardServiceIntegrationTest {
         for (i in 1..5) {
             wardService.createWard(
                 CreateWardRequest(
-                    municipalityCode = testMunicipality.code,
+                    municipalityCode = testMunicipality.code!!,
                     wardNumber = i,
                     area = BigDecimal("10.00"),
                     population = (1000L * i),

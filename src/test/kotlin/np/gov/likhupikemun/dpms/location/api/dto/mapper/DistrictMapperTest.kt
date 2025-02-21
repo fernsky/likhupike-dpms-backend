@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import np.gov.likhupikemun.dpms.location.api.dto.mapper.impl.DistrictMapperImpl
+import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceSummaryResponse
 import np.gov.likhupikemun.dpms.location.domain.District
 import np.gov.likhupikemun.dpms.location.domain.Province
@@ -20,11 +21,12 @@ import kotlin.test.assertNotNull
 @DisplayName("District Mapper Tests")
 class DistrictMapperTest {
     private val provinceMapper = mockk<ProvinceMapper>()
+    private val municipalityMapper = mockk<MunicipalityMapper>()
     private lateinit var districtMapper: DistrictMapper
 
     @BeforeEach
     fun setup() {
-        districtMapper = DistrictMapperImpl(provinceMapper)
+        districtMapper = DistrictMapperImpl(provinceMapper, municipalityMapper)
     }
 
     @Nested
@@ -180,5 +182,15 @@ class DistrictMapperTest {
             nameNepali = "परीक्षण प्रदेश",
         )
 
-    private fun createTestProvinceDetail() = createTestProvinceSummary()
+    private fun createTestProvinceDetail() =
+        ProvinceDetailResponse(
+            code = "P1",
+            name = "Test Province",
+            nameNepali = "परीक्षण प्रदेश",
+            area = BigDecimal("1000.00"),
+            population = 1000000L,
+            headquarter = "Test HQ",
+            headquarterNepali = "परीक्षण सदरमुकाम",
+            districts = emptyList(),
+        )
 }

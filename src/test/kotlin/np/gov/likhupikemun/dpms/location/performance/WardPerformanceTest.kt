@@ -99,7 +99,7 @@ class WardPerformanceTest {
         val ward = wardService.createWard(createWardRequest())
         val elapsed =
             measureTimeMillis {
-                wardService.getWardDetail(ward.wardNumber, testMunicipality.code)
+                wardService.getWardDetail(ward.wardNumber, testMunicipality.code!!)
             }
         assert(elapsed < 1000) { "Ward detail retrieval took more than 1 second: $elapsed ms" }
     }
@@ -130,15 +130,14 @@ class WardPerformanceTest {
                 area = BigDecimal("100.00")
                 population = 10000L
                 totalWards = 33
-                isActive = true
             }
         return municipalityRepository.save(municipality)
     }
 
     private fun createWardRequest(number: Int = 1) =
         CreateWardRequest(
-            municipalityCode = testMunicipality.code,
-            wardNumber = number,
+            municipalityCode = testMunicipality.code!!, // Add null-safe operator
+            wardNumber = number, // Remove unnecessary null-safe operator
             area = BigDecimal("10.00"),
             population = 1000L,
             latitude = BigDecimal("27.7172"),

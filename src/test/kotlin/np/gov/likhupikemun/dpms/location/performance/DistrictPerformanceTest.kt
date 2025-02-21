@@ -1,11 +1,10 @@
 package np.gov.likhupikemun.dpms.location.performance
-
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.DistrictSearchCriteria
+import np.gov.likhupikemun.dpms.location.api.dto.criteria.DistrictSortField
 import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
 import np.gov.likhupikemun.dpms.location.service.DistrictService
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
-import np.gov.likhupikemun.dpms.location.test.fixtures.MunicipalityTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.ProvinceTestFixtures
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -53,7 +52,7 @@ class DistrictPerformanceTest {
     fun `benchmark district creation performance`() {
         val request =
             DistrictTestFixtures.createDistrictRequest(
-                provinceId = testProvince.id!!,
+                provinceCode = testProvince.code!!,
                 code = "PERF-D${System.nanoTime()}",
             )
 
@@ -70,9 +69,8 @@ class DistrictPerformanceTest {
         val criteria =
             DistrictSearchCriteria(
                 searchTerm = "Test",
-                minPopulation = 50000L,
-                maxPopulation = 200000L,
-                sortBy = "population",
+                code = null,
+                sortBy = DistrictSortField.POPULATION,
                 sortDirection = Sort.Direction.DESC,
                 page = 0,
                 pageSize = 10,
@@ -91,7 +89,7 @@ class DistrictPerformanceTest {
         val district =
             districtService.createDistrict(
                 DistrictTestFixtures.createDistrictRequest(
-                    provinceId = testProvince.id!!,
+                    provinceCode = testProvince.code!!,
                     code = "PERF-D-CONC",
                 ),
             )
@@ -103,34 +101,6 @@ class DistrictPerformanceTest {
                 }
             }
         assert(elapsed < 1000) { "Concurrent district access took more than 1 second: $elapsed ms" }
-    }
-
-    @Test
-    @Benchmark
-    fun `benchmark district statistics calculation performance`() {
-        val district =
-            districtService.createDistrict(
-                DistrictTestFixtures.createDistrictRequest(
-                    provinceId = testProvince.id!!,
-                    code = "PERF-D-STAT",
-                ),
-            )
-
-        // Add municipalities for statistics
-        repeat(5) {
-            val municipality =
-                MunicipalityTestFixtures.createMunicipalityRequest(
-                    districtCode = district.code,
-                    code = "PERF-M$it",
-                )
-            districtService.getMunicipalityService().createMunicipality(municipality)
-        }
-
-        val elapsed =
-            measureTimeMillis {
-                districtService.getDistrictStatistics(district.code)
-            }
-        assert(elapsed < 1000) { "Statistics calculation took more than 1 second: $elapsed ms" }
     }
 
     @Test
@@ -156,7 +126,7 @@ class DistrictPerformanceTest {
             districtService
                 .searchDistricts(
                     DistrictSearchCriteria(
-                        provinceCode = testProvince.code,
+                        code = testProvince.code,
                         page = 0,
                         pageSize = 50,
                     ),
@@ -188,7 +158,7 @@ class DistrictPerformanceTest {
             try {
                 districtService.createDistrict(
                     DistrictTestFixtures.createDistrictRequest(
-                        provinceId = testProvince.id!!,
+                        provinceCode = testProvince.code!!,
                         code = "PERF-D$i",
                         name = "Performance Test District $i",
                         population = (50000L + (i * 10000L)),

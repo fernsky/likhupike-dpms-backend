@@ -20,22 +20,20 @@ object MunicipalityTestFixtures {
         latitude: BigDecimal = BigDecimal("27.7172"),
         longitude: BigDecimal = BigDecimal("85.3240"),
         totalWards: Int = 12,
-    ): Municipality =
-        Municipality().apply {
-            this.district = district
-            this.name = name
-            this.nameNepali = nameNepali
-            this.code = code
-            this.type = type
-            this.area = area
-            this.population = population
-            this.latitude = latitude
-            this.longitude = longitude
-            this.totalWards = totalWards
-        }
+    ) = Municipality().apply {
+        this.district = district
+        this.name = name
+        this.nameNepali = nameNepali
+        this.code = code
+        this.type = type
+        this.area = area
+        this.population = population
+        this.latitude = latitude
+        this.longitude = longitude
+        this.totalWards = totalWards
+    }
 
     fun createMunicipalityRequest(
-        districtCode: String = "TEST-D",
         name: String = "Test Municipality",
         nameNepali: String = "परीक्षण नगरपालिका",
         code: String = "TEST-M",
@@ -45,8 +43,8 @@ object MunicipalityTestFixtures {
         latitude: BigDecimal = BigDecimal("27.7172"),
         longitude: BigDecimal = BigDecimal("85.3240"),
         totalWards: Int = 12,
+        districtCode: String = "TEST-D",
     ) = CreateMunicipalityRequest(
-        districtCode = districtCode,
         name = name,
         nameNepali = nameNepali,
         code = code,
@@ -56,6 +54,7 @@ object MunicipalityTestFixtures {
         latitude = latitude,
         longitude = longitude,
         totalWards = totalWards,
+        districtCode = districtCode,
     )
 
     fun createUpdateMunicipalityRequest(
@@ -66,7 +65,6 @@ object MunicipalityTestFixtures {
         latitude: BigDecimal = BigDecimal("27.7173"),
         longitude: BigDecimal = BigDecimal("85.3241"),
         totalWards: Int = 15,
-        isActive: Boolean = true,
     ) = UpdateMunicipalityRequest(
         name = name,
         nameNepali = nameNepali,
@@ -87,7 +85,6 @@ object MunicipalityTestFixtures {
         latitude: BigDecimal = BigDecimal("27.7172"),
         longitude: BigDecimal = BigDecimal("85.3240"),
         totalWards: Int = 12,
-        isActive: Boolean = true,
         district: DistrictSummaryResponse = DistrictTestFixtures.createDistrictSummaryResponse(),
     ) = MunicipalityResponse(
         code = code,
@@ -112,8 +109,7 @@ object MunicipalityTestFixtures {
         latitude: BigDecimal = BigDecimal("27.7172"),
         longitude: BigDecimal = BigDecimal("85.3240"),
         totalWards: Int = 12,
-        isActive: Boolean = true,
-        district: DistrictSummaryResponse = DistrictTestFixtures.createDistrictSummaryResponse(),
+        district: DistrictDetailResponse = DistrictTestFixtures.createDistrictDetailResponse(),
     ) = MunicipalityDetailResponse(
         code = code,
         name = name,
@@ -124,7 +120,6 @@ object MunicipalityTestFixtures {
         latitude = latitude,
         longitude = longitude,
         totalWards = totalWards,
-        isActive = isActive,
         district = district,
     )
 
@@ -134,7 +129,6 @@ object MunicipalityTestFixtures {
         nameNepali: String = "परीक्षण नगरपालिका",
         type: MunicipalityType = MunicipalityType.MUNICIPALITY,
         totalWards: Int = 12,
-        isActive: Boolean = true,
     ) = MunicipalitySummaryResponse(
         code = code,
         name = name,
@@ -142,19 +136,4 @@ object MunicipalityTestFixtures {
         type = type,
         totalWards = totalWards,
     )
-
-    fun createMunicipalityStats(
-        totalWards: Int = 12,
-        activeWards: Int = 10,
-        totalPopulation: Long = 50000L,
-        totalArea: BigDecimal = BigDecimal("100.50"),
-        totalFamilies: Long = 10000L,
-    ): MunicipalityStats =
-        MunicipalityStats(
-            totalWards = totalWards,
-            activeWards = activeWards,
-            totalPopulation = totalPopulation,
-            totalArea = totalArea,
-            totalFamilies = totalFamilies,
-        )
 }

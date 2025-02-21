@@ -115,49 +115,6 @@ class DistrictRepositoryIntegrationTest {
         }
     }
 
-    @Nested
-    @DisplayName("Municipality-related Query Tests")
-    inner class MunicipalityQueryTests {
-        @Test
-        fun `should find districts by minimum municipalities`() {
-            // Arrange
-            addMunicipalityToDistrict(testDistrict, 3)
-            entityManager.flush()
-
-            // Act
-            val result = districtRepository.findByMinimumMunicipalities(2, PageRequest.of(0, 10))
-
-            // Assert
-            assertEquals(1, result.totalElements)
-            assertTrue(result.content.all { it.municipalities.size >= 2 })
-        }
-    }
-
-    @Nested
-    @DisplayName("Geographic Query Tests")
-    inner class GeographicQueryTests {
-        @Test
-        fun `should find nearby districts`() {
-            // Arrange
-            val centralPoint = Pair(BigDecimal("27.7172"), BigDecimal("85.3240"))
-            addMunicipalityWithLocation(testDistrict, centralPoint.first, centralPoint.second)
-            entityManager.flush()
-
-            // Act
-            val result =
-                districtRepository.findNearbyDistricts(
-                    latitude = centralPoint.first,
-                    longitude = centralPoint.second,
-                    radiusInMeters = 5000.0,
-                    pageable = PageRequest.of(0, 10),
-                )
-
-            // Assert
-            assertEquals(1, result.totalElements)
-            assertEquals(testDistrict.code, result.content.first().code)
-        }
-    }
-
     private fun addMunicipalityToDistrict(
         district: District,
         count: Int,

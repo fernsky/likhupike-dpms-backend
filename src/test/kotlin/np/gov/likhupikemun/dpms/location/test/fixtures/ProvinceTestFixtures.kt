@@ -5,7 +5,6 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateProvinceRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.*
 import np.gov.likhupikemun.dpms.location.domain.Province
 import java.math.BigDecimal
-import java.time.LocalDateTime
 
 object ProvinceTestFixtures {
     fun createProvince(
@@ -16,7 +15,6 @@ object ProvinceTestFixtures {
         population: Long = 500000L,
         headquarter: String = "Test Headquarter",
         headquarterNepali: String = "परीक्षण सदरमुकाम",
-        isActive: Boolean = true,
     ): Province =
         Province().apply {
             this.name = name
@@ -26,11 +24,6 @@ object ProvinceTestFixtures {
             this.population = population
             this.headquarter = headquarter
             this.headquarterNepali = headquarterNepali
-            this.isActive = isActive
-            this.createdAt = LocalDateTime.now()
-            this.createdBy = "test-user"
-            this.updatedAt = LocalDateTime.now()
-            this.updatedBy = "test-user"
         }
 
     fun createProvinceRequest(
@@ -124,34 +117,10 @@ object ProvinceTestFixtures {
     private fun createDistrictSummaries(): List<DistrictSummaryResponse> =
         (1..3).map { index ->
             DistrictSummaryResponse(
-                code = "TEST-D$index",
+                code = "DIST-$index",
                 name = "Test District $index",
                 nameNepali = "परीक्षण जिल्ला $index",
                 municipalityCount = 5,
             )
         }
-
-    fun createProvinceStats(
-        totalDistricts: Int = 8,
-        totalMunicipalities: Int = 40,
-        totalPopulation: Long = 450000L,
-        totalArea: BigDecimal = BigDecimal("9500.25"),
-        populationDensity: BigDecimal = BigDecimal("47.37"),
-        municipalityTypes: Map<String, Int> = createMunicipalityTypeBreakdown(),
-    ) = ProvinceStats(
-        totalDistricts = totalDistricts,
-        totalMunicipalities = totalMunicipalities,
-        totalPopulation = totalPopulation,
-        totalArea = totalArea,
-        populationDensity = populationDensity,
-        municipalityTypes = municipalityTypes,
-    )
-
-    private fun createMunicipalityTypeBreakdown() =
-        mapOf(
-            "METROPOLITAN_CITY" to 1,
-            "SUB_METROPOLITAN_CITY" to 2,
-            "MUNICIPALITY" to 25,
-            "RURAL_MUNICIPALITY" to 12,
-        )
 }
