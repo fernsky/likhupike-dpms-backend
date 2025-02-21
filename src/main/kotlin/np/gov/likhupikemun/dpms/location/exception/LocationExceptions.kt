@@ -139,8 +139,8 @@ class MunicipalityOperationException(
 
 // Ward Exceptions
 class WardNotFoundException(
-    municipalityCode: String,
     wardNumber: Int,
+    municipalityCode: String,
 ) : BaseException(
         statusCode = HttpStatus.NOT_FOUND.value(),
         message = "Ward number $wardNumber not found in municipality $municipalityCode",
@@ -155,6 +155,23 @@ class DuplicateWardNumberException(
         message = "Ward number $wardNumber already exists in municipality $municipalityCode",
         errorCode = "DUPLICATE_WARD_NUMBER",
     )
+
+class InvalidWardOperationException(
+    message: String = "Operation not allowed for this ward",
+    errorCode: String = "WARD_OPERATION_ERROR",
+) : BaseException(
+        statusCode = HttpStatus.FORBIDDEN.value(),
+        message = message,
+        errorCode = errorCode,
+    ) {
+    companion object {
+        fun accessDenied(wardNumber: Int) =
+            InvalidWardOperationException(
+                message = "Access denied to ward number $wardNumber",
+                errorCode = "WARD_ACCESS_DENIED",
+            )
+    }
+}
 
 // Validation Exceptions
 class InvalidLocationDataException(

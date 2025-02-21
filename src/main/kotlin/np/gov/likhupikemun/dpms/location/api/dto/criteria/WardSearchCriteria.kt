@@ -4,13 +4,11 @@ import jakarta.validation.constraints.*
 import np.gov.likhupikemun.dpms.shared.dto.BaseSearchCriteria
 import org.springframework.data.domain.Sort
 import java.math.BigDecimal
-import java.util.*
 
 data class WardSearchCriteria(
     val municipalityCode: String? = null,
     val districtCode: String? = null,
     val provinceCode: String? = null,
-    @field:Min(1) @field:Max(33)
     val wardNumber: Int? = null,
     @field:Min(1) @field:Max(33)
     val wardNumberFrom: Int? = null,
@@ -64,6 +62,8 @@ data class WardSearchCriteria(
     fun hasWardNumberFilter(): Boolean = wardNumber != null || wardNumberFrom != null || wardNumberTo != null
 
     fun hasHierarchyFilter(): Boolean = municipalityCode != null || districtCode != null || provinceCode != null
+
+    fun getSort(): Sort = Sort.by(sortDirection, sortBy.toEntityField())
 }
 
 enum class WardSortField {

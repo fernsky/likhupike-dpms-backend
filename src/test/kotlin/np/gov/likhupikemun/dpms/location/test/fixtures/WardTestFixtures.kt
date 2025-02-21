@@ -11,7 +11,6 @@ import java.util.*
 
 object WardTestFixtures {
     fun createWard(
-        id: UUID = UUID.randomUUID(),
         municipality: Municipality,
         wardNumber: Int = 1,
         area: BigDecimal = BigDecimal("10.00"),
@@ -23,7 +22,6 @@ object WardTestFixtures {
         isActive: Boolean = true,
     ): Ward =
         Ward().apply {
-            this.id = id
             this.municipality = municipality
             this.wardNumber = wardNumber
             this.area = area
