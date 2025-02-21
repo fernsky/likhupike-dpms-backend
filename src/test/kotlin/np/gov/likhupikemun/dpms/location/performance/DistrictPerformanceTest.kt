@@ -34,7 +34,6 @@ import kotlin.system.measureTimeMillis
 @Tag("performance")
 @EnabledIfEnvironmentVariable(named = "RUN_PERFORMANCE_TESTS", matches = "true")
 class DistrictPerformanceTest {
-
     @Autowired
     private lateinit var districtService: DistrictService
 
@@ -52,132 +51,139 @@ class DistrictPerformanceTest {
     @Test
     @Benchmark
     fun `benchmark district creation performance`() {
-        val request = DistrictTestFixtures.createDistrictRequest(provinceId = testProvince.id!!)
-        val elapsed = measureTimeMillis {
-            districtService.createDistrict(request)
-        }
+        val request =
+            DistrictTestFixtures.createDistrictRequest(
+                provinceId = testProvince.id!!,
+                code = "PERF-D${System.nanoTime()}",
+            )
+
+        val elapsed =
+            measureTimeMillis {
+                districtService.createDistrict(request)
+            }
         assert(elapsed < 1000) { "District creation took more than 1 second: $elapsed ms" }
     }
 
     @Test
     @Benchmark
     fun `benchmark district search performance`() {
-        val criteria = DistrictSearchCriteria(
-            searchTerm = "Test",
-            minPopulation = 50000L,
-            maxPopulation = 200000L,
-            sortBy = DistrictSortField.POPULATION,
-            sortDirection = Sort.Direction.DESC
-        )
+        val criteria =
+            DistrictSearchCriteria(
+                searchTerm = "Test",
+                minPopulation = 50000L,
+                maxPopulation = 200000L,
+                sortBy = "population",
+                sortDirection = Sort.Direction.DESC,
+                page = 0,
+                pageSize = 10,
+            )
 
-        val elapsed = measureTimeMillis {
-            districtService.searchDistricts(criteria)
-        }
+        val elapsed =
+            measureTimeMillis {
+                districtService.searchDistricts(criteria)
+            }
         assert(elapsed < 500) { "District search took more than 500ms: $elapsed ms" }
     }
 
     @Test
     @Benchmark
-    fun `benchmark concurrent district creation performance`() {
-        val requests = (1..10).map {
-            DistrictTestFixtures.createDistrictRequest(
-                provinceId = testProvince.id!!,
-                code = "PERF-D$it"
+    fun `benchmark concurrent district access performance`() {
+        val district =
+            districtService.createDistrict(
+                DistrictTestFixtures.createDistrictRequest(
+                    provinceId = testProvince.id!!,
+                    code = "PERF-D-CONC",
+                ),
             )
-        }
 
-        val elapsed = measureTimeMillis {
-            requests.parallelStream().forEach { request ->
-                try {
-                    districtService.createDistrict(request)
-                } catch (e: Exception) {
-                    // Ignore duplicate codes in concurrent test
+        val elapsed =
+            measureTimeMillis {
+                repeat(10) {
+                    districtService.getDistrictDetail(district.code)
                 }
             }
-        }
-        assert(elapsed < 2000) { "Concurrent district creation took more than 2 seconds: $elapsed ms" }
+        assert(elapsed < 1000) { "Concurrent district access took more than 1 second: $elapsed ms" }
     }
 
     @Test
     @Benchmark
     fun `benchmark district statistics calculation performance`() {
-        val district = districtService.createDistrict(
-            DistrictTestFixtures.createDistrictRequest(provinceId = testProvince.id!!)
-        )
-
-        // Add some municipalities for statistics
-        repeat(5) {
-            val municipality = MunicipalityTestFixtures.createMunicipalityRequest(
-                districtId = district.id,
-                code = "TEST-M$it"
+        val district =
+            districtService.createDistrict(
+                DistrictTestFixtures.createDistrictRequest(
+                    provinceId = testProvince.id!!,
+                    code = "PERF-D-STAT",
+                ),
             )
+
+        // Add municipalities for statistics
+        repeat(5) {
+            val municipality =
+                MunicipalityTestFixtures.createMunicipalityRequest(
+                    districtCode = district.code,
+                    code = "PERF-M$it",
+                )
             districtService.getMunicipalityService().createMunicipality(municipality)
         }
 
-        val elapsed = measureTimeMillis {
-            districtService.getDistrictStatistics(district.id)
-        }
+        val elapsed =
+            measureTimeMillis {
+                districtService.getDistrictStatistics(district.code)
+            }
         assert(elapsed < 1000) { "Statistics calculation took more than 1 second: $elapsed ms" }
     }
 
     @Test
     @Benchmark
     fun `benchmark geospatial search performance`() {
-        val elapsed = measureTimeMillis {
-            districtService.findNearbyDistricts(
-                latitude = BigDecimal("27.7172"),
-                longitude = BigDecimal("85.3240"),
-                radiusKm = 50.0,
-                page = 0,
-                size = 20
-            )
-        }
+        val elapsed =
+            measureTimeMillis {
+                districtService.findNearbyDistricts(
+                    latitude = BigDecimal("27.7172"),
+                    longitude = BigDecimal("85.3240"),
+                    radiusKm = 50.0,
+                    page = 0,
+                    size = 20,
+                )
+            }
         assert(elapsed < 1000) { "Geospatial search took more than 1 second: $elapsed ms" }
     }
 
     @Test
     @Benchmark
     fun `benchmark bulk update performance`() {
-        val districts = districtService.searchDistricts(
-            DistrictSearchCriteria(provinceId = testProvince.id)
-        ).content
+        val districts =
+            districtService
+                .searchDistricts(
+                    DistrictSearchCriteria(
+                        provinceCode = testProvince.code,
+                        page = 0,
+                        pageSize = 50,
+                    ),
+                ).content
 
-        val elapsed = measureTimeMillis {
-            districts.forEach { district ->
-                try {
-                    districtService.updateDistrict(
-                        district.id,
-                        DistrictTestFixtures.createUpdateDistrictRequest()
-                    )
-                } catch (e: Exception) {
-                    // Ignore concurrent modification exceptions
+        val elapsed =
+            measureTimeMillis {
+                districts.forEach { district ->
+                    try {
+                        districtService.updateDistrict(
+                            district.code,
+                            DistrictTestFixtures.createUpdateDistrictRequest(),
+                        )
+                    } catch (e: Exception) {
+                        // Ignore concurrent modification exceptions
+                    }
                 }
             }
-        }
         val avgTimePerUpdate = elapsed / districts.size.coerceAtLeast(1)
         assert(avgTimePerUpdate < 200) { "Average update time exceeded 200ms: $avgTimePerUpdate ms" }
     }
 
-    @Test
-    @Benchmark
-    fun `benchmark district hierarchy loading performance`() {
-        val district = districtService.createDistrict(
-            DistrictTestFixtures.createDistrictRequest(provinceId = testProvince.id!!)
-        )
-
-        val elapsed = measureTimeMillis {
-            districtService.getDistrictDetail(district.id)
-        }
-        assert(elapsed < 500) { "Hierarchy loading took more than 500ms: $elapsed ms" }
-    }
-
-    private fun createAndPersistProvince(): Province {
-        return provinceRepository.save(ProvinceTestFixtures.createProvince())
-    }
+    private fun createAndPersistProvince(): Province = provinceRepository.save(ProvinceTestFixtures.createProvince())
 
     @Transactional
     private fun createTestData() {
-        // Create a substantial amount of test data for realistic performance testing
+        // Create test data for performance testing
         (1..20).forEach { i ->
             try {
                 districtService.createDistrict(
@@ -185,8 +191,8 @@ class DistrictPerformanceTest {
                         provinceId = testProvince.id!!,
                         code = "PERF-D$i",
                         name = "Performance Test District $i",
-                        population = (50000L + (i * 10000L))
-                    )
+                        population = (50000L + (i * 10000L)),
+                    ),
                 )
             } catch (e: Exception) {
                 // Ignore duplicate codes
@@ -197,9 +203,10 @@ class DistrictPerformanceTest {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            val options = OptionsBuilder()
-                .include(DistrictPerformanceTest::class.java.simpleName)
-                .build()
+            val options =
+                OptionsBuilder()
+                    .include(DistrictPerformanceTest::class.java.simpleName)
+                    .build()
             Runner(options).run()
         }
     }

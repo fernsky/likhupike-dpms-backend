@@ -40,20 +40,20 @@ object DistrictTestFixtures {
         }
 
     fun createDistrictRequest(
-        provinceId: UUID = UUID.randomUUID(),
         name: String = "Test District",
         nameNepali: String = "परीक्षण जिल्ला",
         code: String = "TEST-D",
+        provinceId: UUID = UUID.randomUUID(),
         area: BigDecimal = BigDecimal("1000.50"),
         population: Long = 100000L,
         headquarter: String = "Test Headquarter",
         headquarterNepali: String = "परीक्षण सदरमुकाम",
     ): CreateDistrictRequest =
         CreateDistrictRequest(
-            provinceId = provinceId,
             name = name,
             nameNepali = nameNepali,
             code = code,
+            provinceId = provinceId,
             area = area,
             population = population,
             headquarter = headquarter,
@@ -67,7 +67,6 @@ object DistrictTestFixtures {
         population: Long = 150000L,
         headquarter: String = "Updated Headquarter",
         headquarterNepali: String = "अद्यावधिक सदरमुकाम",
-        isActive: Boolean = true,
     ): UpdateDistrictRequest =
         UpdateDistrictRequest(
             name = name,
@@ -76,118 +75,68 @@ object DistrictTestFixtures {
             population = population,
             headquarter = headquarter,
             headquarterNepali = headquarterNepali,
-            isActive = isActive,
         )
 
     fun createDistrictResponse(
-        id: UUID = UUID.randomUUID(),
+        code: String = "TEST-D",
         name: String = "Test District",
         nameNepali: String = "परीक्षण जिल्ला",
-        code: String = "TEST-D",
         area: BigDecimal = BigDecimal("1000.50"),
         population: Long = 100000L,
         headquarter: String = "Test Headquarter",
         headquarterNepali: String = "परीक्षण सदरमुकाम",
-        isActive: Boolean = true,
         province: ProvinceSummaryResponse = ProvinceTestFixtures.createProvinceSummaryResponse(),
+        municipalityCount: Int = 0,
+        totalPopulation: Long? = 100000L,
+        totalArea: BigDecimal? = BigDecimal("1000.50"),
     ): DistrictResponse =
         DistrictResponse(
-            id = id,
+            code = code,
             name = name,
             nameNepali = nameNepali,
-            code = code,
             area = area,
             population = population,
             headquarter = headquarter,
             headquarterNepali = headquarterNepali,
-            isActive = isActive,
             province = province,
-            createdAt = LocalDateTime.now(),
-            createdBy = "test-user",
-            updatedAt = LocalDateTime.now(),
-            updatedBy = "test-user",
+            municipalityCount = municipalityCount,
+            totalPopulation = totalPopulation,
+            totalArea = totalArea,
         )
 
     fun createDistrictDetailResponse(
-        id: UUID = UUID.randomUUID(),
+        code: String = "TEST-D",
         name: String = "Test District",
         nameNepali: String = "परीक्षण जिल्ला",
-        code: String = "TEST-D",
         area: BigDecimal = BigDecimal("1000.50"),
         population: Long = 100000L,
         headquarter: String = "Test Headquarter",
         headquarterNepali: String = "परीक्षण सदरमुकाम",
-        isActive: Boolean = true,
-        province: ProvinceDetailResponse = ProvinceTestFixtures.createProvinceDetailResponse(),
-        stats: DistrictStats = createDistrictStats(),
+        province: ProvinceSummaryResponse = ProvinceTestFixtures.createProvinceSummaryResponse(),
+        municipalities: List<MunicipalitySummaryResponse> = emptyList(),
     ): DistrictDetailResponse =
         DistrictDetailResponse(
-            id = id,
+            code = code,
             name = name,
             nameNepali = nameNepali,
-            code = code,
             area = area,
             population = population,
             headquarter = headquarter,
             headquarterNepali = headquarterNepali,
-            isActive = isActive,
             province = province,
-            stats = stats,
-            createdAt = LocalDateTime.now(),
-            createdBy = "test-user",
-            updatedAt = LocalDateTime.now(),
-            updatedBy = "test-user",
+            municipalities = municipalities,
         )
 
     fun createDistrictSummaryResponse(
-        id: UUID = UUID.randomUUID(),
+        code: String = "TEST-D",
         name: String = "Test District",
         nameNepali: String = "परीक्षण जिल्ला",
-        code: String = "TEST-D",
-        isActive: Boolean = true,
+        municipalityCount: Int = 0,
     ): DistrictSummaryResponse =
         DistrictSummaryResponse(
-            id = id,
+            code = code,
             name = name,
             nameNepali = nameNepali,
-            code = code,
-            isActive = isActive,
-        )
-
-    fun createDistrictStats(
-        id: UUID = UUID.randomUUID(),
-        totalMunicipalities: Int = 10,
-        activeMunicipalities: Int = 8,
-        totalPopulation: Long = 500000L,
-        totalArea: BigDecimal = BigDecimal("5000.00"),
-        demographicBreakdown: Map<String, Long> = createDemographicBreakdown(),
-        infrastructureStats: Map<String, BigDecimal> = createInfrastructureStats(),
-    ): DistrictStats =
-        DistrictStats(
-            id = id,
-            totalMunicipalities = totalMunicipalities,
-            activeMunicipalities = activeMunicipalities,
-            totalPopulation = totalPopulation,
-            totalArea = totalArea,
-            demographicBreakdown = demographicBreakdown,
-            infrastructureStats = infrastructureStats,
-        )
-
-    private fun createDemographicBreakdown(): Map<String, Long> =
-        mapOf(
-            "BRAHMIN" to 150000L,
-            "CHHETRI" to 120000L,
-            "JANAJATI" to 130000L,
-            "DALIT" to 80000L,
-            "OTHERS" to 20000L,
-        )
-
-    private fun createInfrastructureStats(): Map<String, BigDecimal> =
-        mapOf(
-            "ROADS_KM" to BigDecimal("1500.75"),
-            "SCHOOLS" to BigDecimal("250.00"),
-            "HOSPITALS" to BigDecimal("25.00"),
-            "GOVERNMENT_OFFICES" to BigDecimal("50.00"),
-            "BANKS" to BigDecimal("75.00"),
+            municipalityCount = municipalityCount,
         )
 }

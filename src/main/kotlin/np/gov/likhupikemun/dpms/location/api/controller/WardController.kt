@@ -2,7 +2,6 @@ package np.gov.likhupikemun.dpms.location.api.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -11,7 +10,6 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateWardRequest
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateWardRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.WardDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.WardResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.WardStats
 import np.gov.likhupikemun.dpms.location.api.dto.response.WardSummaryResponse
 import np.gov.likhupikemun.dpms.location.service.WardService
 import np.gov.likhupikemun.dpms.shared.dto.ApiResponse
@@ -22,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @RestController
 @RequestMapping("/api/v1/wards")
@@ -35,15 +34,15 @@ class WardController(
     @Operation(summary = "Create a new ward")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Ward created successfully"),
-            ApiResponse(responseCode = "400", description = "Invalid input data"),
-            ApiResponse(responseCode = "403", description = "Insufficient permissions"),
-            ApiResponse(responseCode = "404", description = "Municipality not found"),
-            ApiResponse(responseCode = "409", description = "Ward number already exists in municipality"),
+            SwaggerApiResponse(responseCode = "200", description = "Ward created successfully"),
+            SwaggerApiResponse(responseCode = "400", description = "Invalid input data"),
+            SwaggerApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            SwaggerApiResponse(responseCode = "404", description = "Municipality not found"),
+            SwaggerApiResponse(responseCode = "409", description = "Ward number already exists in municipality"),
         ],
     )
     @PostMapping
-    @PreAuthorize("hasRole('MUNICIPALITY_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     fun createWard(
         @Parameter(description = "Ward creation details", required = true)
         @Valid
@@ -62,14 +61,14 @@ class WardController(
     @Operation(summary = "Update an existing ward")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Ward updated successfully"),
-            ApiResponse(responseCode = "400", description = "Invalid input data"),
-            ApiResponse(responseCode = "403", description = "Insufficient permissions"),
-            ApiResponse(responseCode = "404", description = "Ward not found"),
+            SwaggerApiResponse(responseCode = "200", description = "Ward updated successfully"),
+            SwaggerApiResponse(responseCode = "400", description = "Invalid input data"),
+            SwaggerApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            SwaggerApiResponse(responseCode = "404", description = "Ward not found"),
         ],
     )
     @PutMapping("/{municipalityCode}/{wardNumber}")
-    @PreAuthorize("hasRole('MUNICIPALITY_ADMIN')")
+    @PreAuthorize("hasAnyRole('MUNICIPALITY_ADMIN', 'SUPER_ADMIN')")
     fun updateWard(
         @Parameter(description = "Municipality code", required = true)
         @PathVariable municipalityCode: String,
@@ -126,19 +125,6 @@ class WardController(
         return ResponseEntity.ok(ApiResponse.success(data = wards))
     }
 
-    @Operation(summary = "Get ward statistics")
-    @GetMapping("/{municipalityCode}/{wardNumber}/statistics")
-    fun getWardStatistics(
-        @Parameter(description = "Municipality code", required = true)
-        @PathVariable municipalityCode: String,
-        @Parameter(description = "Ward number", required = true)
-        @PathVariable wardNumber: Int,
-    ): ResponseEntity<ApiResponse<WardStats>> {
-        logger.debug("Fetching statistics for ward $wardNumber in municipality $municipalityCode")
-        val stats = wardService.getWardStatistics(wardNumber, municipalityCode)
-        return ResponseEntity.ok(ApiResponse.success(data = stats))
-    }
-
     @Operation(summary = "Find nearby wards")
     @GetMapping("/nearby")
     fun findNearbyWards(
@@ -157,37 +143,6 @@ class WardController(
         val nearbyWards = wardService.findNearbyWards(latitude, longitude, radiusKm, page, size)
         return ResponseEntity.ok(
             ApiResponse.success(data = PagedResponse.from(nearbyWards)),
-        )
-    }
-
-    @Operation(
-        summary = "Deactivate ward",
-        description = "Deactivate a ward. Cannot deactivate if ward has active families",
-    )
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('MUNICIPALITY_ADMIN')")
-    fun deactivateWard(
-        @Parameter(description = "Ward ID", required = true)
-        @PathVariable id: UUID,
-    ): ResponseEntity<ApiResponse<Unit>> {
-        logger.info("Deactivating ward: $id")
-        wardService.deactivateWard(id)
-        return ResponseEntity.ok(
-            ApiResponse.success(message = "Ward deactivated successfully"),
-        )
-    }
-
-    @Operation(summary = "Reactivate ward")
-    @PostMapping("/{id}/reactivate")
-    @PreAuthorize("hasRole('MUNICIPALITY_ADMIN')")
-    fun reactivateWard(
-        @Parameter(description = "Ward ID", required = true)
-        @PathVariable id: UUID,
-    ): ResponseEntity<ApiResponse<Unit>> {
-        logger.info("Reactivating ward: $id")
-        wardService.reactivateWard(id)
-        return ResponseEntity.ok(
-            ApiResponse.success(message = "Ward reactivated successfully"),
         )
     }
 }

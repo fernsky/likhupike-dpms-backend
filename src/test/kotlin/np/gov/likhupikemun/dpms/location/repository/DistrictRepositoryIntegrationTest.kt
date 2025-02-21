@@ -3,6 +3,7 @@ package np.gov.likhupikemun.dpms.location.repository
 import np.gov.likhupikemun.dpms.location.domain.District
 import np.gov.likhupikemun.dpms.location.domain.Municipality
 import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
+import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.ProvinceTestFixtures
 import org.junit.jupiter.api.BeforeEach
@@ -43,80 +44,47 @@ class DistrictRepositoryIntegrationTest {
     @DisplayName("Basic Query Tests")
     inner class BasicQueryTests {
         @Test
-        fun `should find districts by province ID`() {
+        fun `should find district by code`() {
             // Act
-            val districts = districtRepository.findByProvinceId(testProvince.id!!)
-
-            // Assert
-            assertEquals(1, districts.size)
-            assertEquals(testDistrict.id, districts[0].id)
-        }
-
-        @Test
-        fun `should find active districts by province ID`() {
-            // Arrange
-            val inactiveDistrict =
-                DistrictTestFixtures.createDistrict(
-                    province = testProvince,
-                    isActive = false,
-                )
-            entityManager.persist(inactiveDistrict)
-            entityManager.flush()
-
-            // Act
-            val districts = districtRepository.findByProvinceIdAndIsActive(testProvince.id!!, true)
-
-            // Assert
-            assertEquals(1, districts.size)
-            assertTrue(districts.all { it.isActive })
-        }
-
-        @Test
-        fun `should find district by code and province ID`() {
-            // Act
-            val result = districtRepository.findByCodeAndProvinceId(testDistrict.code!!, testProvince.id!!)
+            val result = districtRepository.findByCodeIgnoreCase(testDistrict.code!!)
 
             // Assert
             assertTrue(result.isPresent)
-            assertEquals(testDistrict.id, result.get().id)
+            assertEquals(testDistrict.code, result.get().code)
+        }
+
+        @Test
+        fun `should find districts by province code`() {
+            // Act
+            val districts = districtRepository.findByProvinceCode(testProvince.code!!)
+
+            // Assert
+            assertEquals(1, districts.size)
+            assertEquals(testDistrict.code, districts[0].code)
+        }
+
+        @Test
+        fun `should check if district exists by code and province`() {
+            // Act & Assert
+            assertTrue(
+                districtRepository.existsByCodeAndProvince(
+                    testDistrict.code!!,
+                    testProvince.code!!,
+                ),
+            )
+
+            assertFalse(
+                districtRepository.existsByCodeAndProvince(
+                    "NONEXISTENT",
+                    testProvince.code!!,
+                ),
+            )
         }
     }
 
     @Nested
     @DisplayName("Search Query Tests")
     inner class SearchQueryTests {
-        @Test
-        fun `should search districts with multiple criteria`() {
-            // Arrange
-            val searchName = "Test"
-            val pageable = PageRequest.of(0, 10)
-
-            // Act
-            val result =
-                districtRepository.search(
-                    name = searchName,
-                    nameNepali = null,
-                    code = null,
-                    provinceId = testProvince.id,
-                    headquarter = null,
-                    isActive = true,
-                    pageable = pageable,
-                )
-
-            // Assert
-            assertEquals(1, result.totalElements)
-            assertTrue(
-                result.content
-                    .first()
-                    .name!!
-                    .contains(searchName),
-            )
-        }
-    }
-
-    @Nested
-    @DisplayName("Statistical Query Tests")
-    inner class StatisticalQueryTests {
         @Test
         fun `should find large districts`() {
             // Arrange
@@ -145,39 +113,6 @@ class DistrictRepositoryIntegrationTest {
                 },
             )
         }
-
-        @Test
-        fun `should count active districts by province`() {
-            // Act
-            val count = districtRepository.countActiveByProvince(testProvince.id!!)
-
-            // Assert
-            assertEquals(1, count)
-        }
-    }
-
-    @Nested
-    @DisplayName("Validation Query Tests")
-    inner class ValidationQueryTests {
-        @Test
-        fun `should check existence by code and province`() {
-            // Act & Assert
-            assertTrue(
-                districtRepository.existsByCodeAndProvince(
-                    testDistrict.code!!,
-                    testProvince.id!!,
-                    null,
-                ),
-            )
-
-            assertFalse(
-                districtRepository.existsByCodeAndProvince(
-                    testDistrict.code!!,
-                    testProvince.id!!,
-                    testDistrict.id,
-                ),
-            )
-        }
     }
 
     @Nested
@@ -204,30 +139,22 @@ class DistrictRepositoryIntegrationTest {
         @Test
         fun `should find nearby districts`() {
             // Arrange
-            val nearbyDistrict =
-                DistrictTestFixtures.createDistrict(
-                    province = testProvince,
-                    name = "Nearby District",
-                )
-            addMunicipalityWithLocation(
-                nearbyDistrict,
-                BigDecimal("27.7172"),
-                BigDecimal("85.3240"),
-            )
-            entityManager.persist(nearbyDistrict)
+            val centralPoint = Pair(BigDecimal("27.7172"), BigDecimal("85.3240"))
+            addMunicipalityWithLocation(testDistrict, centralPoint.first, centralPoint.second)
             entityManager.flush()
 
             // Act
             val result =
                 districtRepository.findNearbyDistricts(
-                    latitude = BigDecimal("27.7172"),
-                    longitude = BigDecimal("85.3240"),
+                    latitude = centralPoint.first,
+                    longitude = centralPoint.second,
                     radiusInMeters = 5000.0,
                     pageable = PageRequest.of(0, 10),
                 )
 
             // Assert
-            assertTrue(result.totalElements > 0)
+            assertEquals(1, result.totalElements)
+            assertEquals(testDistrict.code, result.content.first().code)
         }
     }
 
@@ -242,7 +169,6 @@ class DistrictRepositoryIntegrationTest {
                     nameNepali = "नगरपालिका ${index + 1}"
                     code = "MUN-${index + 1}"
                     type = MunicipalityType.MUNICIPALITY
-                    isActive = true
                     this.district = district
                 }
             entityManager.persist(municipality)
@@ -263,7 +189,6 @@ class DistrictRepositoryIntegrationTest {
                 type = MunicipalityType.MUNICIPALITY
                 this.latitude = latitude
                 this.longitude = longitude
-                isActive = true
                 this.district = district
             }
         entityManager.persist(municipality)

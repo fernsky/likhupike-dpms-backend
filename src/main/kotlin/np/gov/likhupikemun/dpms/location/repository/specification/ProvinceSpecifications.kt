@@ -1,9 +1,11 @@
 package np.gov.likhupikemun.dpms.location.repository.specification
 
+import jakarta.persistence.criteria.Predicate
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSearchCriteria
 import np.gov.likhupikemun.dpms.location.domain.Province
+import np.gov.likhupikemun.dpms.location.domain.Province_
 import org.springframework.data.jpa.domain.Specification
-import javax.persistence.criteria.Predicate
+import java.math.BigDecimal
 
 object ProvinceSpecifications {
     fun withSearchCriteria(criteria: ProvinceSearchCriteria): Specification<Province> =
@@ -15,9 +17,9 @@ object ProvinceSpecifications {
                 val searchTerm = "%${term.lowercase()}%"
                 predicates.add(
                     cb.or(
-                        cb.like(cb.lower(root.get("name")), searchTerm),
-                        cb.like(cb.lower(root.get("nameNepali")), searchTerm),
-                        cb.like(cb.lower(root.get("headquarter")), searchTerm),
+                        cb.like(cb.lower(root.get(Province_.name)), searchTerm),
+                        cb.like(cb.lower(root.get(Province_.nameNepali)), searchTerm),
+                        cb.like(cb.lower(root.get(Province_.headquarter)), searchTerm),
                     ),
                 )
             }
@@ -26,7 +28,7 @@ object ProvinceSpecifications {
             criteria.code?.let { code ->
                 predicates.add(
                     cb.equal(
-                        cb.lower(root.get("code")),
+                        cb.lower(root.get(Province_.code)),
                         code.lowercase(),
                     ),
                 )
@@ -37,11 +39,11 @@ object ProvinceSpecifications {
 
     fun hasMinimumPopulation(minPopulation: Long): Specification<Province> =
         Specification { root, _, cb ->
-            cb.greaterThanOrEqualTo(root.get("population"), minPopulation)
+            cb.greaterThanOrEqualTo(root.get(Province_.population), minPopulation)
         }
 
     fun hasMinimumArea(minArea: BigDecimal): Specification<Province> =
         Specification { root, _, cb ->
-            cb.greaterThanOrEqualTo(root.get("area"), minArea)
+            cb.greaterThanOrEqualTo(root.get(Province_.area), minArea)
         }
 }

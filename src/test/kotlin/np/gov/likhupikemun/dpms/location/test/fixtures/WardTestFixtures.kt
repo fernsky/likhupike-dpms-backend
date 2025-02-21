@@ -38,7 +38,7 @@ object WardTestFixtures {
         }
 
     fun createWardRequest(
-        municipalityId: UUID,
+        municipalityCode: String = "test-municipality",
         wardNumber: Int = 1,
         area: BigDecimal = BigDecimal("10.00"),
         population: Long = 1000L,
@@ -48,7 +48,7 @@ object WardTestFixtures {
         officeLocationNepali: String = "परीक्षण कार्यालय",
     ): CreateWardRequest =
         CreateWardRequest(
-            municipalityId = municipalityId,
+            municipalityCode = municipalityCode,
             wardNumber = wardNumber,
             area = area,
             population = population,
@@ -76,7 +76,6 @@ object WardTestFixtures {
         )
 
     fun createWardResponse(
-        id: UUID = UUID.randomUUID(),
         wardNumber: Int = 1,
         area: BigDecimal = BigDecimal("10.00"),
         population: Long = 1000L,
@@ -84,11 +83,9 @@ object WardTestFixtures {
         longitude: BigDecimal = BigDecimal("85.3240"),
         officeLocation: String = "Test Office",
         officeLocationNepali: String = "परीक्षण कार्यालय",
-        isActive: Boolean = true,
         municipality: MunicipalitySummaryResponse = MunicipalityTestFixtures.createMunicipalitySummaryResponse(),
     ): WardResponse =
         WardResponse(
-            id = id,
             wardNumber = wardNumber,
             area = area,
             population = population,
@@ -96,12 +93,10 @@ object WardTestFixtures {
             longitude = longitude,
             officeLocation = officeLocation,
             officeLocationNepali = officeLocationNepali,
-            isActive = isActive,
             municipality = municipality,
         )
 
     fun createWardDetailResponse(
-        id: UUID = UUID.randomUUID(),
         wardNumber: Int = 1,
         area: BigDecimal = BigDecimal("10.00"),
         population: Long = 1000L,
@@ -109,12 +104,10 @@ object WardTestFixtures {
         longitude: BigDecimal = BigDecimal("85.3240"),
         officeLocation: String = "Test Office",
         officeLocationNepali: String = "परीक्षण कार्यालय",
-        isActive: Boolean = true,
         municipality: MunicipalitySummaryResponse = MunicipalityTestFixtures.createMunicipalitySummaryResponse(),
         stats: WardStats = createWardStats(),
     ): WardDetailResponse =
         WardDetailResponse(
-            id = id,
             wardNumber = wardNumber,
             area = area,
             population = population,
@@ -122,62 +115,6 @@ object WardTestFixtures {
             longitude = longitude,
             officeLocation = officeLocation,
             officeLocationNepali = officeLocationNepali,
-            isActive = isActive,
             municipality = municipality,
-            stats = stats,
-        )
-
-    fun createWardStats(
-        totalFamilies: Long = 250L,
-        totalPopulation: Long = 1000L,
-        totalArea: BigDecimal = BigDecimal("100.50"),
-        populationDensity: BigDecimal = BigDecimal("9.95"),
-        demographicBreakdown: Map<String, Long> =
-            mapOf(
-                "BRAHMIN" to 400L,
-                "CHHETRI" to 300L,
-                "JANAJATI" to 300L,
-            ),
-        economicStats: WardEconomicStats = createWardEconomicStats(),
-        infrastructureStats: WardInfrastructureStats = createWardInfrastructureStats(),
-    ): WardStats =
-        WardStats(
-            totalFamilies = totalFamilies,
-            totalPopulation = totalPopulation,
-            totalArea = totalArea,
-            populationDensity = populationDensity,
-            demographicBreakdown = demographicBreakdown,
-            economicStats = economicStats,
-            infrastructureStats = infrastructureStats,
-        )
-
-    private fun createWardEconomicStats(
-        averageMonthlyIncome: BigDecimal = BigDecimal("25000.00"),
-        employedPopulation: Long = 450L,
-        employmentRate: BigDecimal = BigDecimal("45.0"),
-        bankAccountHolders: Long = 200L,
-        socialSecurityBeneficiaries: Long = 50L,
-    ): WardEconomicStats =
-        WardEconomicStats(
-            averageMonthlyIncome = averageMonthlyIncome,
-            employedPopulation = employedPopulation,
-            employmentRate = employmentRate,
-            bankAccountHolders = bankAccountHolders,
-            socialSecurityBeneficiaries = socialSecurityBeneficiaries,
-        )
-
-    private fun createWardInfrastructureStats(
-        householdsWithElectricity: Long = 240L,
-        householdsWithWaterSupply: Long = 230L,
-        householdsWithToilet: Long = 235L,
-        householdsWithInternet: Long = 180L,
-        agricultureLandArea: BigDecimal = BigDecimal("50.25"),
-    ): WardInfrastructureStats =
-        WardInfrastructureStats(
-            householdsWithElectricity = householdsWithElectricity,
-            householdsWithWaterSupply = householdsWithWaterSupply,
-            householdsWithToilet = householdsWithToilet,
-            householdsWithInternet = householdsWithInternet,
-            agricultureLandArea = agricultureLandArea,
         )
 }

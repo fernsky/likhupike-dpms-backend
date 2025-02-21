@@ -2,21 +2,20 @@ package np.gov.likhupikemun.dpms.location.exception
 
 import np.gov.likhupikemun.dpms.shared.exception.BaseException
 import org.springframework.http.HttpStatus
-import java.util.*
 
 // Province Exceptions
 class ProvinceNotFoundException(
-    id: UUID,
+    code: String,
 ) : BaseException(
-        httpStatus = HttpStatus.NOT_FOUND,
-        message = "Province with ID $id not found",
+        statusCode = HttpStatus.NOT_FOUND.value(),
+        message = "Province with code $code not found",
         errorCode = "PROVINCE_NOT_FOUND",
     )
 
-class DuplicateProvinceCodeException(
+class ProvinceCodeExistsException(
     code: String,
 ) : BaseException(
-        httpStatus = HttpStatus.CONFLICT,
+        statusCode = HttpStatus.CONFLICT.value(),
         message = "Province with code $code already exists",
         errorCode = "DUPLICATE_PROVINCE_CODE",
     )
@@ -25,14 +24,14 @@ class ProvinceOperationException(
     message: String,
     errorCode: String = "PROVINCE_OPERATION_ERROR",
 ) : BaseException(
-        httpStatus = HttpStatus.FORBIDDEN,
+        statusCode = HttpStatus.FORBIDDEN.value(),
         message = message,
         errorCode = errorCode,
     ) {
     companion object {
-        fun hasActiveDistricts(provinceId: UUID) =
+        fun hasActiveDistricts(provinceCode: String) =
             ProvinceOperationException(
-                message = "Cannot deactivate province with ID $provinceId as it has active districts",
+                message = "Cannot deactivate province with code $provinceCode as it has active districts",
                 errorCode = "PROVINCE_HAS_ACTIVE_DISTRICTS",
             )
     }
@@ -40,19 +39,27 @@ class ProvinceOperationException(
 
 // District Exceptions
 class DistrictNotFoundException(
-    id: UUID,
+    code: String,
 ) : BaseException(
-        httpStatus = HttpStatus.NOT_FOUND,
-        message = "District with ID $id not found",
+        statusCode = HttpStatus.NOT_FOUND.value(),
+        message = "District with code $code not found",
         errorCode = "DISTRICT_NOT_FOUND",
+    )
+
+class DistrictCodeExistsException(
+    code: String,
+) : BaseException(
+        statusCode = HttpStatus.CONFLICT.value(),
+        message = "District with code $code already exists",
+        errorCode = "DUPLICATE_DISTRICT_CODE",
     )
 
 class DuplicateDistrictCodeException(
     code: String,
-    provinceId: UUID,
+    provinceCode: String,
 ) : BaseException(
-        httpStatus = HttpStatus.CONFLICT,
-        message = "District with code $code already exists in province with ID $provinceId",
+        statusCode = HttpStatus.CONFLICT.value(),
+        message = "District with code $code already exists in province $provinceCode",
         errorCode = "DUPLICATE_DISTRICT_CODE",
     )
 
@@ -60,22 +67,22 @@ class DistrictOperationException(
     message: String,
     errorCode: String = "DISTRICT_OPERATION_ERROR",
 ) : BaseException(
-        httpStatus = HttpStatus.FORBIDDEN,
+        statusCode = HttpStatus.FORBIDDEN.value(),
         message = message,
         errorCode = errorCode,
     ) {
     companion object {
-        fun hasActiveMunicipalities(districtId: UUID) =
+        fun hasActiveMunicipalities(districtCode: String) =
             DistrictOperationException(
-                message = "Cannot deactivate district with ID $districtId as it has active municipalities",
+                message = "Cannot deactivate district with code $districtCode as it has active municipalities",
                 errorCode = "DISTRICT_HAS_ACTIVE_MUNICIPALITIES",
             )
 
         fun invalidProvince(
-            districtId: UUID,
-            provinceId: UUID,
+            districtCode: String,
+            provinceCode: String,
         ) = DistrictOperationException(
-            message = "District $districtId does not belong to province $provinceId",
+            message = "District $districtCode does not belong to province $provinceCode",
             errorCode = "INVALID_DISTRICT_PROVINCE",
         )
     }
@@ -83,19 +90,19 @@ class DistrictOperationException(
 
 // Municipality Exceptions
 class MunicipalityNotFoundException(
-    id: UUID,
+    code: String,
 ) : BaseException(
-        httpStatus = HttpStatus.NOT_FOUND,
-        message = "Municipality with ID $id not found",
+        statusCode = HttpStatus.NOT_FOUND.value(),
+        message = "Municipality with code $code not found",
         errorCode = "MUNICIPALITY_NOT_FOUND",
     )
 
 class DuplicateMunicipalityCodeException(
     code: String,
-    districtId: UUID,
+    districtCode: String,
 ) : BaseException(
-        httpStatus = HttpStatus.CONFLICT,
-        message = "Municipality with code $code already exists in district with ID $districtId",
+        statusCode = HttpStatus.CONFLICT.value(),
+        message = "Municipality with code $code already exists in district $districtCode",
         errorCode = "DUPLICATE_MUNICIPALITY_CODE",
     )
 
@@ -103,28 +110,28 @@ class MunicipalityOperationException(
     message: String,
     errorCode: String = "MUNICIPALITY_OPERATION_ERROR",
 ) : BaseException(
-        httpStatus = HttpStatus.FORBIDDEN,
+        statusCode = HttpStatus.FORBIDDEN.value(),
         message = message,
         errorCode = errorCode,
     ) {
     companion object {
-        fun hasActiveWards(municipalityId: UUID) =
+        fun hasActiveWards(municipalityCode: String) =
             MunicipalityOperationException(
-                message = "Cannot deactivate municipality with ID $municipalityId as it has active wards",
+                message = "Cannot deactivate municipality with code $municipalityCode as it has active wards",
                 errorCode = "MUNICIPALITY_HAS_ACTIVE_WARDS",
             )
 
         fun invalidDistrict(
-            municipalityId: UUID,
-            districtId: UUID,
+            municipalityCode: String,
+            districtCode: String,
         ) = MunicipalityOperationException(
-            message = "Municipality $municipalityId does not belong to district $districtId",
+            message = "Municipality $municipalityCode does not belong to district $districtCode",
             errorCode = "INVALID_MUNICIPALITY_DISTRICT",
         )
 
-        fun accessDenied(municipalityId: UUID) =
+        fun accessDenied(municipalityCode: String) =
             MunicipalityOperationException(
-                message = "Access denied to municipality with ID $municipalityId",
+                message = "Access denied to municipality with code $municipalityCode",
                 errorCode = "MUNICIPALITY_ACCESS_DENIED",
             )
     }
@@ -132,63 +139,29 @@ class MunicipalityOperationException(
 
 // Ward Exceptions
 class WardNotFoundException(
-    id: UUID,
+    municipalityCode: String,
+    wardNumber: Int,
 ) : BaseException(
-        httpStatus = HttpStatus.NOT_FOUND,
-        message = "Ward with ID $id not found",
+        statusCode = HttpStatus.NOT_FOUND.value(),
+        message = "Ward number $wardNumber not found in municipality $municipalityCode",
         errorCode = "WARD_NOT_FOUND",
     )
 
 class DuplicateWardNumberException(
     wardNumber: Int,
-    municipalityId: UUID,
+    municipalityCode: String,
 ) : BaseException(
-        httpStatus = HttpStatus.CONFLICT,
-        message = "Ward number $wardNumber already exists in municipality with ID $municipalityId",
+        statusCode = HttpStatus.CONFLICT.value(),
+        message = "Ward number $wardNumber already exists in municipality $municipalityCode",
         errorCode = "DUPLICATE_WARD_NUMBER",
     )
-
-class InvalidWardOperationException(
-    message: String,
-    errorCode: String = "INVALID_WARD_OPERATION",
-) : BaseException(
-        httpStatus = HttpStatus.FORBIDDEN,
-        message = message,
-        errorCode = errorCode,
-    ) {
-    companion object {
-        fun noAccess(wardId: UUID) =
-            InvalidWardOperationException(
-                message = "You don't have access to ward with ID $wardId",
-                errorCode = "WARD_ACCESS_DENIED",
-            )
-
-        fun hasActiveFamilies(wardId: UUID) =
-            InvalidWardOperationException(
-                message = "Cannot deactivate ward with ID $wardId as it has active families",
-                errorCode = "WARD_HAS_ACTIVE_FAMILIES",
-            )
-
-        fun alreadyDeactivated(wardId: UUID) =
-            InvalidWardOperationException(
-                message = "Ward with ID $wardId is already deactivated",
-                errorCode = "WARD_ALREADY_DEACTIVATED",
-            )
-
-        fun alreadyActive(wardId: UUID) =
-            InvalidWardOperationException(
-                message = "Ward with ID $wardId is already active",
-                errorCode = "WARD_ALREADY_ACTIVE",
-            )
-    }
-}
 
 // Validation Exceptions
 class InvalidLocationDataException(
     message: String,
     errorCode: String = "INVALID_LOCATION_DATA",
 ) : BaseException(
-        httpStatus = HttpStatus.BAD_REQUEST,
+        statusCode = HttpStatus.BAD_REQUEST.value(),
         message = message,
         errorCode = errorCode,
     ) {
@@ -226,7 +199,7 @@ class GeoSearchException(
     message: String,
     errorCode: String = "GEO_SEARCH_ERROR",
 ) : BaseException(
-        httpStatus = HttpStatus.BAD_REQUEST,
+        statusCode = HttpStatus.BAD_REQUEST.value(),
         message = message,
         errorCode = errorCode,
     ) {

@@ -27,7 +27,6 @@ data class DistrictDetailResponse(
     val headquarterNepali: String?,
     val province: ProvinceSummaryResponse,
     val municipalities: List<MunicipalitySummaryResponse>,
-    val stats: DistrictStats,
 )
 
 data class DistrictSummaryResponse(

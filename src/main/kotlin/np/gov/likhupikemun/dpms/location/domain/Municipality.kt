@@ -56,6 +56,9 @@ class Municipality : BaseEntity() {
     @OneToMany(mappedBy = "municipality", cascade = [CascadeType.ALL])
     var wards: MutableSet<Ward> = mutableSetOf()
 
+    @Transient
+    var distanceInMeters: Double? = null
+
     fun addWard(ward: Ward) {
         wards.add(ward)
         ward.municipality = this

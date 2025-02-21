@@ -5,7 +5,6 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateProvinceRequest
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateProvinceRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceStats
 import org.springframework.data.domain.Page
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.transaction.annotation.Transactional
@@ -54,14 +53,6 @@ interface ProvinceService {
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun searchProvinces(criteria: ProvinceSearchCriteria): Page<ProvinceResponse>
-
-    /**
-     * Gets province statistics
-     * @throws ProvinceNotFoundException if province not found
-     */
-    @PreAuthorize("isAuthenticated()")
-    @Transactional(readOnly = true)
-    fun getProvinceStatistics(code: String): ProvinceStats
 
     /**
      * Lists all provinces

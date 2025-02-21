@@ -1,6 +1,7 @@
 package np.gov.likhupikemun.dpms.location.repository
 
 import np.gov.likhupikemun.dpms.location.domain.Municipality
+import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
 import np.gov.likhupikemun.dpms.location.domain.Ward
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -11,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.ActiveProfiles
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.*
 
 @DataJpaTest
@@ -32,112 +34,83 @@ class WardRepositoryIntegrationTest {
     fun setup() {
         testMunicipality = createAndPersistMunicipality()
         testWard = createAndPersistWard(testMunicipality)
-    }
-
-    @Test
-    fun `should find ward by municipality ID`() {
-        // Act
-        val result = wardRepository.findByMunicipalityId(testMunicipality.id!!)
-
-        // Assert
-        assertEquals(1, result.size)
-        assertEquals(testWard.id, result[0].id)
-    }
-
-    @Test
-    fun `should find active wards by municipality ID`() {
-        // Arrange
-        val inactiveWard = createWard(testMunicipality, 2, isActive = false)
-        entityManager.persist(inactiveWard)
         entityManager.flush()
-
-        // Act
-        val result = wardRepository.findByMunicipalityIdAndIsActive(testMunicipality.id!!, true)
-
-        // Assert
-        assertEquals(1, result.size)
-        assertTrue(result.all { it.isActive })
     }
 
     @Test
-    fun `should find ward by ward number and municipality ID`() {
+    fun `should find wards by municipality code`() {
         // Act
-        val result = wardRepository.findByWardNumberAndMunicipalityId(1, testMunicipality.id!!)
+        val result = wardRepository.findByMunicipalityCode(testMunicipality.code)
+
+        // Assert
+        assertEquals(1, result.size)
+        assertEquals(testWard.wardNumber, result[0].wardNumber)
+    }
+
+    @Test
+    fun `should find ward by ward number and municipality code`() {
+        // Act
+        val result = wardRepository.findByWardNumberAndMunicipalityCode(testWard.wardNumber, testMunicipality.code)
 
         // Assert
         assertTrue(result.isPresent)
-        assertEquals(testWard.id, result.get().id)
+        assertEquals(testWard.wardNumber, result.get().wardNumber)
+    }
+
+    @Test
+    fun `should find wards by ward number range`() {
+        // Arrange
+        createMultipleWards()
+
+        // Act
+        val result = wardRepository.findByWardNumberRange(testMunicipality.code, 1, 3)
+
+        // Assert
+        assertEquals(3, result.size)
+        assertTrue(result.all { it.wardNumber in 1..3 })
     }
 
     @Test
     fun `should find wards by population range`() {
         // Arrange
-        val wardWithHighPopulation = createWard(testMunicipality, 2, population = 2000)
-        entityManager.persist(wardWithHighPopulation)
-        entityManager.flush()
+        createMultipleWards()
 
         // Act
-        val result =
-            wardRepository.findByPopulationGreaterThanEqualAndPopulationLessThanEqual(
-                1000,
-                2000,
-                PageRequest.of(0, 10),
-            )
+        val result = wardRepository.findByPopulationRange(1000, 2000, PageRequest.of(0, 10))
 
         // Assert
-        assertEquals(2, result.totalElements)
+        assertTrue(result.content.isNotEmpty())
         assertTrue(result.content.all { it.population!! in 1000..2000 })
     }
 
     @Test
-    fun `should count active wards by municipality`() {
+    fun `should count wards by municipality code`() {
         // Arrange
-        val inactiveWard = createWard(testMunicipality, 2, isActive = false)
-        val activeWard = createWard(testMunicipality, 3, isActive = true)
-        entityManager.persist(inactiveWard)
-        entityManager.persist(activeWard)
-        entityManager.flush()
+        createMultipleWards()
 
         // Act
-        val count = wardRepository.countByMunicipalityIdAndIsActive(testMunicipality.id!!, true)
+        val count = wardRepository.countByMunicipalityCode(testMunicipality.code)
 
         // Assert
-        assertEquals(2, count) // testWard + activeWard
+        assertEquals(5, count)
     }
 
     @Test
-    fun `should check existence by ward number and municipality`() {
-        // Act & Assert
-        assertTrue(
-            wardRepository.existsByWardNumberAndMunicipality(
-                wardNumber = 1,
-                municipalityId = testMunicipality.id!!,
-                excludeId = null,
-            ),
-        )
+    fun `should find wards by district code`() {
+        // Act
+        val result = wardRepository.findByDistrictCode(testMunicipality.code.substring(0, 2))
 
-        assertFalse(
-            wardRepository.existsByWardNumberAndMunicipality(
-                wardNumber = 1,
-                municipalityId = testMunicipality.id!!,
-                excludeId = testWard.id,
-            ),
-        )
+        // Assert
+        assertFalse(result.isEmpty())
+        assertTrue(result.all { it.municipality.code.startsWith(testMunicipality.code.substring(0, 2)) })
     }
 
-    private fun createAndPersistMunicipality(): Municipality {
-        val municipality =
-            Municipality().apply {
-                name = "Test Municipality"
-                nameNepali = "परीक्षण नगरपालिका"
-                code = "TEST-01"
-                type = np.gov.likhupikemun.dpms.location.domain.MunicipalityType.MUNICIPALITY
-                area = BigDecimal("100.00")
-                population = 10000L
-                totalWards = 10
-                isActive = true
-            }
-        return entityManager.persist(municipality)
+    @Test
+    fun `should find wards by province code`() {
+        // Act
+        val result = wardRepository.findByProvinceCode(testMunicipality.code.substring(0, 1))
+
+        // Assert
     }
 
     private fun createAndPersistWard(municipality: Municipality): Ward {
@@ -149,7 +122,6 @@ class WardRepositoryIntegrationTest {
         municipality: Municipality,
         wardNumber: Int,
         population: Long = 1000L,
-        isActive: Boolean = true,
     ): Ward =
         Ward().apply {
             this.municipality = municipality
@@ -160,6 +132,23 @@ class WardRepositoryIntegrationTest {
             this.longitude = BigDecimal("85.3240")
             this.officeLocation = "Ward $wardNumber Office"
             this.officeLocationNepali = "वडा $wardNumber कार्यालय"
-            this.isActive = isActive
         }
+
+    private fun createMultipleWards() {
+        for (i in 1..5) {
+            Ward()
+                .apply {
+                    municipality = testMunicipality
+                    wardNumber = i
+                    area = BigDecimal("10.00")
+                    population = (1000L * i)
+                    latitude = BigDecimal("27.7172")
+                    longitude = BigDecimal("85.3240")
+                    officeLocation = "Ward $i Office"
+                    officeLocationNepali = "वडा $i कार्यालय"
+                    isActive = true
+                }.let { entityManager.persist(it) }
+        }
+        entityManager.flush()
+    }
 }

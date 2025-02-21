@@ -23,7 +23,6 @@ data class WardDetailResponse(
     val officeLocation: String?,
     val officeLocationNepali: String?,
     val municipality: MunicipalitySummaryResponse,
-    val stats: WardStats,
 )
 
 data class WardSummaryResponse(

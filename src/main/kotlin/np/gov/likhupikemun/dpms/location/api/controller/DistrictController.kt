@@ -2,7 +2,6 @@ package np.gov.likhupikemun.dpms.location.api.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -11,14 +10,15 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateDistrictRequest
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateDistrictRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictStats
 import np.gov.likhupikemun.dpms.location.service.DistrictService
 import np.gov.likhupikemun.dpms.shared.dto.ApiResponse
 import np.gov.likhupikemun.dpms.shared.dto.PagedResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @RestController
 @RequestMapping("/api/v1/districts")
@@ -35,13 +35,14 @@ class DistrictController(
     )
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "District created successfully"),
-            ApiResponse(responseCode = "400", description = "Invalid input data"),
-            ApiResponse(responseCode = "403", description = "Insufficient permissions"),
-            ApiResponse(responseCode = "409", description = "District code already exists"),
+            SwaggerApiResponse(responseCode = "200", description = "District created successfully"),
+            SwaggerApiResponse(responseCode = "400", description = "Invalid input data"),
+            SwaggerApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            SwaggerApiResponse(responseCode = "409", description = "District code already exists"),
         ],
     )
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     fun createDistrict(
         @Parameter(description = "District creation details", required = true)
         @Valid
@@ -86,6 +87,7 @@ class DistrictController(
         description = "Updates an existing district. Only accessible by super admins.",
     )
     @PutMapping("/{code}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     fun updateDistrict(
         @Parameter(description = "District code", required = true)
         @PathVariable code: String,
@@ -99,17 +101,6 @@ class DistrictController(
                 message = "District updated successfully",
             ),
         )
-    }
-
-    @Operation(summary = "Get district statistics", description = "Get statistical information about a district")
-    @GetMapping("/{code}/statistics")
-    fun getDistrictStatistics(
-        @Parameter(description = "District code", required = true)
-        @PathVariable code: String,
-    ): ResponseEntity<ApiResponse<DistrictStats>> {
-        logger.debug("Fetching statistics for district: $code")
-        val stats = districtService.getDistrictStatistics(code)
-        return ResponseEntity.ok(ApiResponse.success(data = stats))
     }
 
     @Operation(summary = "Get all districts", description = "Get list of all districts")

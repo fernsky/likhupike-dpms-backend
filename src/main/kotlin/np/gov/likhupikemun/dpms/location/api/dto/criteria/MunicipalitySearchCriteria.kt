@@ -1,6 +1,7 @@
 package np.gov.likhupikemun.dpms.location.api.dto.criteria
 
 import jakarta.validation.constraints.*
+import np.gov.likhupikemun.dpms.location.api.dto.enums.MunicipalitySortField
 import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
 import np.gov.likhupikemun.dpms.shared.dto.BaseSearchCriteria
 import org.springframework.data.domain.Sort
@@ -12,8 +13,8 @@ data class MunicipalitySearchCriteria(
     val searchTerm: String? = null,
     @field:Pattern(regexp = "^[A-Z0-9]{1,10}$")
     val code: String? = null,
-    val districtId: UUID? = null,
-    val provinceId: UUID? = null,
+    val districtCode: String? = null,
+    val provinceCode: String? = null,
     val types: Set<MunicipalityType>? = null,
     @field:Min(1) @field:Max(33)
     val minWards: Int? = null,
@@ -35,8 +36,10 @@ data class MunicipalitySearchCriteria(
     val radiusKm: Double? = null,
     val sortBy: MunicipalitySortField = MunicipalitySortField.NAME,
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
-    page: Int = 0,
-    pageSize: Int = 20,
+    @field:Min(0)
+    override val page: Int = 0,
+    @field:Min(1)
+    override val pageSize: Int = 20,
 ) : BaseSearchCriteria(page, pageSize) {
     fun validate() {
         require(!(minWards != null && maxWards != null && minWards > maxWards)) {
@@ -52,28 +55,4 @@ data class MunicipalitySearchCriteria(
             "Radius is required when searching by coordinates"
         }
     }
-}
-
-enum class MunicipalitySortField {
-    NAME,
-    CODE,
-    TYPE,
-    POPULATION,
-    AREA,
-    WARD_COUNT,
-    CREATED_AT,
-    DISTANCE, // For geo-search results
-    ;
-
-    fun toEntityField(): String =
-        when (this) {
-            NAME -> "name"
-            CODE -> "code"
-            TYPE -> "type"
-            POPULATION -> "population"
-            AREA -> "area"
-            WARD_COUNT -> "totalWards"
-            CREATED_AT -> "createdAt"
-            DISTANCE -> "distance" // Handled specially in repository
-        }
 }

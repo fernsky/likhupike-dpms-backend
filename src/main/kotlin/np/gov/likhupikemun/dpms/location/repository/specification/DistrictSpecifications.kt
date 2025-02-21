@@ -1,10 +1,12 @@
 package np.gov.likhupikemun.dpms.location.repository.specification
 
+import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Order
+import jakarta.persistence.criteria.Predicate
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.DistrictSearchCriteria
 import np.gov.likhupikemun.dpms.location.domain.District
 import np.gov.likhupikemun.dpms.location.domain.District_
 import org.springframework.data.jpa.domain.Specification
-import javax.persistence.criteria.Predicate
 
 object DistrictSpecifications {
     fun withSearchCriteria(criteria: DistrictSearchCriteria): Specification<District> =
@@ -33,17 +35,24 @@ object DistrictSpecifications {
                 )
             }
 
-            // Always include active status check
-            predicates.add(cb.isTrue(root.get(District_.isActive)))
-
-            // Apply sorting
-            val sortField = criteria.sortBy.toEntityField()
-            if (criteria.sortDirection.isAscending) {
-                query.orderBy(cb.asc(root.get<Any>(sortField)))
-            } else {
-                query.orderBy(cb.desc(root.get<Any>(sortField)))
+            // Apply sorting if query is not a count query and is a CriteriaQuery
+            query?.let { q ->
+                if (q is CriteriaQuery<*> && q.resultType != Long::class.java) {
+                    val sortField = criteria.sortBy.toEntityField()
+                    val order: Order =
+                        if (criteria.sortDirection.isAscending) {
+                            cb.asc(root.get<Any>(sortField))
+                        } else {
+                            cb.desc(root.get<Any>(sortField))
+                        }
+                    q.orderBy(order)
+                }
             }
 
-            cb.and(*predicates.toTypedArray())
+            if (predicates.isEmpty()) {
+                null
+            } else {
+                cb.and(*predicates.toTypedArray())
+            }
         }
 }

@@ -5,7 +5,6 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateDistrictRequest
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateDistrictRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictStats
 import org.springframework.data.domain.Page
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.transaction.annotation.Transactional
@@ -37,10 +36,6 @@ interface DistrictService {
 
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
-    fun getDistrictStatistics(code: String): DistrictStats
-
-    @PreAuthorize("isAuthenticated()")
-    @Transactional(readOnly = true)
     fun getAllDistricts(): List<DistrictResponse>
 
     @PreAuthorize("isAuthenticated()")
@@ -59,4 +54,14 @@ interface DistrictService {
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun validateDistrictExists(code: String)
+
+    @PreAuthorize("isAuthenticated()")
+    @Transactional(readOnly = true)
+    fun findNearbyDistricts(
+        latitude: BigDecimal,
+        longitude: BigDecimal,
+        radiusKm: Double,
+        page: Int,
+        size: Int,
+    ): Page<DistrictResponse>
 }

@@ -12,8 +12,8 @@ data class ProvinceSearchCriteria(
     val code: String? = null,
     val sortBy: ProvinceSortField = ProvinceSortField.NAME,
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
-    page: Int = 0,
-    pageSize: Int = 20,
+    override val page: Int = 0,
+    override val pageSize: Int = 20,
 ) : BaseSearchCriteria(page, pageSize)
 
 enum class ProvinceSortField {

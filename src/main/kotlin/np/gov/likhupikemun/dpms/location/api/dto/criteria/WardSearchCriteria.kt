@@ -7,9 +7,9 @@ import java.math.BigDecimal
 import java.util.*
 
 data class WardSearchCriteria(
-    val municipalityId: UUID? = null,
-    val districtId: UUID? = null,
-    val provinceId: UUID? = null,
+    val municipalityCode: String? = null,
+    val districtCode: String? = null,
+    val provinceCode: String? = null,
     @field:Min(1) @field:Max(33)
     val wardNumber: Int? = null,
     @field:Min(1) @field:Max(33)
@@ -32,8 +32,10 @@ data class WardSearchCriteria(
     val radiusKm: Double? = null,
     val sortBy: WardSortField = WardSortField.WARD_NUMBER,
     val sortDirection: Sort.Direction = Sort.Direction.ASC,
-    page: Int = 0,
-    pageSize: Int = 20,
+    @field:Min(0)
+    override val page: Int = 0,
+    @field:Min(1)
+    override val pageSize: Int = 20,
 ) : BaseSearchCriteria(page, pageSize) {
     fun validate() {
         require(!(wardNumberFrom != null && wardNumberTo != null && wardNumberFrom > wardNumberTo)) {
@@ -61,7 +63,7 @@ data class WardSearchCriteria(
 
     fun hasWardNumberFilter(): Boolean = wardNumber != null || wardNumberFrom != null || wardNumberTo != null
 
-    fun hasHierarchyFilter(): Boolean = municipalityId != null || districtId != null || provinceId != null
+    fun hasHierarchyFilter(): Boolean = municipalityCode != null || districtCode != null || provinceCode != null
 }
 
 enum class WardSortField {

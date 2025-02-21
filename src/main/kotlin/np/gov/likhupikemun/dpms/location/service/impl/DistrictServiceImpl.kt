@@ -6,16 +6,18 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateDistrictRequest
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateDistrictRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictStats
 import np.gov.likhupikemun.dpms.location.domain.District
 import np.gov.likhupikemun.dpms.location.exception.*
 import np.gov.likhupikemun.dpms.location.repository.DistrictRepository
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
+import np.gov.likhupikemun.dpms.location.repository.specification.DistrictSpecifications
+import np.gov.likhupikemun.dpms.location.service.DistrictService
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 @Service
@@ -78,13 +80,12 @@ class DistrictServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun getDistrictDetail(id: UUID): DistrictDetailResponse {
-        logger.debug("Fetching detailed information for district: $id")
+    override fun getDistrictDetail(code: String): DistrictDetailResponse {
+        logger.debug("Fetching detailed information for district: $code")
 
-        val district = getDistrictEntity(id)
-        val stats = getDistrictStatistics(id)
+        val district = getDistrictEntity(code)
 
-        return districtMapper.toDetailResponse(district, stats)
+        return districtMapper.toDetailResponse(district)
     }
 
     @Transactional(readOnly = true)
@@ -94,12 +95,7 @@ class DistrictServiceImpl(
         criteria.validate()
 
         val specification = DistrictSpecifications.withSearchCriteria(criteria)
-        val pageable =
-            PageRequest.of(
-                criteria.page,
-                criteria.pageSize,
-                Sort.by(criteria.sortDirection, criteria.sortBy.toEntityField()),
-            )
+        val pageable = buildPageRequest(criteria)
 
         return districtRepository
             .findAll(specification, pageable)
@@ -107,9 +103,9 @@ class DistrictServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun getDistrict(id: UUID): DistrictResponse {
-        logger.debug("Fetching district: $id")
-        return getDistrictEntity(id)
+    override fun getDistrict(code: String): DistrictResponse {
+        logger.debug("Fetching district: $code")
+        return getDistrictEntity(code)
             .let { districtMapper.toResponse(it) }
     }
 
@@ -121,73 +117,11 @@ class DistrictServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun getDistrictsByProvince(provinceId: UUID): List<DistrictResponse> {
-        logger.debug("Fetching districts for province: $provinceId")
-
-        if (!provinceRepository.existsById(provinceId)) {
-            throw ProvinceNotFoundException(provinceId)
-        }
-
-        return districtRepository
-            .findByProvinceIdAndIsActive(provinceId, true)
-            .map { districtMapper.toResponse(it) }
-    }
-
     override fun getDistrictsByProvince(provinceCode: String): List<DistrictResponse> {
         logger.debug("Fetching districts for province: $provinceCode")
         return districtRepository
             .findByProvinceCode(provinceCode)
             .map { districtMapper.toResponse(it) }
-    }
-
-    @Transactional(readOnly = true)
-    override fun getDistrictStatistics(id: UUID): DistrictStats {
-        logger.debug("Fetching statistics for district: $id")
-
-        return districtRepository
-            .getDistrictStatistics(id)
-            .orElseThrow { DistrictNotFoundException(id) }
-    }
-
-    @Transactional
-    override fun deactivateDistrict(id: UUID) {
-        logger.info("Deactivating district: $id")
-
-        val district = getDistrictEntity(id)
-
-        if (district.municipalities.any { it.isActive }) {
-            throw DistrictOperationException.hasActiveMunicipalities(id)
-        }
-
-        district.isActive = false
-        districtRepository.save(district)
-        logger.info("District $id deactivated successfully")
-    }
-
-    @Transactional
-    override fun reactivateDistrict(id: UUID) {
-        logger.info("Reactivating district: $id")
-
-        val district = getDistrictEntity(id)
-
-        if (district.isActive) {
-            throw DistrictOperationException(
-                message = "District is already active",
-                errorCode = "DISTRICT_ALREADY_ACTIVE",
-            )
-        }
-
-        // Check if province is active
-        if (!district.province?.isActive!!) {
-            throw DistrictOperationException(
-                message = "Cannot reactivate district in inactive province",
-                errorCode = "PROVINCE_INACTIVE",
-            )
-        }
-
-        district.isActive = true
-        districtRepository.save(district)
-        logger.info("District $id reactivated successfully")
     }
 
     @Transactional(readOnly = true)
@@ -212,52 +146,31 @@ class DistrictServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun getDistrictAnalytics(id: UUID): DistrictStats {
-        logger.debug("Generating analytics for district: $id")
-
-        val district = getDistrictEntity(id)
-        val baseStats = getDistrictStatistics(id)
-
-        // Enhance base stats with additional analytics
-        return baseStats.copy(
-            demographicBreakdown = calculateDemographicBreakdown(district),
-            economicIndicators = calculateEconomicIndicators(district),
-            infrastructureMetrics = calculateInfrastructureMetrics(district),
-        )
-    }
-
-    @Transactional(readOnly = true)
-    override fun validateDistrictExists(districtId: UUID) {
-        if (!districtRepository.existsById(districtId)) {
-            throw DistrictNotFoundException(districtId)
-        }
-    }
-
     override fun validateDistrictExists(code: String) {
         if (!districtRepository.existsByCode(code.uppercase())) {
             throw DistrictNotFoundException(code)
         }
     }
 
-    // Private helper methods
-    private fun getDistrictEntity(id: UUID): District =
-        districtRepository
-            .findById(id)
-            .orElseThrow { DistrictNotFoundException(id) }
+    @Transactional(readOnly = true)
+    override fun findLargeDistricts(
+        minArea: BigDecimal,
+        minPopulation: Long,
+        page: Int,
+        size: Int,
+    ): Page<DistrictResponse> {
+        logger.debug("Finding large districts with minArea: $minArea, minPopulation: $minPopulation")
+        val pageable = PageRequest.of(page, size)
+        return districtRepository
+            .findLargeDistricts(minPopulation, minArea, pageable)
+            .map { districtMapper.toResponse(it) }
+    }
 
+    // Private helper methods
     private fun getDistrictEntity(code: String): District =
         districtRepository
             .findByCodeIgnoreCase(code)
             .orElseThrow { DistrictNotFoundException(code) }
-
-    private fun validateDistrictCode(
-        code: String,
-        provinceId: UUID,
-    ) {
-        if (districtRepository.existsByCodeAndProvince(code, provinceId, null)) {
-            throw DuplicateDistrictCodeException(code, provinceId)
-        }
-    }
 
     private fun validateDistrictCode(
         code: String,
@@ -288,48 +201,7 @@ class DistrictServiceImpl(
         require(radiusKm <= MAX_SEARCH_RADIUS_KM) { "Radius exceeds maximum allowed value of $MAX_SEARCH_RADIUS_KM km" }
     }
 
-    private fun calculateDemographicBreakdown(district: District): Map<String, Long> {
-        // Implementation for demographic breakdown calculation
-        return district.municipalities
-            .filter { it.isActive }
-            .flatMap { it.wards }
-            .filter { it.isActive }
-            .groupBy { "Category" } // Replace with actual demographic categories
-            .mapValues { it.value.sumOf { ward -> ward.population ?: 0L } }
-    }
-
-    private fun calculateEconomicIndicators(district: District): EconomicIndicators {
-        // Implementation for economic indicators calculation
-        return EconomicIndicators(
-            totalBusinesses = 0, // Implement actual calculation
-            averageIncome = BigDecimal.ZERO, // Implement actual calculation
-            employmentRate = BigDecimal.ZERO, // Implement actual calculation
-        )
-    }
-
-    private fun calculateInfrastructureMetrics(district: District): InfrastructureMetrics {
-        // Implementation for infrastructure metrics calculation
-        return InfrastructureMetrics(
-            roadCoverageKm = BigDecimal.ZERO, // Implement actual calculation
-            waterAccessPercent = BigDecimal.ZERO, // Implement actual calculation
-            electricityAccessPercent = BigDecimal.ZERO, // Implement actual calculation
-        )
-    }
-
     companion object {
         private const val MAX_SEARCH_RADIUS_KM = 100.0
     }
 }
-
-// Additional data classes for analytics
-private data class EconomicIndicators(
-    val totalBusinesses: Long,
-    val averageIncome: BigDecimal,
-    val employmentRate: BigDecimal,
-)
-
-private data class InfrastructureMetrics(
-    val roadCoverageKm: BigDecimal,
-    val waterAccessPercent: BigDecimal,
-    val electricityAccessPercent: BigDecimal,
-)

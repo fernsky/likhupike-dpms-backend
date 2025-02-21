@@ -14,11 +14,11 @@ class ProvinceMapperImpl(
     override fun toResponse(province: Province): ProvinceResponse {
         validateRequiredFields(province)
 
-        val totalPopulation = province.district.sumOf { it.population ?: 0L }
+        val totalPopulation = province.districts.sumOf { it.population ?: 0L }
         val totalArea =
-            province.district
+            province.districts
                 .mapNotNull { it.area }
-                .fold(BigDecimal.ZERO) { acc, area -> acc.add(area) }
+                .fold(BigDecimal.ZERO) { acc: BigDecimal, area: BigDecimal -> acc.add(area) }
 
         return ProvinceResponse(
             code = province.code!!,
@@ -28,7 +28,7 @@ class ProvinceMapperImpl(
             population = province.population,
             headquarter = province.headquarter,
             headquarterNepali = province.headquarterNepali,
-            districtCount = province.district.size,
+            districtCount = province.districts.size,
             totalPopulation = totalPopulation,
             totalArea = totalArea,
         )
@@ -36,11 +36,6 @@ class ProvinceMapperImpl(
 
     override fun toDetailResponse(province: Province): ProvinceDetailResponse {
         validateRequiredFields(province)
-
-        val districts =
-            province.districts
-                .sortedBy { it.name }
-                .map { districtMapper.toSummaryResponse(it) }
 
         return ProvinceDetailResponse(
             code = province.code!!,
@@ -50,7 +45,10 @@ class ProvinceMapperImpl(
             population = province.population,
             headquarter = province.headquarter,
             headquarterNepali = province.headquarterNepali,
-            districts = districts,
+            districts =
+                province.districts
+                    .sortedBy { it.name }
+                    .map { districtMapper.toSummaryResponse(it) },
         )
     }
 
@@ -58,17 +56,15 @@ class ProvinceMapperImpl(
         validateRequiredFields(province)
 
         return ProvinceSummaryResponse(
-            id = province.id!!,
+            code = province.code!!,
             name = province.name!!,
             nameNepali = province.nameNepali!!,
-            code = province.code!!,
         )
     }
 
     private fun validateRequiredFields(province: Province) {
-        requireNotNull(province.id) { "Province ID cannot be null" }
+        requireNotNull(province.code) { "Province code cannot be null" }
         requireNotNull(province.name) { "Province name cannot be null" }
         requireNotNull(province.nameNepali) { "Province Nepali name cannot be null" }
-        requireNotNull(province.code) { "Province code cannot be null" }
     }
 }

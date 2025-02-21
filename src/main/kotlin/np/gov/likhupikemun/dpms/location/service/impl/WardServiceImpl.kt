@@ -1,6 +1,6 @@
 package np.gov.likhupikemun.dpms.location.service.impl
 
-import np.gov.likhupikemun.dpms.auth.service.AuthenticationService
+import np.gov.likhupikemun.dpms.shared.service.SecurityService
 import np.gov.likhupikemun.dpms.family.repository.FamilyRepository
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.WardSearchCriteria
 import np.gov.likhupikemun.dpms.location.api.dto.mapper.WardMapper
@@ -28,7 +28,7 @@ class WardServiceImpl(
     private val wardRepository: WardRepository,
     private val municipalityRepository: MunicipalityRepository,
     private val familyRepository: FamilyRepository,
-    private val authenticationService: AuthenticationService,
+    private val securityService: SecurityService,
     private val wardMapper: WardMapper,
 ) : WardService {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -55,7 +55,6 @@ class WardServiceImpl(
                 this.longitude = request.longitude
                 this.officeLocation = request.officeLocation
                 this.officeLocationNepali = request.officeLocationNepali
-                this.isActive = true
             }
 
         return wardRepository
@@ -156,7 +155,7 @@ class WardServiceImpl(
         wardNumber: Int,
     ) {
         val ward = getWardEntity(wardNumber, municipalityCode)
-        val currentUser = authenticationService.getCurrentUser()
+        val currentUser = securityService.getCurrentUser()
 
         if (!currentUser.isMunicipalityAdmin() &&
             currentUser.wardNumber != ward.wardNumber

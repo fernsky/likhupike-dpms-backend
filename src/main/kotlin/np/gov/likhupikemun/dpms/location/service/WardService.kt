@@ -5,7 +5,6 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateWardRequest
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateWardRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.WardDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.WardResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.WardStats
 import np.gov.likhupikemun.dpms.location.api.dto.response.WardSummaryResponse
 import org.springframework.data.domain.Page
 import org.springframework.security.access.prepost.PreAuthorize
@@ -70,34 +69,6 @@ interface WardService {
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun getWardsByMunicipality(municipalityCode: String): List<WardSummaryResponse>
-
-    /**
-     * Gets ward statistics for dashboard/reports
-     * @throws WardNotFoundException if ward not found
-     */
-    @PreAuthorize("isAuthenticated()")
-    @Transactional(readOnly = true)
-    fun getWardStatistics(
-        wardNumber: Int,
-        municipalityCode: String,
-    ): WardStats
-
-    /**
-     * Deactivates a ward (soft delete)
-     * @throws WardNotFoundException if ward not found
-     * @throws InvalidWardOperationException if ward has active families
-     */
-    @PreAuthorize("hasRole('MUNICIPALITY_ADMIN')")
-    @Transactional
-    fun deactivateWard(id: UUID)
-
-    /**
-     * Reactivates a previously deactivated ward
-     * @throws WardNotFoundException if ward not found
-     */
-    @PreAuthorize("hasRole('MUNICIPALITY_ADMIN')")
-    @Transactional
-    fun reactivateWard(id: UUID)
 
     /**
      * Finds nearby wards within specified radius

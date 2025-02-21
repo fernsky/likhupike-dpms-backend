@@ -44,7 +44,7 @@ data class CreateMunicipalityRequest(
     val totalWards: Int,
     @field:NotNull(message = "District ID is required")
     @Schema(description = "ID of the district this municipality belongs to")
-    val districtId: UUID,
+    val districtCode: String,
 )
 
 @Schema(description = "Request payload for updating an existing municipality")

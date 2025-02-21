@@ -6,11 +6,11 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateProvinceRequest
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateProvinceRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceStats
 import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.exception.*
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
 import np.gov.likhupikemun.dpms.location.repository.specification.ProvinceSpecifications
+import np.gov.likhupikemun.dpms.location.service.ProvinceService
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -74,9 +74,8 @@ class ProvinceServiceImpl(
         logger.debug("Fetching detailed information for province: $code")
 
         val province = getProvinceEntity(code)
-        val stats = getProvinceStatistics(code)
 
-        return provinceMapper.toDetailResponse(province, stats)
+        return provinceMapper.toDetailResponse(province)
     }
 
     override fun getProvince(code: String): ProvinceResponse {
@@ -98,13 +97,6 @@ class ProvinceServiceImpl(
         return provinceRepository
             .findAll(specification, pageable)
             .map { provinceMapper.toResponse(it) }
-    }
-
-    override fun getProvinceStatistics(code: String): ProvinceStats {
-        logger.debug("Calculating statistics for province: $code")
-
-        val province = getProvinceEntity(code)
-        return calculateProvinceStats(province)
     }
 
     override fun getAllProvinces(): List<ProvinceResponse> {
@@ -143,35 +135,4 @@ class ProvinceServiceImpl(
             throw ProvinceCodeExistsException(code)
         }
     }
-
-    private fun calculateProvinceStats(province: Province): ProvinceStats {
-        val districts = province.districts
-        val municipalities = districts.flatMap { it.municipalities }
-
-        return ProvinceStats(
-            totalDistricts = districts.size,
-            totalMunicipalities = municipalities.size,
-            totalPopulation = municipalities.sumOf { it.population ?: 0L },
-            totalArea =
-                municipalities
-                    .mapNotNull { it.area }
-                    .fold(BigDecimal.ZERO) { acc, area -> acc.add(area) },
-            populationDensity = calculatePopulationDensity(province),
-            municipalityTypes = calculateMunicipalityTypeBreakdown(municipalities),
-        )
-    }
-
-    private fun calculatePopulationDensity(province: Province): BigDecimal {
-        val area = province.area ?: return BigDecimal.ZERO
-        if (area == BigDecimal.ZERO) return BigDecimal.ZERO
-
-        val population = province.population ?: 0L
-        return BigDecimal(population).divide(area, 2, BigDecimal.ROUND_HALF_UP)
-    }
-
-    private fun calculateMunicipalityTypeBreakdown(municipalities: List<Municipality>): Map<String, Int> =
-        municipalities
-            .groupBy { it.type }
-            .mapKeys { it.key.toString() }
-            .mapValues { it.value.size }
 }

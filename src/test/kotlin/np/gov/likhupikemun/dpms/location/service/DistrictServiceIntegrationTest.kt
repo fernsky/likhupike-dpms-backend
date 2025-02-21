@@ -1,10 +1,12 @@
 package np.gov.likhupikemun.dpms.location.service
 
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.DistrictSearchCriteria
+import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.exception.*
 import np.gov.likhupikemun.dpms.location.repository.DistrictRepository
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
+import np.gov.likhupikemun.dpms.location.test.fixtures.MunicipalityTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.ProvinceTestFixtures
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -18,26 +20,23 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 @SpringBootTest
 @ActiveProfiles("test")
 @DisplayName("District Service Integration Tests")
 class DistrictServiceIntegrationTest {
-    
     @Autowired
     private lateinit var districtService: DistrictService
-    
+
     @Autowired
     private lateinit var districtRepository: DistrictRepository
-    
+
     @Autowired
     private lateinit var provinceRepository: ProvinceRepository
 
     private lateinit var testProvince: Province
-    
+
     @BeforeEach
     fun setup() {
         districtRepository.deleteAll()
@@ -48,15 +47,15 @@ class DistrictServiceIntegrationTest {
     @Nested
     @DisplayName("Create District Tests")
     inner class CreateDistrictTests {
-        
         @Test
         @Transactional
         @DisplayName("Should create district successfully")
         fun shouldCreateDistrict() {
             // Given
-            val request = DistrictTestFixtures.createDistrictRequest(
-                provinceId = testProvince.id!!
-            )
+            val request =
+                DistrictTestFixtures.createDistrictRequest(
+                    provinceId = testProvince.id!!,
+                )
 
             // When
             val result = districtService.createDistrict(request)
@@ -70,10 +69,9 @@ class DistrictServiceIntegrationTest {
             assertEquals(request.population, result.population)
             assertEquals(request.headquarter, result.headquarter)
             assertEquals(request.headquarterNepali, result.headquarterNepali)
-            assertTrue(result.isActive)
 
             // Verify persistence
-            val savedDistrict = districtRepository.findById(result.id).orElseThrow()
+            val savedDistrict = districtRepository.findByCodeIgnoreCase(result.code).orElseThrow()
             assertEquals(request.name, savedDistrict.name)
             assertEquals(testProvince.id, savedDistrict.province?.id)
         }
@@ -83,14 +81,15 @@ class DistrictServiceIntegrationTest {
         @DisplayName("Should throw exception for duplicate district code in same province")
         fun shouldThrowExceptionForDuplicateCode() {
             // Given
-            val request = DistrictTestFixtures.createDistrictRequest(
-                provinceId = testProvince.id!!,
-                code = "TEST-D1"
-            )
+            val request =
+                DistrictTestFixtures.createDistrictRequest(
+                    provinceId = testProvince.id!!,
+                    code = "TEST-D1",
+                )
             districtService.createDistrict(request)
 
             // When & Then
-            assertThrows<DuplicateDistrictCodeException> {
+            assertThrows<DistrictCodeExistsException> {
                 districtService.createDistrict(request)
             }
         }
@@ -99,19 +98,19 @@ class DistrictServiceIntegrationTest {
     @Nested
     @DisplayName("Update District Tests")
     inner class UpdateDistrictTests {
-        
         @Test
         @Transactional
         @DisplayName("Should update district successfully")
         fun shouldUpdateDistrict() {
             // Given
-            val district = districtRepository.save(
-                DistrictTestFixtures.createDistrict(province = testProvince)
-            )
+            val district =
+                districtRepository.save(
+                    DistrictTestFixtures.createDistrict(province = testProvince),
+                )
             val updateRequest = DistrictTestFixtures.createUpdateDistrictRequest()
 
             // When
-            val result = districtService.updateDistrict(district.id!!, updateRequest)
+            val result = districtService.updateDistrict(district.code!!, updateRequest)
 
             // Then
             assertNotNull(result)
@@ -122,63 +121,43 @@ class DistrictServiceIntegrationTest {
             assertEquals(updateRequest.headquarter, result.headquarter)
 
             // Verify persistence
-            val updatedDistrict = districtRepository.findById(district.id!!).orElseThrow()
+            val updatedDistrict = districtRepository.findByCodeIgnoreCase(district.code!!).orElseThrow()
             assertEquals(updateRequest.name, updatedDistrict.name)
-        }
-
-        @Test
-        @Transactional
-        @DisplayName("Should handle deactivation with active municipalities")
-        fun shouldHandleDeactivationWithActiveMunicipalities() {
-            // Given
-            val district = districtRepository.save(
-                DistrictTestFixtures.createDistrict(province = testProvince)
-            )
-            // Add active municipality
-            district.addMunicipality(
-                MunicipalityTestFixtures.createMunicipality(district = district)
-            )
-            districtRepository.save(district)
-
-            // When & Then
-            assertThrows<DistrictOperationException> {
-                districtService.updateDistrict(
-                    district.id!!,
-                    DistrictTestFixtures.createUpdateDistrictRequest(isActive = false)
-                )
-            }
         }
     }
 
     @Nested
     @DisplayName("Search District Tests")
     inner class SearchDistrictTests {
-        
         @Test
         @Transactional
         @DisplayName("Should search districts with criteria")
         fun shouldSearchWithCriteria() {
             // Given
-            val districts = listOf(
-                DistrictTestFixtures.createDistrict(
-                    province = testProvince,
-                    name = "Test District 1",
-                    population = 100000
-                ),
-                DistrictTestFixtures.createDistrict(
-                    province = testProvince,
-                    name = "Test District 2",
-                    population = 200000
+            val districts =
+                listOf(
+                    DistrictTestFixtures.createDistrict(
+                        province = testProvince,
+                        name = "Test District 1",
+                        population = 100000,
+                    ),
+                    DistrictTestFixtures.createDistrict(
+                        province = testProvince,
+                        name = "Test District 2",
+                        population = 200000,
+                    ),
                 )
-            )
             districtRepository.saveAll(districts)
 
-            val criteria = DistrictSearchCriteria(
-                searchTerm = "Test",
-                minPopulation = 150000,
-                sortBy = DistrictSortField.POPULATION,
-                sortDirection = Sort.Direction.DESC
-            )
+            val criteria =
+                DistrictSearchCriteria(
+                    searchTerm = "Test",
+                    minPopulation = 150000,
+                    sortBy = "population",
+                    sortDirection = Sort.Direction.DESC,
+                    page = 0,
+                    pageSize = 10,
+                )
 
             // When
             val result = districtService.searchDistricts(criteria)
@@ -192,68 +171,66 @@ class DistrictServiceIntegrationTest {
     @Nested
     @DisplayName("Geographic Search Tests")
     inner class GeographicSearchTests {
-        
         @Test
         @Transactional
         @DisplayName("Should find nearby districts")
         fun shouldFindNearbyDistricts() {
             // Given
-            val centralLocation = Pair(BigDecimal("27.7172"), BigDecimal("85.3240"))
-            val districts = listOf(
-                DistrictTestFixtures.createDistrict(
-                    province = testProvince,
-                    name = "Nearby District",
-                    latitude = centralLocation.first,
-                    longitude = centralLocation.second
-                ),
-                DistrictTestFixtures.createDistrict(
-                    province = testProvince,
-                    name = "Far District",
-                    latitude = BigDecimal("26.7172"),
-                    longitude = BigDecimal("84.3240")
+            val centralPoint = Pair(BigDecimal("27.7172"), BigDecimal("85.3240"))
+            val district =
+                districtRepository.save(
+                    DistrictTestFixtures.createDistrict(province = testProvince),
                 )
+            // Add a municipality near the central point
+            district.addMunicipality(
+                MunicipalityTestFixtures.createMunicipality(
+                    district = district,
+                    latitude = centralPoint.first,
+                    longitude = centralPoint.second,
+                ),
             )
-            districtRepository.saveAll(districts)
+            districtRepository.save(district)
 
             // When
-            val result = districtService.findNearbyDistricts(
-                latitude = centralLocation.first,
-                longitude = centralLocation.second,
-                radiusKm = 10.0,
-                page = 0,
-                size = 10
-            )
+            val result =
+                districtService.findNearbyDistricts(
+                    latitude = centralPoint.first,
+                    longitude = centralPoint.second,
+                    radiusKm = 10.0,
+                    page = 0,
+                    size = 10,
+                )
 
             // Then
             assertEquals(1, result.totalElements)
-            assertEquals("Nearby District", result.content.first().name)
+            assertEquals(district.name, result.content.first().name)
         }
     }
 
     @Nested
     @DisplayName("Statistics Tests")
     inner class StatisticsTests {
-        
         @Test
         @Transactional
         @DisplayName("Should calculate district statistics correctly")
         fun shouldCalculateStatistics() {
             // Given
-            val district = districtRepository.save(
-                DistrictTestFixtures.createDistrict(province = testProvince)
-            )
-            // Add municipalities with test data
+            val district =
+                districtRepository.save(
+                    DistrictTestFixtures.createDistrict(province = testProvince),
+                )
+            // Add municipality with test data
             district.addMunicipality(
                 MunicipalityTestFixtures.createMunicipality(
                     district = district,
                     population = 50000,
-                    area = BigDecimal("100.00")
-                )
+                    area = BigDecimal("100.00"),
+                ),
             )
             districtRepository.save(district)
 
             // When
-            val stats = districtService.getDistrictStatistics(district.id!!)
+            val stats = districtService.getDistrictStatistics(district.code!!)
 
             // Then
             assertNotNull(stats)

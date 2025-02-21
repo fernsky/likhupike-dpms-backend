@@ -5,7 +5,6 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateMunicipalityReque
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateMunicipalityRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.MunicipalityDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.MunicipalityResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.MunicipalityStats
 import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
 import org.springframework.data.domain.Page
 import org.springframework.security.access.prepost.PreAuthorize
@@ -42,10 +41,6 @@ interface MunicipalityService {
 
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
-    fun getMunicipalityStatistics(code: String): MunicipalityStats
-
-    @PreAuthorize("isAuthenticated()")
-    @Transactional(readOnly = true)
     fun findNearbyMunicipalities(
         latitude: BigDecimal,
         longitude: BigDecimal,
@@ -61,4 +56,10 @@ interface MunicipalityService {
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun validateMunicipalityExists(code: String)
+
+    @PreAuthorize("isAuthenticated()")
+    @Transactional(readOnly = true)
+    fun getAllMunicipalities(): List<MunicipalityResponse>
+
+    fun validateMunicipalityAccess(municipalityCode: String)
 }

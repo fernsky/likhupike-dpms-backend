@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import np.gov.likhupikemun.dpms.location.domain.District
 import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
 import np.gov.likhupikemun.dpms.location.repository.DistrictRepository
+import np.gov.likhupikemun.dpms.location.service.MunicipalityService
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.MunicipalityTestFixtures
 import org.junit.jupiter.api.BeforeEach
@@ -21,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.transaction.annotation.Transactional
-import java.math.BigDecimal
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -29,14 +29,13 @@ import java.math.BigDecimal
 @Transactional
 @DisplayName("Municipality Controller Integration Tests")
 class MunicipalityControllerIntegrationTest {
-    @Autowired
-    private lateinit var mockMvc: MockMvc
+    @Autowired private lateinit var mockMvc: MockMvc
 
-    @Autowired
-    private lateinit var objectMapper: ObjectMapper
+    @Autowired private lateinit var objectMapper: ObjectMapper
 
-    @Autowired
-    private lateinit var districtRepository: DistrictRepository
+    @Autowired private lateinit var districtRepository: DistrictRepository
+
+    @Autowired private lateinit var municipalityService: MunicipalityService
 
     private lateinit var testDistrict: District
 
@@ -54,7 +53,7 @@ class MunicipalityControllerIntegrationTest {
             // Arrange
             val request =
                 MunicipalityTestFixtures.createMunicipalityRequest(
-                    districtId = testDistrict.id!!,
+                    districtCode = testDistrict.code!!,
                 )
 
             // Act & Assert
@@ -65,10 +64,9 @@ class MunicipalityControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(request))
                         .with(csrf()),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.name").value(request.name))
                 .andExpect(jsonPath("$.data.code").value(request.code))
+                .andExpect(jsonPath("$.data.name").value(request.name))
                 .andExpect(jsonPath("$.data.type").value(request.type.name))
-                .andExpect(jsonPath("$.data.isActive").value(true))
         }
 
         @Test
@@ -105,7 +103,7 @@ class MunicipalityControllerIntegrationTest {
             // Act & Assert
             mockMvc
                 .perform(
-                    put("/api/v1/municipalities/${municipality.id}")
+                    put("/api/v1/municipalities/${municipality.code}")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest))
                         .with(csrf()),
@@ -116,8 +114,8 @@ class MunicipalityControllerIntegrationTest {
     }
 
     @Nested
-    @DisplayName("Search Municipality Tests")
-    inner class SearchMunicipalityTests {
+    @DisplayName("Search and Query Tests")
+    inner class SearchAndQueryTests {
         @Test
         @WithMockUser(roles = ["VIEWER"])
         fun `should search municipalities with filters`() {
@@ -128,39 +126,58 @@ class MunicipalityControllerIntegrationTest {
             mockMvc
                 .perform(
                     get("/api/v1/municipalities/search")
-                        .param("districtId", testDistrict.id.toString())
+                        .param("districtCode", testDistrict.code)
                         .param("type", MunicipalityType.MUNICIPALITY.name)
                         .param("minPopulation", "10000"),
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.content").isArray)
                 .andExpect(jsonPath("$.data.totalElements").isNumber)
         }
-    }
 
-    @Nested
-    @DisplayName("Geographic Search Tests")
-    inner class GeographicSearchTests {
         @Test
         @WithMockUser(roles = ["VIEWER"])
-        fun `should find nearby municipalities`() {
+        fun `should get municipalities by district`() {
             // Arrange
-            createTestMunicipalityWithLocation()
+            createTestMunicipality()
 
             // Act & Assert
             mockMvc
-                .perform(
-                    get("/api/v1/municipalities/nearby")
-                        .param("latitude", "27.7172")
-                        .param("longitude", "85.3240")
-                        .param("radiusKm", "10.0"),
-                ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content").isArray)
+                .perform(get("/api/v1/municipalities/by-district/${testDistrict.code}"))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.data").isArray)
+        }
+
+        @Test
+        @WithMockUser(roles = ["VIEWER"])
+        fun `should get municipalities by type`() {
+            // Arrange
+            createTestMunicipality()
+
+            // Act & Assert
+            mockMvc
+                .perform(get("/api/v1/municipalities/by-type/${MunicipalityType.MUNICIPALITY}"))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.data").isArray)
         }
     }
 
     @Nested
-    @DisplayName("Statistics Tests")
-    inner class StatisticsTests {
+    @DisplayName("Detail and Statistics Tests")
+    inner class DetailAndStatsTests {
+        @Test
+        @WithMockUser(roles = ["VIEWER"])
+        fun `should get municipality detail`() {
+            // Arrange
+            val municipality = createTestMunicipality()
+
+            // Act & Assert
+            mockMvc
+                .perform(get("/api/v1/municipalities/${municipality.code}"))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.code").value(municipality.code))
+                .andExpect(jsonPath("$.data.district").exists())
+        }
+
         @Test
         @WithMockUser(roles = ["VIEWER"])
         fun `should get municipality statistics`() {
@@ -169,26 +186,28 @@ class MunicipalityControllerIntegrationTest {
 
             // Act & Assert
             mockMvc
-                .perform(get("/api/v1/municipalities/${municipality.id}/statistics"))
+                .perform(get("/api/v1/municipalities/${municipality.code}/statistics"))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.totalWards").exists())
-                .andExpect(jsonPath("$.data.activeWards").exists())
                 .andExpect(jsonPath("$.data.totalPopulation").exists())
         }
     }
 
+    // Helper methods
     private fun createAndPersistDistrict(): District = districtRepository.save(DistrictTestFixtures.createDistrict())
 
     private fun createTestMunicipality() =
         municipalityService.createMunicipality(
-            MunicipalityTestFixtures.createMunicipalityRequest(districtId = testDistrict.id!!),
+            MunicipalityTestFixtures.createMunicipalityRequest(
+                districtCode = testDistrict.code!!,
+            ),
         )
 
     private fun createTestMunicipalities() {
         repeat(5) { i ->
             municipalityService.createMunicipality(
                 MunicipalityTestFixtures.createMunicipalityRequest(
-                    districtId = testDistrict.id!!,
+                    districtCode = testDistrict.code!!,
                     code = "TEST-M$i",
                     population = 10000L + (i * 1000),
                     type = MunicipalityType.MUNICIPALITY,

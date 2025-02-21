@@ -14,8 +14,8 @@ data class CreateDistrictRequest(
     @field:NotBlank(message = "Code is required")
     @field:Pattern(regexp = "^[A-Z0-9]{1,10}$", message = "Code must be 1-10 uppercase letters or numbers")
     val code: String,
-    @field:NotNull(message = "Province ID is required")
-    val provinceId: UUID,
+    @field:NotNull(message = "Province Code is required")
+    val provinceCode: String,
     @field:Positive(message = "Area must be positive")
     @field:Digits(integer = 8, fraction = 2, message = "Area must have at most 8 digits and 2 decimal places")
     val area: BigDecimal?,

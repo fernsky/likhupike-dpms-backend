@@ -9,7 +9,7 @@ plugins {
     id("com.google.cloud.tools.jib") version "3.4.1"
     id("org.liquibase.gradle") version "2.2.1"
     id("application")
-    id("org.jetbrains.kotlin.kapt") version "1.9.25"
+    kotlin("kapt") version "1.9.25"
 }
 
 springBoot {
@@ -206,9 +206,19 @@ dependencies {
     implementation("ch.qos.logback:logback-classic")
     implementation("org.slf4j:slf4j-api")
 
-    // Add Hibernate metamodel generator
-    annotationProcessor("org.hibernate.orm:hibernate-jpamodelgen:6.4.4.Final")
-    kapt("org.hibernate.orm:hibernate-jpamodelgen:6.4.4.Final")
+    // Add Spring Security
+    implementation("org.springframework.security:spring-security-config")
+    implementation("org.springframework.security:spring-security-web")
+    
+    // Add Hibernate Core with JPA
+    implementation("org.hibernate.orm:hibernate-core:6.4.4.Final")
+
+    // Add JPA metamodel generation
+    kapt("org.hibernate.orm:hibernate-jpamodelgen")
+    implementation("org.hibernate.orm:hibernate-jpamodelgen")
+
+    // Make sure service interfaces are compiled before implementations
+    kapt("org.springframework.boot:spring-boot-starter-data-jpa")
 }
 
 // Liquibase configuration
@@ -431,6 +441,16 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
 }
 
+// Configure kapt for JPA metamodel generation
+kapt {
+    includeCompileClasspath = false
+    keepJavacAnnotationProcessors = true
+    correctErrorTypes = true
+    arguments {
+        // Remove hibernate.jpamodelgen.version argument as it's not recognized
+        arg("kapt.kotlin.generated", "$buildDir/generated/source/kapt/main")
+    }
+}
 
 // Test configuration
 tasks.withType<Test> {

@@ -2,7 +2,6 @@ package np.gov.likhupikemun.dpms.location.api.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -11,7 +10,6 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateMunicipalityReque
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateMunicipalityRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.MunicipalityDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.MunicipalityResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.MunicipalityStats
 import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
 import np.gov.likhupikemun.dpms.location.service.MunicipalityService
 import np.gov.likhupikemun.dpms.shared.dto.ApiResponse
@@ -22,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @RestController
 @RequestMapping("/api/v1/municipalities")
@@ -35,10 +34,10 @@ class MunicipalityController(
     @Operation(summary = "Create a new municipality")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Municipality created successfully"),
-            ApiResponse(responseCode = "400", description = "Invalid input data"),
-            ApiResponse(responseCode = "403", description = "Insufficient permissions"),
-            ApiResponse(responseCode = "409", description = "Municipality code already exists"),
+            SwaggerApiResponse(responseCode = "200", description = "Municipality created successfully"),
+            SwaggerApiResponse(responseCode = "400", description = "Invalid input data"),
+            SwaggerApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            SwaggerApiResponse(responseCode = "409", description = "Municipality code already exists"),
         ],
     )
     @PostMapping
@@ -61,9 +60,9 @@ class MunicipalityController(
     @Operation(summary = "Update an existing municipality")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Municipality updated successfully"),
-            ApiResponse(responseCode = "404", description = "Municipality not found"),
-            ApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            SwaggerApiResponse(responseCode = "200", description = "Municipality updated successfully"),
+            SwaggerApiResponse(responseCode = "404", description = "Municipality not found"),
+            SwaggerApiResponse(responseCode = "403", description = "Insufficient permissions"),
         ],
     )
     @PutMapping("/{code}")
@@ -129,17 +128,6 @@ class MunicipalityController(
         logger.debug("Fetching municipalities of type: $type")
         val municipalities = municipalityService.getMunicipalitiesByType(type)
         return ResponseEntity.ok(ApiResponse.success(data = municipalities))
-    }
-
-    @Operation(summary = "Get municipality statistics")
-    @GetMapping("/{code}/statistics")
-    fun getMunicipalityStatistics(
-        @Parameter(description = "Municipality code", required = true)
-        @PathVariable code: String,
-    ): ResponseEntity<ApiResponse<MunicipalityStats>> {
-        logger.debug("Fetching statistics for municipality: $code")
-        val stats = municipalityService.getMunicipalityStatistics(code)
-        return ResponseEntity.ok(ApiResponse.success(data = stats))
     }
 
     @Operation(summary = "Find nearby municipalities")

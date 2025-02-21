@@ -1,11 +1,15 @@
 package np.gov.likhupikemun.dpms.common.repository
 
 import jakarta.persistence.EntityManager
+import jakarta.persistence.criteria.CriteriaBuilder
+import jakarta.persistence.criteria.Order
+import jakarta.persistence.criteria.Root
 import org.hibernate.Session
-import org.hibernate.query.Order
+import org.hibernate.query.Query
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -20,19 +24,31 @@ abstract class BaseHibernateRepository(
         entityClass: Class<T>,
         parameters: Map<Int, Any?> = emptyMap(),
         pageable: Pageable? = null,
-        orders: List<Order<Any>>? = null,
-    ): List<T> =
-        session.createSelectionQuery(queryString, entityClass).run {
-            parameters.forEach { (position, value) ->
-                setParameter(position, value)
-            }
-            orders?.forEach { addOrder(it) }
-            pageable?.let {
-                setFirstResult(it.offset.toInt())
-                setMaxResults(it.pageSize)
-            }
-            resultList
+        orders: List<Order>? = null,
+    ): List<T> {
+        val query: Query<T> = session.createQuery(queryString, entityClass)
+        parameters.forEach { (position, value) ->
+            query.setParameter(position, value)
         }
+
+        pageable?.let {
+            query.setFirstResult(it.offset.toInt())
+            query.setMaxResults(it.pageSize)
+
+            if (it.sort.isSorted) {
+                val criteriaBuilder = session.criteriaBuilder
+                val criteriaQuery = criteriaBuilder.createQuery(entityClass)
+                val root = criteriaQuery.from(entityClass)
+
+                val orders = addOrderBy(criteriaBuilder, root, it.sort)
+                orders.forEach { order ->
+                    criteriaQuery.orderBy(order)
+                }
+            }
+        }
+
+        return query.resultList
+    }
 
     protected fun <T> executePagedQuery(
         queryString: String,
@@ -40,7 +56,7 @@ abstract class BaseHibernateRepository(
         entityClass: Class<T>,
         parameters: Map<Int, Any?> = emptyMap(),
         pageable: Pageable,
-        orders: List<Order<Any>>? = null,
+        orders: List<Order>? = null,
     ): Page<T> {
         val results = executeQuery(queryString, entityClass, parameters, pageable, orders)
         val total = executeCount(countQuery, parameters)
@@ -51,10 +67,25 @@ abstract class BaseHibernateRepository(
         countQuery: String,
         parameters: Map<Int, Any?> = emptyMap(),
     ): Long =
-        session.createSelectionQuery(countQuery, Long::class.java).run {
+        session.createQuery(countQuery, Long::class.java).run {
             parameters.forEach { (position, value) ->
                 setParameter(position, value)
             }
             singleResult
         }
+
+    protected fun <T> addOrderBy(
+        builder: CriteriaBuilder,
+        root: Root<T>,
+        sort: Sort,
+    ): List<Order> =
+        sort
+            .stream()
+            .map { order ->
+                if (order.isAscending) {
+                    builder.asc(root.get<Any>(order.property))
+                } else {
+                    builder.desc(root.get<Any>(order.property))
+                }
+            }.toList()
 }

@@ -1,11 +1,8 @@
 package np.gov.likhupikemun.dpms.location.service
 
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSearchCriteria
-import np.gov.likhupikemun.dpms.location.api.dto.request.CreateDistrictRequest
-import np.gov.likhupikemun.dpms.location.api.dto.request.CreateMunicipalityRequest
 import np.gov.likhupikemun.dpms.location.exception.ProvinceCodeExistsException
 import np.gov.likhupikemun.dpms.location.exception.ProvinceNotFoundException
-import np.gov.likhupikemun.dpms.location.exception.ProvinceOperationException
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.MunicipalityTestFixtures
@@ -22,9 +19,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -66,10 +61,10 @@ class ProvinceServiceIntegrationTest {
             assertEquals(request.name, result.name)
             assertEquals(request.nameNepali, result.nameNepali)
             assertEquals(request.code, result.code)
-            assertTrue(result.isActive)
+            assertEquals(0, result.districtCount)
 
             // Verify persistence
-            val savedProvince = provinceRepository.findById(result.id).orElseThrow()
+            val savedProvince = provinceRepository.findByCodeIgnoreCase(result.code).orElseThrow()
             assertEquals(request.name, savedProvince.name)
         }
 
@@ -99,11 +94,12 @@ class ProvinceServiceIntegrationTest {
             val updateRequest = ProvinceTestFixtures.createUpdateProvinceRequest()
 
             // When
-            val result = provinceService.updateProvince(province.id!!, updateRequest)
+            val result = provinceService.updateProvince(province.code, updateRequest)
 
             // Then
             assertEquals(updateRequest.name, result.name)
             assertEquals(updateRequest.population, result.population)
+            assertEquals(province.code, result.code)
         }
     }
 
@@ -119,8 +115,10 @@ class ProvinceServiceIntegrationTest {
             val criteria = ProvinceSearchCriteria(
                 searchTerm = "Test",
                 minPopulation = 400000L,
-                sortBy = ProvinceSortField.POPULATION,
-                sortDirection = Sort.Direction.DESC
+                sortBy = "population",
+                sortDirection = Sort.Direction.DESC,
+                page = 0,
+                pageSize = 10
             )
 
             // When
@@ -138,16 +136,16 @@ class ProvinceServiceIntegrationTest {
         
         @Test
         @Transactional
-        fun `should calculate province statistics correctly`() {
+        fun `should get province statistics correctly`() {
             // Given
             val province = createTestProvince()
-            val district = createTestDistrict(province.id!!)
-            createTestMunicipalities(district.id)
+            createTestDistrictWithMunicipalities(province.code)
 
-            // When
-            val stats = provinceService.getProvinceStatistics(province.id!!)
+            // When 
+            val stats = provinceService.getProvinceStatistics(province.code)
 
             // Then
+            assertNotNull(stats)
             assertEquals(1, stats.totalDistricts)
             assertEquals(3, stats.totalMunicipalities)
             assertTrue(stats.totalPopulation > 0)
@@ -155,53 +153,27 @@ class ProvinceServiceIntegrationTest {
         }
     }
 
-    @Nested
-    @DisplayName("Deactivation Tests")
-    inner class DeactivationTests {
-        
-        @Test
-        @Transactional
-        fun `should not deactivate province with active districts`() {
-            // Given
-            val province = createTestProvince()
-            createTestDistrict(province.id!!)
-
-            // When & Then
-            assertThrows<ProvinceOperationException> {
-                provinceService.deactivateProvince(province.id!!)
-            }
-        }
-
-        @Test
-        @Transactional
-        fun `should deactivate province without active districts`() {
-            // Given
-            val province = createTestProvince()
-
-            // When
-            provinceService.deactivateProvince(province.id!!)
-
-            // Then
-            val updatedProvince = provinceService.getProvince(province.id!!)
-            assertFalse(updatedProvince.isActive)
-        }
-    }
-
     private fun createTestProvince() = provinceService.createProvince(
         ProvinceTestFixtures.createProvinceRequest()
     )
 
-    private fun createTestDistrict(provinceId: UUID) = districtService.createDistrict(
-        DistrictTestFixtures.createDistrictRequest(provinceId = provinceId)
-    )
+    private fun createTestDistrictWithMunicipalities(provinceCode: String) {
+        // Create district
+        val district = districtService.createDistrict(
+            DistrictTestFixtures.createDistrictRequest(
+                provinceCode = provinceCode,
+                code = "TEST-D1"
+            )
+        )
 
-    private fun createTestMunicipalities(districtId: UUID) {
+        // Create municipalities
         repeat(3) { i ->
             municipalityService.createMunicipality(
                 MunicipalityTestFixtures.createMunicipalityRequest(
-                    districtId = districtId,
+                    districtCode = district.code,
                     code = "TEST-M$i",
-                    population = 10000L + (i * 1000)
+                    population = 10000L + (i * 1000),
+                    area = BigDecimal("100.00").add(BigDecimal(i.toString()))
                 )
             )
         }

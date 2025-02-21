@@ -52,13 +52,14 @@ class ProvincePerformanceTest {
     @BeforeEach
     fun setup() {
         provinceRepository.deleteAll()
-        createTestData()
+        testProvince = createTestData()
     }
 
     @Test
     @Benchmark
     fun `benchmark province creation performance`() {
         val request = ProvinceTestFixtures.createProvinceRequest(code = "PERF-${System.nanoTime()}")
+
         val elapsed =
             measureTimeMillis {
                 provinceService.createProvince(request)
@@ -68,55 +69,33 @@ class ProvincePerformanceTest {
 
     @Test
     @Benchmark
-    fun `benchmark province search with complex criteria performance`() {
+    fun `benchmark province search performance`() {
         val criteria =
             ProvinceSearchCriteria(
                 searchTerm = "Test",
                 minPopulation = 100000L,
                 maxPopulation = 1000000L,
-                sortBy = ProvinceSortField.POPULATION,
+                sortBy = "population",
                 sortDirection = Sort.Direction.DESC,
-                includeInactive = false,
-                minDistricts = 2,
-                minMunicipalities = 5,
+                page = 0,
+                pageSize = 10,
             )
 
         val elapsed =
             measureTimeMillis {
                 provinceService.searchProvinces(criteria)
             }
-        assert(elapsed < 500) { "Complex search took more than 500ms: $elapsed ms" }
+        assert(elapsed < 500) { "Search took more than 500ms: $elapsed ms" }
     }
 
     @Test
     @Benchmark
-    fun `benchmark concurrent province creation performance`() {
-        val requests =
-            (1..5).map {
-                ProvinceTestFixtures.createProvinceRequest(code = "CONC-$it")
-            }
-
+    fun `benchmark province detail retrieval performance`() {
         val elapsed =
             measureTimeMillis {
-                requests.parallelStream().forEach { request ->
-                    try {
-                        provinceService.createProvince(request)
-                    } catch (e: Exception) {
-                        // Ignore duplicate codes in concurrent test
-                    }
-                }
+                provinceService.getProvinceDetail(testProvince.code!!)
             }
-        assert(elapsed < 2000) { "Concurrent province creation took more than 2 seconds: $elapsed ms" }
-    }
-
-    @Test
-    @Benchmark
-    fun `benchmark hierarchical data loading performance`() {
-        val elapsed =
-            measureTimeMillis {
-                provinceService.getProvinceDetail(testProvince.id!!)
-            }
-        assert(elapsed < 1000) { "Hierarchical data loading took more than 1 second: $elapsed ms" }
+        assert(elapsed < 500) { "Detail retrieval took more than 500ms: $elapsed ms" }
     }
 
     @Test
@@ -124,7 +103,7 @@ class ProvincePerformanceTest {
     fun `benchmark statistics calculation performance`() {
         val elapsed =
             measureTimeMillis {
-                provinceService.getProvinceStatistics(testProvince.id!!)
+                provinceService.getProvinceStatistics(testProvince.code!!)
             }
         assert(elapsed < 1000) { "Statistics calculation took more than 1 second: $elapsed ms" }
     }
@@ -139,7 +118,7 @@ class ProvincePerformanceTest {
             measureTimeMillis {
                 provinces.forEach { province ->
                     try {
-                        provinceService.updateProvince(province.id!!, updateRequest)
+                        provinceService.updateProvince(province.code!!, updateRequest)
                     } catch (e: Exception) {
                         // Ignore concurrent modification exceptions
                     }
@@ -150,16 +129,16 @@ class ProvincePerformanceTest {
     }
 
     @Transactional
-    private fun createTestData() {
-        // Create main test province with complex hierarchy
-        testProvince = provinceRepository.save(ProvinceTestFixtures.createProvince())
+    private fun createTestData(): Province {
+        // Create main test province with hierarchy
+        val province = provinceRepository.save(ProvinceTestFixtures.createProvince())
 
         // Create districts
         repeat(3) { districtIndex ->
             val district =
                 districtService.createDistrict(
                     DistrictTestFixtures.createDistrictRequest(
-                        provinceId = testProvince.id!!,
+                        provinceCode = province.code!!,
                         code = "D-$districtIndex",
                         population = 100000L + (districtIndex * 10000L),
                     ),
@@ -169,13 +148,14 @@ class ProvincePerformanceTest {
             repeat(5) { municipalityIndex ->
                 municipalityService.createMunicipality(
                     MunicipalityTestFixtures.createMunicipalityRequest(
-                        districtId = district.id,
+                        districtCode = district.code,
                         code = "M-$districtIndex-$municipalityIndex",
                         population = 20000L + (municipalityIndex * 1000L),
                     ),
                 )
             }
         }
+        return province
     }
 
     private fun createBulkTestProvinces(): List<Province> =

@@ -2,7 +2,6 @@ package np.gov.likhupikemun.dpms.location.api.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -11,15 +10,16 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.CreateProvinceRequest
 import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateProvinceRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceDetailResponse
 import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceResponse
-import np.gov.likhupikemun.dpms.location.api.dto.response.ProvinceStats
 import np.gov.likhupikemun.dpms.location.service.ProvinceService
 import np.gov.likhupikemun.dpms.shared.dto.ApiResponse
 import np.gov.likhupikemun.dpms.shared.dto.PagedResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @RestController
 @RequestMapping("/api/v1/provinces")
@@ -36,13 +36,14 @@ class ProvinceController(
     )
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Province created successfully"),
-            ApiResponse(responseCode = "400", description = "Invalid input data"),
-            ApiResponse(responseCode = "403", description = "Insufficient permissions"),
-            ApiResponse(responseCode = "409", description = "Province code already exists"),
+            SwaggerApiResponse(responseCode = "200", description = "Province created successfully"),
+            SwaggerApiResponse(responseCode = "400", description = "Invalid input data"),
+            SwaggerApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            SwaggerApiResponse(responseCode = "409", description = "Province code already exists"),
         ],
     )
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     fun createProvince(
         @Parameter(description = "Province creation details", required = true)
         @Valid
@@ -87,6 +88,7 @@ class ProvinceController(
         description = "Updates an existing province. Only accessible by super admins.",
     )
     @PutMapping("/{code}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     fun updateProvince(
         @Parameter(description = "Province code", required = true)
         @PathVariable code: String,
@@ -100,17 +102,6 @@ class ProvinceController(
                 message = "Province updated successfully",
             ),
         )
-    }
-
-    @Operation(summary = "Get province statistics", description = "Get statistical information about a province")
-    @GetMapping("/{code}/statistics")
-    fun getProvinceStatistics(
-        @Parameter(description = "Province code", required = true)
-        @PathVariable code: String,
-    ): ResponseEntity<ApiResponse<ProvinceStats>> {
-        logger.debug("Fetching statistics for province: $code")
-        val stats = provinceService.getProvinceStatistics(code)
-        return ResponseEntity.ok(ApiResponse.success(data = stats))
     }
 
     @Operation(summary = "Get all provinces", description = "Get list of all provinces")

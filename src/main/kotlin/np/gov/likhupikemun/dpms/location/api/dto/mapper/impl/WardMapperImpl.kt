@@ -13,12 +13,10 @@ class WardMapperImpl(
     private val municipalityMapper: MunicipalityMapper,
 ) : WardMapper {
     override fun toResponse(ward: Ward): WardResponse {
-        require(ward.code != null) { "Ward code cannot be null" }
         require(ward.wardNumber != null) { "Ward number cannot be null" }
         require(ward.municipality != null) { "Municipality cannot be null" }
 
         return WardResponse(
-            code = ward.code!!,
             wardNumber = ward.wardNumber!!,
             area = ward.area,
             population = ward.population,
@@ -35,7 +33,6 @@ class WardMapperImpl(
         require(ward.municipality != null) { "Municipality cannot be null" }
 
         return WardDetailResponse(
-            id = ward.id!!,
             wardNumber = ward.wardNumber!!,
             area = ward.area,
             population = ward.population,

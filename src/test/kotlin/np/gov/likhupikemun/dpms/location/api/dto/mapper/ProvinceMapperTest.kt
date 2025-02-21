@@ -4,10 +4,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import np.gov.likhupikemun.dpms.location.api.dto.mapper.impl.ProvinceMapperImpl
-import np.gov.likhupikemun.dpms.location.api.dto.response.DistrictSummaryResponse
 import np.gov.likhupikemun.dpms.location.domain.District
 import np.gov.likhupikemun.dpms.location.domain.Municipality
 import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
+import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.ProvinceTestFixtures
 import org.junit.jupiter.api.BeforeEach
@@ -16,10 +16,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 @DisplayName("Province Mapper Tests")
 class ProvinceMapperTest {
@@ -48,25 +46,23 @@ class ProvinceMapperTest {
             // Then
             assertNotNull(response)
             with(response) {
-                assertEquals(province.id, id)
+                assertEquals(province.code, code)
                 assertEquals(province.name, name)
                 assertEquals(province.nameNepali, nameNepali)
-                assertEquals(province.code, code)
                 assertEquals(province.area, area)
                 assertEquals(province.population, population)
                 assertEquals(province.headquarter, headquarter)
                 assertEquals(province.headquarterNepali, headquarterNepali)
-                assertEquals(province.isActive, isActive)
-                assertEquals(2, districtCount) // Only active districts
-                assertTrue(totalPopulation > 0)
-                assertTrue(totalArea > BigDecimal.ZERO)
+                assertEquals(2, districtCount)
+                assertEquals(40000L, totalPopulation)
+                assertEquals(BigDecimal("400.00"), totalArea)
             }
         }
 
         @Test
-        fun `should throw exception when mapping province with null ID`() {
+        fun `should throw exception when mapping province with null required fields`() {
             // Given
-            val province = ProvinceTestFixtures.createProvince(id = null)
+            val province = Province()
 
             // Then
             assertThrows<IllegalArgumentException> {
@@ -80,16 +76,20 @@ class ProvinceMapperTest {
     inner class DetailedResponseMappingTests {
 
         @Test
-        fun `should map province to detailed response with districts`() {
+        fun `should map province to detailed response successfully`() {
             // Given
             val province = ProvinceTestFixtures.createProvince()
             val districts = addTestDistricts(province)
-            val districtSummaries = createDistrictSummaries(districts)
 
             districts.forEach { district ->
                 every { 
                     districtMapper.toSummaryResponse(district) 
-                } returns districtSummaries.find { it.id == district.id }!!
+                } returns DistrictTestFixtures.createDistrictSummaryResponse(
+                    code = district.code!!,
+                    name = district.name!!,
+                    nameNepali = district.nameNepali!!,
+                    municipalityCount = district.municipalities.size
+                )
             }
 
             // When
@@ -97,16 +97,15 @@ class ProvinceMapperTest {
 
             // Then
             assertNotNull(response)
-            assertEquals(province.id, response.id)
-            assertEquals(3, response.districts.size)
-            
-            with(response.stats) {
-                assertEquals(2, totalDistricts) // Only active districts
-                assertEquals(4, totalMunicipalities) // Only active municipalities
-                assertTrue(totalPopulation > 0)
-                assertTrue(totalArea > BigDecimal.ZERO)
-                assertTrue(populationDensity > BigDecimal.ZERO)
-                assertEquals(2, municipalityTypes.size)
+            with(response) {
+                assertEquals(province.code, code)
+                assertEquals(province.name, name)
+                assertEquals(province.nameNepali, nameNepali)
+                assertEquals(province.area, area)
+                assertEquals(province.population, population)
+                assertEquals(province.headquarter, headquarter)
+                assertEquals(province.headquarterNepali, headquarterNepali)
+                assertEquals(3, districts.size)
             }
 
             verify(exactly = 3) { 
@@ -120,7 +119,7 @@ class ProvinceMapperTest {
     inner class SummaryResponseMappingTests {
 
         @Test
-        fun `should map province to summary response`() {
+        fun `should map province to summary response successfully`() {
             // Given
             val province = ProvinceTestFixtures.createProvince()
 
@@ -129,95 +128,29 @@ class ProvinceMapperTest {
 
             // Then
             assertNotNull(response)
-            assertEquals(province.id, response.id)
+            assertEquals(province.code, response.code)
             assertEquals(province.name, response.name)
             assertEquals(province.nameNepali, response.nameNepali)
-            assertEquals(province.code, response.code)
-        }
-    }
-
-    @Nested
-    @DisplayName("Statistics Calculation Tests")
-    inner class StatisticsCalculationTests {
-
-        @Test
-        fun `should calculate correct statistics for province`() {
-            // Given
-            val province = ProvinceTestFixtures.createProvince()
-            addTestDistricts(province)
-
-            // When
-            val response = provinceMapper.toDetailResponse(province)
-
-            // Then
-            with(response.stats) {
-                assertEquals(2, totalDistricts)
-                assertEquals(4, totalMunicipalities)
-                assertEquals(40000L, totalPopulation)
-                assertEquals(BigDecimal("400.00"), totalArea)
-                assertEquals(BigDecimal("100.00"), populationDensity)
-                assertEquals(2, municipalityTypes.size)
-                assertEquals(2, municipalityTypes["MUNICIPALITY"])
-                assertEquals(2, municipalityTypes["RURAL_MUNICIPALITY"])
-            }
         }
     }
 
     private fun addTestDistricts(province: Province): List<District> {
         val districts = listOf(
-            createTestDistrict(province, isActive = true),
-            createTestDistrict(province, isActive = true),
-            createTestDistrict(province, isActive = false)
+            createTestDistrict(province, population = 15000L, area = BigDecimal("150.00")),
+            createTestDistrict(province, population = 25000L, area = BigDecimal("250.00")),
+            createTestDistrict(province, population = 0L, area = BigDecimal("0.00"))
         )
         province.districts.addAll(districts)
         return districts
     }
 
-    private fun createTestDistrict(province: Province, isActive: Boolean): District {
-        val district = DistrictTestFixtures.createDistrict(province = province)
-        district.isActive = isActive
-        
-        if (isActive) {
-            addTestMunicipalities(district)
-        }
-        
-        return district
-    }
-
-    private fun addTestMunicipalities(district: District) {
-        val municipalities = listOf(
-            createTestMunicipality(district, MunicipalityType.MUNICIPALITY, true),
-            createTestMunicipality(district, MunicipalityType.RURAL_MUNICIPALITY, true),
-            createTestMunicipality(district, MunicipalityType.MUNICIPALITY, false)
-        )
-        district.municipalities.addAll(municipalities)
-    }
-
-    private fun createTestMunicipality(
-        district: District,
-        type: MunicipalityType,
-        isActive: Boolean
-    ): Municipality {
-        return Municipality().apply {
-            id = UUID.randomUUID()
-            this.district = district
-            this.type = type
-            this.isActive = isActive
-            population = 10000L
-            area = BigDecimal("100.00")
-        }
-    }
-
-    private fun createDistrictSummaries(districts: List<District>): List<DistrictSummaryResponse> {
-        return districts.map { district ->
-            DistrictSummaryResponse(
-                id = district.id!!,
-                name = district.name!!,
-                nameNepali = district.nameNepali!!,
-                code = district.code!!,
-                isActive = district.isActive,
-                municipalityCount = district.municipalities.count { it.isActive }
-            )
-        }
-    }
+    private fun createTestDistrict(
+        province: Province,
+        population: Long,
+        area: BigDecimal
+    ): District = DistrictTestFixtures.createDistrict(
+        province = province,
+        population = population,
+        area = area
+    )
 }

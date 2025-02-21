@@ -2,24 +2,20 @@ package np.gov.likhupikemun.dpms.location.service
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
-import np.gov.likhupikemun.dpms.location.api.dto.request.CreateMunicipalityRequest
-import np.gov.likhupikemun.dpms.location.domain.District
+import np.gov.likhupikemun.dpms.location.api.dto.mapper.MunicipalityMapper
 import np.gov.likhupikemun.dpms.location.domain.Municipality
-import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
-import np.gov.likhupikemun.dpms.location.exception.DistrictNotFoundException
-import np.gov.likhupikemun.dpms.location.exception.DuplicateMunicipalityCodeException
+import np.gov.likhupikemun.dpms.location.exception.*
 import np.gov.likhupikemun.dpms.location.repository.DistrictRepository
 import np.gov.likhupikemun.dpms.location.repository.MunicipalityRepository
-import np.gov.likhupikemun.dpms.shared.service.CurrentUserService
+import np.gov.likhupikemun.dpms.location.service.impl.MunicipalityServiceImpl
+import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
+import np.gov.likhupikemun.dpms.location.test.fixtures.MunicipalityTestFixtures
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.springframework.data.repository.findByIdOrNull
-import java.math.BigDecimal
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -28,7 +24,7 @@ import kotlin.test.assertNotNull
 class MunicipalityServiceTest {
     private val municipalityRepository = mockk<MunicipalityRepository>()
     private val districtRepository = mockk<DistrictRepository>()
-    private val currentUserService = mockk<CurrentUserService>()
+    private val municipalityMapper = mockk<MunicipalityMapper>()
     private lateinit var municipalityService: MunicipalityService
 
     @BeforeEach
@@ -37,7 +33,7 @@ class MunicipalityServiceTest {
             MunicipalityServiceImpl(
                 municipalityRepository = municipalityRepository,
                 districtRepository = districtRepository,
-                currentUserService = currentUserService,
+                municipalityMapper = municipalityMapper,
             )
     }
 
@@ -48,46 +44,39 @@ class MunicipalityServiceTest {
         @DisplayName("Should create municipality successfully")
         fun shouldCreateMunicipality() {
             // Given
-            val districtId = UUID.randomUUID()
-            val district =
-                District().apply {
-                    id = districtId
-                    name = "Test District"
-                }
+            val request = MunicipalityTestFixtures.createMunicipalityRequest()
+            val district = DistrictTestFixtures.createDistrict()
+            val municipality = MunicipalityTestFixtures.createMunicipality()
+            val expectedResponse = MunicipalityTestFixtures.createMunicipalityResponse()
 
-            val request =
-                CreateMunicipalityRequest(
-                    name = "Test Municipality",
-                    nameNepali = "टेस्ट नगरपालिका",
-                    code = "TEST001",
-                    type = MunicipalityType.MUNICIPALITY,
-                    area = BigDecimal("100.50"),
-                    population = 50000,
-                    latitude = BigDecimal("27.7172"),
-                    longitude = BigDecimal("85.3240"),
-                    totalWards = 12,
-                    districtId = districtId,
-                )
+            every {
+                districtRepository.findByCodeIgnoreCase(request.districtCode)
+            } returns Optional.of(district)
 
-            val municipalitySlot = slot<Municipality>()
+            every {
+                municipalityRepository.existsByCodeAndDistrict(request.code, request.districtCode)
+            } returns false
 
-            every { districtRepository.findByIdOrNull(districtId) } returns district
-            every { municipalityRepository.existsByCodeAndDistrict(any(), any(), any()) } returns false
-            every { municipalityRepository.save(capture(municipalitySlot)) } answers { municipalitySlot.captured }
+            every {
+                municipalityRepository.save(any())
+            } returns municipality
+
+            every {
+                municipalityMapper.toResponse(municipality)
+            } returns expectedResponse
 
             // When
             val result = municipalityService.createMunicipality(request)
 
             // Then
             assertNotNull(result)
-            assertEquals(request.name, result.name)
-            assertEquals(request.code, result.code)
-            assertEquals(request.type, result.type)
+            assertEquals(expectedResponse, result)
 
             verify(exactly = 1) {
-                districtRepository.findByIdOrNull(districtId)
-                municipalityRepository.existsByCodeAndDistrict(request.code, districtId, null)
+                districtRepository.findByCodeIgnoreCase(request.districtCode)
+                municipalityRepository.existsByCodeAndDistrict(request.code, request.districtCode)
                 municipalityRepository.save(any())
+                municipalityMapper.toResponse(any())
             }
         }
 
@@ -95,18 +84,9 @@ class MunicipalityServiceTest {
         @DisplayName("Should throw DistrictNotFoundException when district not found")
         fun shouldThrowDistrictNotFound() {
             // Given
-            val districtId = UUID.randomUUID()
-            val request =
-                CreateMunicipalityRequest(
-                    name = "Test Municipality",
-                    nameNepali = "टेस्ट नगरपालिका",
-                    code = "TEST001",
-                    type = MunicipalityType.MUNICIPALITY,
-                    districtId = districtId,
-                    totalWards = 12,
-                )
+            val request = MunicipalityTestFixtures.createMunicipalityRequest()
 
-            every { districtRepository.findByIdOrNull(districtId) } returns null
+            every { districtRepository.findByCodeIgnoreCase(request.districtCode) } returns Optional.empty()
 
             // Then
             assertThrows<DistrictNotFoundException> {
@@ -114,7 +94,7 @@ class MunicipalityServiceTest {
             }
 
             verify(exactly = 1) {
-                districtRepository.findByIdOrNull(districtId)
+                districtRepository.findByCodeIgnoreCase(request.districtCode)
             }
             verify(exactly = 0) {
                 municipalityRepository.save(any())
@@ -125,25 +105,11 @@ class MunicipalityServiceTest {
         @DisplayName("Should throw DuplicateMunicipalityCodeException when code exists")
         fun shouldThrowDuplicateCode() {
             // Given
-            val districtId = UUID.randomUUID()
-            val district =
-                District().apply {
-                    id = districtId
-                    name = "Test District"
-                }
+            val request = MunicipalityTestFixtures.createMunicipalityRequest()
+            val district = DistrictTestFixtures.createDistrict()
 
-            val request =
-                CreateMunicipalityRequest(
-                    name = "Test Municipality",
-                    nameNepali = "टेस्ट नगरपालिका",
-                    code = "TEST001",
-                    type = MunicipalityType.MUNICIPALITY,
-                    districtId = districtId,
-                    totalWards = 12,
-                )
-
-            every { districtRepository.findByIdOrNull(districtId) } returns district
-            every { municipalityRepository.existsByCodeAndDistrict(request.code, districtId, null) } returns true
+            every { districtRepository.findByCodeIgnoreCase(request.districtCode) } returns Optional.of(district)
+            every { municipalityRepository.existsByCodeAndDistrict(request.code, request.districtCode) } returns true
 
             // Then
             assertThrows<DuplicateMunicipalityCodeException> {
@@ -151,8 +117,8 @@ class MunicipalityServiceTest {
             }
 
             verify(exactly = 1) {
-                districtRepository.findByIdOrNull(districtId)
-                municipalityRepository.existsByCodeAndDistrict(request.code, districtId, null)
+                districtRepository.findByCodeIgnoreCase(request.districtCode)
+                municipalityRepository.existsByCodeAndDistrict(request.code, request.districtCode)
             }
             verify(exactly = 0) {
                 municipalityRepository.save(any())
@@ -167,37 +133,40 @@ class MunicipalityServiceTest {
         @DisplayName("Should update municipality successfully")
         fun shouldUpdateMunicipality() {
             // Given
-            val municipalityId = UUID.randomUUID()
-            val existingMunicipality = createTestMunicipality(id = municipalityId)
-            val request =
-                UpdateMunicipalityRequest(
-                    name = "Updated Municipality",
-                    nameNepali = "अपडेटेड नगरपालिका",
-                    area = BigDecimal("200.50"),
-                    population = 75000,
-                    latitude = BigDecimal("27.7172"),
-                    longitude = BigDecimal("85.3240"),
-                    totalWards = 15,
-                    isActive = true,
-                )
+            val code = "TEST-M"
+            val request = MunicipalityTestFixtures.createUpdateMunicipalityRequest()
+            val existingMunicipality = MunicipalityTestFixtures.createMunicipality()
+            val updatedMunicipality =
+                existingMunicipality.copy().apply {
+                    name = request.name
+                    nameNepali = request.nameNepali
+                    // ...update other fields...
+                }
+            val expectedResponse = MunicipalityTestFixtures.createMunicipalityResponse()
 
-            every { municipalityRepository.findById(municipalityId) } returns Optional.of(existingMunicipality)
-            every { municipalityRepository.save(any()) } answers { firstArg() }
+            every {
+                municipalityRepository.findByCodeIgnoreCase(code)
+            } returns Optional.of(existingMunicipality)
+
+            every {
+                municipalityRepository.save(any())
+            } returns updatedMunicipality
+
+            every {
+                municipalityMapper.toResponse(updatedMunicipality)
+            } returns expectedResponse
 
             // When
-            val result = municipalityService.updateMunicipality(municipalityId, request)
+            val result = municipalityService.updateMunicipality(code, request)
 
             // Then
             assertNotNull(result)
-            assertEquals(request.name, result.name)
-            assertEquals(request.nameNepali, result.nameNepali)
-            assertEquals(request.area, result.area)
-            assertEquals(request.population, result.population)
-            assertEquals(request.totalWards, result.totalWards)
+            assertEquals(expectedResponse, result)
 
             verify(exactly = 1) {
-                municipalityRepository.findById(municipalityId)
+                municipalityRepository.findByCodeIgnoreCase(code)
                 municipalityRepository.save(any())
+                municipalityMapper.toResponse(any())
             }
         }
 
@@ -205,22 +174,18 @@ class MunicipalityServiceTest {
         @DisplayName("Should throw MunicipalityNotFoundException when municipality not found")
         fun shouldThrowMunicipalityNotFound() {
             // Given
-            val municipalityId = UUID.randomUUID()
-            val request =
-                UpdateMunicipalityRequest(
-                    name = "Updated Municipality",
-                    nameNepali = "अपडेटेड नगरपालिका",
-                )
+            val code = "TEST-M"
+            val request = MunicipalityTestFixtures.createUpdateMunicipalityRequest()
 
-            every { municipalityRepository.findById(municipalityId) } returns Optional.empty()
+            every { municipalityRepository.findByCodeIgnoreCase(code) } returns Optional.empty()
 
             // Then
             assertThrows<MunicipalityNotFoundException> {
-                municipalityService.updateMunicipality(municipalityId, request)
+                municipalityService.updateMunicipality(code, request)
             }
 
             verify(exactly = 1) {
-                municipalityRepository.findById(municipalityId)
+                municipalityRepository.findByCodeIgnoreCase(code)
             }
             verify(exactly = 0) {
                 municipalityRepository.save(any())
@@ -231,88 +196,69 @@ class MunicipalityServiceTest {
         @DisplayName("Should update only provided fields")
         fun shouldUpdateOnlyProvidedFields() {
             // Given
-            val municipalityId = UUID.randomUUID()
+            val code = "TEST-M"
             val existingMunicipality =
-                createTestMunicipality(
-                    id = municipalityId,
-                    name = "Original Name",
-                    code = "TEST001",
-                ).apply {
+                MunicipalityTestFixtures.createMunicipality().apply {
+                    name = "Original Name"
+                    code = "TEST001"
                     area = BigDecimal("100.00")
                     population = 50000
                     totalWards = 10
                 }
 
             val request =
-                UpdateMunicipalityRequest(
-                    name = "Updated Name",
-                    population = 60000,
-                )
+                MunicipalityTestFixtures.createUpdateMunicipalityRequest().apply {
+                    name = "Updated Name"
+                    population = 60000
+                }
 
-            every { municipalityRepository.findById(municipalityId) } returns Optional.of(existingMunicipality)
-            every { municipalityRepository.save(any()) } answers { firstArg() }
+            val updatedMunicipality =
+                existingMunicipality.copy().apply {
+                    name = request.name
+                    population = request.population
+                }
+
+            val expectedResponse = MunicipalityTestFixtures.createMunicipalityResponse()
+
+            every { municipalityRepository.findByCodeIgnoreCase(code) } returns Optional.of(existingMunicipality)
+            every { municipalityRepository.save(any()) } returns updatedMunicipality
+            every { municipalityMapper.toResponse(updatedMunicipality) } returns expectedResponse
 
             // When
-            val result = municipalityService.updateMunicipality(municipalityId, request)
+            val result = municipalityService.updateMunicipality(code, request)
 
             // Then
             assertNotNull(result)
-            assertEquals(request.name, result.name)
-            assertEquals(existingMunicipality.nameNepali, result.nameNepali)
-            assertEquals(existingMunicipality.area, result.area)
-            assertEquals(request.population, result.population)
-            assertEquals(existingMunicipality.totalWards, result.totalWards)
+            assertEquals(expectedResponse, result)
 
             verify(exactly = 1) {
-                municipalityRepository.findById(municipalityId)
+                municipalityRepository.findByCodeIgnoreCase(code)
                 municipalityRepository.save(any())
+                municipalityMapper.toResponse(any())
             }
         }
 
-        @Test
-        @DisplayName("Should handle deactivation through update")
-        fun shouldHandleDeactivation() {
-            // Given
-            val municipalityId = UUID.randomUUID()
-            val existingMunicipality = createTestMunicipality(id = municipalityId)
-            val request = UpdateMunicipalityRequest(isActive = false)
-
-            // Mock no active wards
-            existingMunicipality.wards = mutableSetOf()
-
-            every { municipalityRepository.findById(municipalityId) } returns Optional.of(existingMunicipality)
-            every { municipalityRepository.save(any()) } answers { firstArg() }
-
-            // When
-            val result = municipalityService.updateMunicipality(municipalityId, request)
-
-            // Then
-            assertNotNull(result)
-            assertEquals(false, result.isActive)
-
-            verify(exactly = 1) {
-                municipalityRepository.findById(municipalityId)
-                municipalityRepository.save(any())
-            }
-        }
 
         @Test
         @DisplayName("Should validate ward count when updating")
         fun shouldValidateWardCount() {
             // Given
-            val municipalityId = UUID.randomUUID()
-            val existingMunicipality = createTestMunicipality(id = municipalityId)
-            val request = UpdateMunicipalityRequest(totalWards = 0)
+            val code = "TEST-M"
+            val existingMunicipality = MunicipalityTestFixtures.createMunicipality()
+            val request =
+                MunicipalityTestFixtures.createUpdateMunicipalityRequest().apply {
+                    totalWards = 0
+                }
 
-            every { municipalityRepository.findById(municipalityId) } returns Optional.of(existingMunicipality)
+            every { municipalityRepository.findByCodeIgnoreCase(code) } returns Optional.of(existingMunicipality)
 
             // Then
             assertThrows<InvalidMunicipalityDataException> {
-                municipalityService.updateMunicipality(municipalityId, request)
+                municipalityService.updateMunicipality(code, request)
             }
 
             verify(exactly = 1) {
-                municipalityRepository.findById(municipalityId)
+                municipalityRepository.findByCodeIgnoreCase(code)
             }
             verify(exactly = 0) {
                 municipalityRepository.save(any())
@@ -323,23 +269,23 @@ class MunicipalityServiceTest {
         @DisplayName("Should validate coordinates when updating")
         fun shouldValidateCoordinates() {
             // Given
-            val municipalityId = UUID.randomUUID()
-            val existingMunicipality = createTestMunicipality(id = municipalityId)
+            val code = "TEST-M"
+            val existingMunicipality = MunicipalityTestFixtures.createMunicipality()
             val request =
-                UpdateMunicipalityRequest(
-                    latitude = BigDecimal("91.0"), // Invalid latitude
-                    longitude = BigDecimal("85.3240"),
-                )
+                MunicipalityTestFixtures.createUpdateMunicipalityRequest().apply {
+                    latitude = BigDecimal("91.0") // Invalid latitude
+                    longitude = BigDecimal("85.3240")
+                }
 
-            every { municipalityRepository.findById(municipalityId) } returns Optional.of(existingMunicipality)
+            every { municipalityRepository.findByCodeIgnoreCase(code) } returns Optional.of(existingMunicipality)
 
             // Then
             assertThrows<InvalidLocationDataException> {
-                municipalityService.updateMunicipality(municipalityId, request)
+                municipalityService.updateMunicipality(code, request)
             }
 
             verify(exactly = 1) {
-                municipalityRepository.findById(municipalityId)
+                municipalityRepository.findByCodeIgnoreCase(code)
             }
             verify(exactly = 0) {
                 municipalityRepository.save(any())
@@ -354,15 +300,10 @@ class MunicipalityServiceTest {
         @DisplayName("Should search municipalities with basic criteria")
         fun shouldSearchWithBasicCriteria() {
             // Given
-            val criteria =
-                MunicipalitySearchCriteria(
-                    searchTerm = "test",
-                    page = 0,
-                    pageSize = 10,
-                )
+            val criteria = MunicipalityTestFixtures.createMunicipalitySearchCriteria()
 
-            val municipality1 = createTestMunicipality(name = "Test Municipality 1")
-            val municipality2 = createTestMunicipality(name = "Test Municipality 2")
+            val municipality1 = MunicipalityTestFixtures.createMunicipality(name = "Test Municipality 1")
+            val municipality2 = MunicipalityTestFixtures.createMunicipality(name = "Test Municipality 2")
             val mockPage = mockk<Page<Municipality>>()
 
             every { mockPage.content } returns listOf(municipality1, municipality2)
@@ -391,21 +332,19 @@ class MunicipalityServiceTest {
         @DisplayName("Should search with multiple filter criteria")
         fun shouldSearchWithMultipleFilters() {
             // Given
-            val districtId = UUID.randomUUID()
             val criteria =
-                MunicipalitySearchCriteria(
-                    searchTerm = "test",
-                    districtId = districtId,
-                    types = setOf(MunicipalityType.MUNICIPALITY),
-                    minWards = 5,
-                    maxWards = 15,
-                    minPopulation = 10000,
-                    maxPopulation = 50000,
-                    includeInactive = false,
-                )
+                MunicipalityTestFixtures.createMunicipalitySearchCriteria().apply {
+                    districtId = UUID.randomUUID()
+                    types = setOf(MunicipalityType.MUNICIPALITY)
+                    minWards = 5
+                    maxWards = 15
+                    minPopulation = 10000
+                    maxPopulation = 50000
+                    includeInactive = false
+                }
 
             val municipality =
-                createTestMunicipality().apply {
+                MunicipalityTestFixtures.createMunicipality().apply {
                     population = 25000
                     totalWards = 10
                     type = MunicipalityType.MUNICIPALITY
@@ -441,14 +380,14 @@ class MunicipalityServiceTest {
         fun shouldSearchWithGeographicCriteria() {
             // Given
             val criteria =
-                MunicipalitySearchCriteria(
-                    latitude = BigDecimal("27.7172"),
-                    longitude = BigDecimal("85.3240"),
-                    radiusKm = 10.0,
-                )
+                MunicipalityTestFixtures.createMunicipalitySearchCriteria().apply {
+                    latitude = BigDecimal("27.7172")
+                    longitude = BigDecimal("85.3240")
+                    radiusKm = 10.0
+                }
 
             val municipality =
-                createTestMunicipality().apply {
+                MunicipalityTestFixtures.createMunicipality().apply {
                     latitude = BigDecimal("27.7172")
                     longitude = BigDecimal("85.3240")
                 }
@@ -479,7 +418,10 @@ class MunicipalityServiceTest {
         @DisplayName("Should return empty result for no matches")
         fun shouldReturnEmptyResult() {
             // Given
-            val criteria = MunicipalitySearchCriteria(searchTerm = "nonexistent")
+            val criteria =
+                MunicipalityTestFixtures.createMunicipalitySearchCriteria().apply {
+                    searchTerm = "nonexistent"
+                }
 
             val mockPage = mockk<Page<Municipality>>()
             every { mockPage.content } returns emptyList()
@@ -506,10 +448,10 @@ class MunicipalityServiceTest {
         fun shouldValidateSearchCriteria() {
             // Given
             val invalidCriteria =
-                MunicipalitySearchCriteria(
-                    minWards = 20,
-                    maxWards = 10, // Invalid: min > max
-                )
+                MunicipalityTestFixtures.createMunicipalitySearchCriteria().apply {
+                    minWards = 20
+                    maxWards = 10 // Invalid: min > max
+                }
 
             // Then
             assertThrows<IllegalArgumentException> {
@@ -526,13 +468,13 @@ class MunicipalityServiceTest {
         fun shouldSortResults() {
             // Given
             val criteria =
-                MunicipalitySearchCriteria(
-                    sortBy = MunicipalitySortField.POPULATION,
-                    sortDirection = Sort.Direction.DESC,
-                )
+                MunicipalityTestFixtures.createMunicipalitySearchCriteria().apply {
+                    sortBy = MunicipalitySortField.POPULATION
+                    sortDirection = Sort.Direction.DESC
+                }
 
-            val municipality1 = createTestMunicipality(name = "Municipality 1").apply { population = 50000 }
-            val municipality2 = createTestMunicipality(name = "Municipality 2").apply { population = 100000 }
+            val municipality1 = MunicipalityTestFixtures.createMunicipality(name = "Municipality 1").apply { population = 50000 }
+            val municipality2 = MunicipalityTestFixtures.createMunicipality(name = "Municipality 2").apply { population = 100000 }
 
             val mockPage = mockk<Page<Municipality>>()
             every { mockPage.content } returns listOf(municipality2, municipality1) // Sorted by population DESC
@@ -569,6 +511,6 @@ class MunicipalityServiceTest {
             this.nameNepali = "टेस्ट नगरपालिका"
             this.code = code
             this.type = type
-            this.isActive = true
+            
         }
 }

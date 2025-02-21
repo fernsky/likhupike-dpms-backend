@@ -1,16 +1,17 @@
 package np.gov.likhupikemun.dpms.location.repository.specification
 
+import jakarta.persistence.criteria.CriteriaBuilder
+import jakarta.persistence.criteria.Expression
+import jakarta.persistence.criteria.Predicate
+import jakarta.persistence.criteria.Root
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.MunicipalitySearchCriteria
+import np.gov.likhupikemun.dpms.location.api.dto.enums.MunicipalitySortField
 import np.gov.likhupikemun.dpms.location.domain.District_
 import np.gov.likhupikemun.dpms.location.domain.Municipality
 import np.gov.likhupikemun.dpms.location.domain.Municipality_
 import np.gov.likhupikemun.dpms.location.domain.Province_
 import org.springframework.data.jpa.domain.Specification
 import java.math.BigDecimal
-import javax.persistence.criteria.CriteriaBuilder
-import javax.persistence.criteria.Expression
-import javax.persistence.criteria.Predicate
-import javax.persistence.criteria.Root
 
 object MunicipalitySpecifications {
     fun withSearchCriteria(criteria: MunicipalitySearchCriteria): Specification<Municipality> =
@@ -40,15 +41,15 @@ object MunicipalitySpecifications {
             }
 
             // District and Province filtering
-            criteria.districtId?.let { districtId ->
+            criteria.districtCode?.let { districtCode ->
                 val district = root.join(Municipality_.district)
-                predicates.add(cb.equal(district.get(District_.id), districtId))
+                predicates.add(cb.equal(district.get(District_.code), districtCode))
             }
 
-            criteria.provinceId?.let { provinceId ->
+            criteria.provinceCode?.let { provinceCode ->
                 val district = root.join(Municipality_.district)
                 val province = district.join(District_.province)
-                predicates.add(cb.equal(province.get(Province_.id), provinceId))
+                predicates.add(cb.equal(province.get(Province_.code), provinceCode))
             }
 
             // Municipality type filtering
@@ -96,40 +97,55 @@ object MunicipalitySpecifications {
                 )
             }
 
-            // Always include active status check
-            predicates.add(cb.isTrue(root.get(Municipality_.isActive)))
-
-            // Handle sorting, including special case for distance-based sorting
-            if (!query.groupList.isEmpty()) {
-                when (criteria.sortBy) {
-                    MunicipalitySortField.DISTANCE -> {
-                        if (criteria.latitude != null && criteria.longitude != null) {
-                            val distanceExpression =
-                                createDistanceExpression(
-                                    cb,
-                                    root,
-                                    criteria.latitude,
-                                    criteria.longitude,
-                                )
-                            if (criteria.sortDirection.isAscending) {
-                                query.orderBy(cb.asc(distanceExpression))
-                            } else {
-                                query.orderBy(cb.desc(distanceExpression))
-                            }
+            // Apply sorting if query is not a count query
+            if (query?.resultType != Long::class.java) {
+                query?.let { q ->
+                    when (criteria.sortBy) {
+                        MunicipalitySortField.DISTANCE -> {
+                            // Handle distance-based sorting with null check
+                            val order =
+                                if (criteria.latitude != null && criteria.longitude != null) {
+                                    val distanceExpression =
+                                        createDistanceExpression(
+                                            cb,
+                                            root,
+                                            criteria.latitude,
+                                            criteria.longitude,
+                                        )
+                                    if (criteria.sortDirection.isAscending) {
+                                        cb.asc(distanceExpression)
+                                    } else {
+                                        cb.desc(distanceExpression)
+                                    }
+                                } else {
+                                    // Fallback sort if coordinates are missing
+                                    if (criteria.sortDirection.isAscending) {
+                                        cb.asc(root.get<Any>("id"))
+                                    } else {
+                                        cb.desc(root.get<Any>("id"))
+                                    }
+                                }
+                            q.orderBy(order)
                         }
-                    }
-                    else -> {
-                        val sortField = criteria.sortBy.toEntityField()
-                        if (criteria.sortDirection.isAscending) {
-                            query.orderBy(cb.asc(root.get<Any>(sortField)))
-                        } else {
-                            query.orderBy(cb.desc(root.get<Any>(sortField)))
+                        else -> {
+                            val sortField = criteria.sortBy.toEntityField()
+                            val order =
+                                if (criteria.sortDirection.isAscending) {
+                                    cb.asc(root.get<Any>(sortField))
+                                } else {
+                                    cb.desc(root.get<Any>(sortField))
+                                }
+                            q.orderBy(order)
                         }
                     }
                 }
             }
 
-            cb.and(*predicates.toTypedArray())
+            if (predicates.isEmpty()) {
+                null
+            } else {
+                cb.and(*predicates.toTypedArray())
+            }
         }
 
     private fun createDistancePredicate(
