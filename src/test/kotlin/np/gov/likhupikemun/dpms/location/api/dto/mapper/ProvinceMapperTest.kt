@@ -5,8 +5,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import np.gov.likhupikemun.dpms.location.api.dto.mapper.impl.ProvinceMapperImpl
 import np.gov.likhupikemun.dpms.location.domain.District
-import np.gov.likhupikemun.dpms.location.domain.Municipality
-import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
 import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.ProvinceTestFixtures
@@ -21,19 +19,17 @@ import kotlin.test.assertNotNull
 
 @DisplayName("Province Mapper Tests")
 class ProvinceMapperTest {
-
-    private val districtMapper = mockk<DistrictMapper>()
+    private val locationSummaryMapper = mockk<LocationSummaryMapper>()
     private lateinit var provinceMapper: ProvinceMapper
 
     @BeforeEach
     fun setup() {
-        provinceMapper = ProvinceMapperImpl(districtMapper)
+        provinceMapper = ProvinceMapperImpl(locationSummaryMapper)
     }
 
     @Nested
     @DisplayName("Basic Response Mapping Tests")
     inner class BasicResponseMappingTests {
-
         @Test
         fun `should map province to response successfully`() {
             // Given
@@ -74,7 +70,6 @@ class ProvinceMapperTest {
     @Nested
     @DisplayName("Detailed Response Mapping Tests")
     inner class DetailedResponseMappingTests {
-
         @Test
         fun `should map province to detailed response successfully`() {
             // Given
@@ -82,14 +77,15 @@ class ProvinceMapperTest {
             val districts = addTestDistricts(province)
 
             districts.forEach { district ->
-                every { 
-                    districtMapper.toSummaryResponse(district) 
-                } returns DistrictTestFixtures.createDistrictSummaryResponse(
-                    code = district.code!!,
-                    name = district.name!!,
-                    nameNepali = district.nameNepali!!,
-                    municipalityCount = district.municipalities.size
-                )
+                every {
+                    locationSummaryMapper.toDistrictSummary(district)
+                } returns
+                    DistrictTestFixtures.createDistrictSummaryResponse(
+                        code = district.code!!,
+                        name = district.name!!,
+                        nameNepali = district.nameNepali!!,
+                        municipalityCount = district.municipalities.size,
+                    )
             }
 
             // When
@@ -108,8 +104,8 @@ class ProvinceMapperTest {
                 assertEquals(3, districts.size)
             }
 
-            verify(exactly = 3) { 
-                districtMapper.toSummaryResponse(any()) 
+            verify(exactly = 3) {
+                locationSummaryMapper.toDistrictSummary(any())
             }
         }
     }
@@ -117,7 +113,6 @@ class ProvinceMapperTest {
     @Nested
     @DisplayName("Summary Response Mapping Tests")
     inner class SummaryResponseMappingTests {
-
         @Test
         fun `should map province to summary response successfully`() {
             // Given
@@ -135,11 +130,12 @@ class ProvinceMapperTest {
     }
 
     private fun addTestDistricts(province: Province): List<District> {
-        val districts = listOf(
-            createTestDistrict(province, population = 15000L, area = BigDecimal("150.00")),
-            createTestDistrict(province, population = 25000L, area = BigDecimal("250.00")),
-            createTestDistrict(province, population = 0L, area = BigDecimal("0.00"))
-        )
+        val districts =
+            listOf(
+                createTestDistrict(province, population = 15000L, area = BigDecimal("150.00")),
+                createTestDistrict(province, population = 25000L, area = BigDecimal("250.00")),
+                createTestDistrict(province, population = 0L, area = BigDecimal("0.00")),
+            )
         province.districts.addAll(districts)
         return districts
     }
@@ -147,10 +143,11 @@ class ProvinceMapperTest {
     private fun createTestDistrict(
         province: Province,
         population: Long,
-        area: BigDecimal
-    ): District = DistrictTestFixtures.createDistrict(
-        province = province,
-        population = population,
-        area = area
-    )
+        area: BigDecimal,
+    ): District =
+        DistrictTestFixtures.createDistrict(
+            province = province,
+            population = population,
+            area = area,
+        )
 }

@@ -1,6 +1,6 @@
 package np.gov.likhupikemun.dpms.location.api.dto.mapper.impl
 
-import np.gov.likhupikemun.dpms.location.api.dto.mapper.DistrictMapper
+import np.gov.likhupikemun.dpms.location.api.dto.mapper.LocationSummaryMapper
 import np.gov.likhupikemun.dpms.location.api.dto.mapper.ProvinceMapper
 import np.gov.likhupikemun.dpms.location.api.dto.response.*
 import np.gov.likhupikemun.dpms.location.domain.Province
@@ -9,7 +9,7 @@ import java.math.BigDecimal
 
 @Component
 class ProvinceMapperImpl(
-    private val districtMapper: DistrictMapper,
+    private val locationSummaryMapper: LocationSummaryMapper,
 ) : ProvinceMapper {
     override fun toResponse(province: Province): ProvinceResponse {
         validateRequiredFields(province)
@@ -48,19 +48,11 @@ class ProvinceMapperImpl(
             districts =
                 province.districts
                     .sortedBy { it.name }
-                    .map { districtMapper.toSummaryResponse(it) },
+                    .map { locationSummaryMapper.toDistrictSummary(it) },
         )
     }
 
-    override fun toSummaryResponse(province: Province): ProvinceSummaryResponse {
-        validateRequiredFields(province)
-
-        return ProvinceSummaryResponse(
-            code = province.code!!,
-            name = province.name!!,
-            nameNepali = province.nameNepali!!,
-        )
-    }
+    override fun toSummaryResponse(province: Province): ProvinceSummaryResponse = locationSummaryMapper.toProvinceSummary(province)
 
     private fun validateRequiredFields(province: Province) {
         requireNotNull(province.code) { "Province code cannot be null" }

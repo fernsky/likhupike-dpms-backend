@@ -20,13 +20,13 @@ import kotlin.test.assertNotNull
 
 @DisplayName("District Mapper Tests")
 class DistrictMapperTest {
-    private val provinceMapper = mockk<ProvinceMapper>()
+    private val locationSummaryMapper = mockk<LocationSummaryMapper>()
     private val municipalityMapper = mockk<MunicipalityMapper>()
     private lateinit var districtMapper: DistrictMapper
 
     @BeforeEach
     fun setup() {
-        districtMapper = DistrictMapperImpl(provinceMapper, municipalityMapper)
+        districtMapper = DistrictMapperImpl(locationSummaryMapper, municipalityMapper)
     }
 
     @Nested
@@ -40,7 +40,7 @@ class DistrictMapperTest {
             val provinceSummary = createTestProvinceSummary()
 
             every {
-                provinceMapper.toSummaryResponse(district.province!!)
+                locationSummaryMapper.toProvinceSummary(district.province!!)
             } returns provinceSummary
 
             // When
@@ -61,7 +61,7 @@ class DistrictMapperTest {
             }
 
             verify(exactly = 1) {
-                provinceMapper.toSummaryResponse(district.province!!)
+                locationSummaryMapper.toProvinceSummary(district.province!!)
             }
         }
 
@@ -86,10 +86,11 @@ class DistrictMapperTest {
         fun shouldMapToDetailResponse() {
             // Given
             val district = createTestDistrict()
+            val provinceSummary = createTestProvinceSummary()
 
             every {
-                provinceMapper.toDetailResponse(district.province!!)
-            } returns createTestProvinceDetail()
+                locationSummaryMapper.toProvinceSummary(district.province!!)
+            } returns provinceSummary
 
             // When
             val response = districtMapper.toDetailResponse(district)
@@ -104,7 +105,12 @@ class DistrictMapperTest {
                 assertEquals(district.population, population)
                 assertEquals(district.headquarter, headquarter)
                 assertEquals(district.headquarterNepali, headquarterNepali)
+                assertEquals(provinceSummary, province)
                 assertEquals(0, municipalities.size)
+            }
+
+            verify(exactly = 1) {
+                locationSummaryMapper.toProvinceSummary(district.province!!)
             }
         }
 
@@ -117,10 +123,15 @@ class DistrictMapperTest {
                     addMunicipality(MunicipalityTestFixtures.createMunicipality(district = this))
                     addMunicipality(MunicipalityTestFixtures.createMunicipality(district = this))
                 }
+            val provinceSummary = createTestProvinceSummary()
 
             every {
-                provinceMapper.toDetailResponse(district.province!!)
-            } returns createTestProvinceDetail()
+                locationSummaryMapper.toProvinceSummary(district.province!!)
+            } returns provinceSummary
+
+            every {
+                municipalityMapper.toSummaryResponse(any())
+            } returns MunicipalityTestFixtures.createMunicipalitySummaryResponse()
 
             // When
             val response = districtMapper.toDetailResponse(district)
@@ -128,6 +139,13 @@ class DistrictMapperTest {
             // Then
             assertNotNull(response)
             assertEquals(2, response.municipalities.size)
+
+            verify(exactly = 1) {
+                locationSummaryMapper.toProvinceSummary(district.province!!)
+            }
+            verify(exactly = 2) {
+                municipalityMapper.toSummaryResponse(any())
+            }
         }
     }
 

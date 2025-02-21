@@ -41,8 +41,7 @@ class TestConfig {
     }
 
     @Bean
-    @Primary
-    fun dataSource(): DataSource =
+    fun defaultTestDataSource(): DataSource =
         EmbeddedDatabaseBuilder()
             .setType(EmbeddedDatabaseType.H2)
             .setName("testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1")

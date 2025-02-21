@@ -1,8 +1,7 @@
 package np.gov.likhupikemun.dpms.location.api.dto.mapper.impl
 
 import np.gov.likhupikemun.dpms.location.api.dto.mapper.DistrictMapper
-import np.gov.likhupikemun.dpms.location.api.dto.mapper.MunicipalityMapper
-import np.gov.likhupikemun.dpms.location.api.dto.mapper.ProvinceMapper
+import np.gov.likhupikemun.dpms.location.api.dto.mapper.LocationSummaryMapper
 import np.gov.likhupikemun.dpms.location.api.dto.response.*
 import np.gov.likhupikemun.dpms.location.domain.District
 import org.springframework.stereotype.Component
@@ -10,8 +9,7 @@ import java.math.BigDecimal
 
 @Component
 class DistrictMapperImpl(
-    private val provinceMapper: ProvinceMapper,
-    private val municipalityMapper: MunicipalityMapper,
+    private val locationSummaryMapper: LocationSummaryMapper,
 ) : DistrictMapper {
     override fun toResponse(district: District): DistrictResponse {
         validateRequiredFields(district)
@@ -24,7 +22,7 @@ class DistrictMapperImpl(
             population = district.population,
             headquarter = district.headquarter,
             headquarterNepali = district.headquarterNepali,
-            province = provinceMapper.toSummaryResponse(district.province!!),
+            province = locationSummaryMapper.toProvinceSummary(district.province!!),
             municipalityCount = district.municipalities.size,
             totalArea = district.area ?: BigDecimal.ZERO,
             totalPopulation = district.population ?: 0L,
@@ -42,24 +40,14 @@ class DistrictMapperImpl(
             population = district.population,
             headquarter = district.headquarter,
             headquarterNepali = district.headquarterNepali,
-            province = provinceMapper.toSummaryResponse(district.province!!),
+            province = locationSummaryMapper.toProvinceSummary(district.province!!),
             municipalities =
                 district.municipalities
-                    .sortedBy { it.name }
-                    .map { municipalityMapper.toSummaryResponse(it) },
+                    .map { locationSummaryMapper.toMunicipalitySummary(it) },
         )
     }
 
-    override fun toSummaryResponse(district: District): DistrictSummaryResponse {
-        validateRequiredFields(district)
-
-        return DistrictSummaryResponse(
-            code = district.code!!,
-            name = district.name!!,
-            nameNepali = district.nameNepali!!,
-            municipalityCount = district.municipalities.size,
-        )
-    }
+    override fun toSummaryResponse(district: District): DistrictSummaryResponse = locationSummaryMapper.toDistrictSummary(district)
 
     private fun validateRequiredFields(district: District) {
         requireNotNull(district.code) { "District code cannot be null" }
