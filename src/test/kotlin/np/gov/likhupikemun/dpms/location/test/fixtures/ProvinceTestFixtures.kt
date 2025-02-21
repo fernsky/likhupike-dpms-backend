@@ -5,12 +5,13 @@ import np.gov.likhupikemun.dpms.location.api.dto.request.UpdateProvinceRequest
 import np.gov.likhupikemun.dpms.location.api.dto.response.*
 import np.gov.likhupikemun.dpms.location.domain.Province
 import java.math.BigDecimal
+import java.util.UUID
 
 object ProvinceTestFixtures {
     fun createProvince(
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
-        code: String = "TEST-P",
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
         area: BigDecimal = BigDecimal("10000.50"),
         population: Long = 500000L,
         headquarter: String = "Test Headquarter",
@@ -29,7 +30,7 @@ object ProvinceTestFixtures {
     fun createProvinceRequest(
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
-        code: String = "TEST-P",
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
         area: BigDecimal = BigDecimal("10000.50"),
         population: Long = 500000L,
         headquarter: String = "Test Headquarter",
@@ -61,7 +62,7 @@ object ProvinceTestFixtures {
     )
 
     fun createProvinceResponse(
-        code: String = "TEST-P",
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
         area: BigDecimal = BigDecimal("10000.50"),
@@ -85,7 +86,7 @@ object ProvinceTestFixtures {
     )
 
     fun createProvinceDetailResponse(
-        code: String = "TEST-P",
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
         area: BigDecimal = BigDecimal("10000.50"),
@@ -105,7 +106,7 @@ object ProvinceTestFixtures {
     )
 
     fun createProvinceSummaryResponse(
-        code: String = "TEST-P",
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
     ) = ProvinceSummaryResponse(

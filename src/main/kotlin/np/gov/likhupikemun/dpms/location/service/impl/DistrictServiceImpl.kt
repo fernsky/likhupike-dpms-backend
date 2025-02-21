@@ -176,7 +176,7 @@ class DistrictServiceImpl(
         code: String,
         provinceCode: String,
     ) {
-        if (districtRepository.existsByCodeAndProvince(code.uppercase(), provinceCode)) {
+        if (districtRepository.existsByCodeAndProvince(code.uppercase(), provinceCode.uppercase())) {
             throw DistrictCodeExistsException(code)
         }
     }

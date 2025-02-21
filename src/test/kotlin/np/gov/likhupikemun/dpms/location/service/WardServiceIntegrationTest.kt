@@ -11,18 +11,20 @@ import np.gov.likhupikemun.dpms.location.repository.MunicipalityRepository
 import np.gov.likhupikemun.dpms.location.repository.WardRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
+@WebMvcTest(WardService::class)
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional
+@DisplayName("Ward Service Integration Tests")
 class WardServiceIntegrationTest {
     @Autowired
     private lateinit var wardService: WardService
