@@ -1,6 +1,8 @@
 package np.gov.likhupikemun.dpms.location.api.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import np.gov.likhupikemun.dpms.auth.domain.User
+import np.gov.likhupikemun.dpms.auth.test.UserTestDataFactory
 import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import np.gov.likhupikemun.dpms.location.api.controller.ProvinceController
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
@@ -10,14 +12,19 @@ import np.gov.likhupikemun.dpms.location.service.ProvinceService
 import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.MunicipalityTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.ProvinceTestFixtures
+import np.gov.likhupikemun.dpms.shared.service.SecurityService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
@@ -43,6 +50,19 @@ class ProvinceControllerIntegrationTest {
 
     @Autowired private lateinit var municipalityService: MunicipalityService
 
+    @MockBean
+    private lateinit var securityService: SecurityService
+
+    private val superAdmin = UserTestDataFactory.createSuperAdmin()
+    private val municipalityAdmin = UserTestDataFactory.createMunicipalityAdmin()
+    private val viewer = UserTestDataFactory.createViewer()
+
+    private fun mockLoggedInUser(user: User) {
+        val authentication = UsernamePasswordAuthenticationToken(user, null, user.authorities)
+        SecurityContextHolder.getContext().authentication = authentication
+        whenever(securityService.getCurrentUser()).thenReturn(user)
+    }
+
     @BeforeEach
     fun setup() {
         provinceRepository.deleteAll()
@@ -52,8 +72,9 @@ class ProvinceControllerIntegrationTest {
     @DisplayName("Create Province Tests")
     inner class CreateProvinceTests {
         @Test
-        @WithMockUser(roles = ["SUPER_ADMIN"])
-        fun `should create province successfully`() {
+        fun `should create province successfully when super admin`() {
+            // Arrange
+            mockLoggedInUser(superAdmin)
             val request = ProvinceTestFixtures.createProvinceRequest()
 
             mockMvc
@@ -69,8 +90,9 @@ class ProvinceControllerIntegrationTest {
         }
 
         @Test
-        @WithMockUser(roles = ["VIEWER"])
-        fun `should return 403 when unauthorized user tries to create province`() {
+        fun `should return 403 when viewer tries to create province`() {
+            // Arrange
+            mockLoggedInUser(viewer)
             val request = ProvinceTestFixtures.createProvinceRequest()
 
             mockMvc
@@ -87,8 +109,9 @@ class ProvinceControllerIntegrationTest {
     @DisplayName("Get Province Tests")
     inner class GetProvinceTests {
         @Test
-        @WithMockUser(roles = ["VIEWER"])
         fun `should get province detail successfully`() {
+            // Arrange
+            mockLoggedInUser(viewer)
             val province = createTestProvince()
 
             mockMvc
@@ -104,8 +127,9 @@ class ProvinceControllerIntegrationTest {
     @DisplayName("Search Province Tests")
     inner class SearchProvinceTests {
         @Test
-        @WithMockUser(roles = ["VIEWER"])
         fun `should search provinces with criteria`() {
+            // Arrange
+            mockLoggedInUser(viewer)
             createTestProvinces()
 
             mockMvc
@@ -124,8 +148,9 @@ class ProvinceControllerIntegrationTest {
     @DisplayName("Update Province Tests")
     inner class UpdateProvinceTests {
         @Test
-        @WithMockUser(roles = ["SUPER_ADMIN"])
         fun `should update province successfully`() {
+            // Arrange
+            mockLoggedInUser(superAdmin)
             val province = createTestProvince()
             val updateRequest = ProvinceTestFixtures.createUpdateProvinceRequest()
 
@@ -138,14 +163,31 @@ class ProvinceControllerIntegrationTest {
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.name").value(updateRequest.name))
         }
+
+        @Test
+        fun `should return 403 when viewer tries to update province`() {
+            // Arrange
+            mockLoggedInUser(viewer)
+            val province = createTestProvince()
+            val updateRequest = ProvinceTestFixtures.createUpdateProvinceRequest()
+
+            mockMvc
+                .perform(
+                    put("/api/v1.provinces/${province.code}")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest))
+                        .with(csrf()),
+                ).andExpect(status().isForbidden)
+        }
     }
 
     @Nested
     @DisplayName("Statistics Tests")
     inner class StatisticsTests {
         @Test
-        @WithMockUser(roles = ["VIEWER"])
-        fun `should get province statistics`() {
+        fun `should get province statistics when viewer`() {
+            // Arrange
+            mockLoggedInUser(viewer)
             val province = createTestProvince()
             val district = createTestDistrict(province.code)
             createTestMunicipalities(district.code)

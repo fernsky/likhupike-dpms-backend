@@ -1,12 +1,15 @@
 package np.gov.likhupikemun.dpms.location.api.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import np.gov.likhupikemun.dpms.auth.domain.User
+import np.gov.likhupikemun.dpms.auth.test.UserTestDataFactory
 import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import np.gov.likhupikemun.dpms.location.api.controller.WardController
 import np.gov.likhupikemun.dpms.location.domain.Municipality
 import np.gov.likhupikemun.dpms.location.domain.MunicipalityType
 import np.gov.likhupikemun.dpms.location.service.WardService
 import np.gov.likhupikemun.dpms.location.test.fixtures.WardTestFixtures
+import np.gov.likhupikemun.dpms.shared.service.SecurityService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -16,7 +19,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
-import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
@@ -34,17 +38,29 @@ class WardControllerTest {
 
     @MockBean private lateinit var wardService: WardService
 
+    @MockBean private lateinit var securityService: SecurityService
+
     private lateinit var testMunicipality: Municipality
+
+    private val superAdmin = UserTestDataFactory.createSuperAdmin()
+    private val municipalityAdmin = UserTestDataFactory.createMunicipalityAdmin()
+    private val viewer = UserTestDataFactory.createViewer()
 
     @BeforeEach
     fun setup() {
         testMunicipality = createTestMunicipality()
     }
 
+    private fun mockLoggedInUser(user: User) {
+        val authentication = UsernamePasswordAuthenticationToken(user, null, user.authorities)
+        SecurityContextHolder.getContext().authentication = authentication
+        whenever(securityService.getCurrentUser()).thenReturn(user)
+    }
+
     @Test
-    @WithMockUser(roles = ["SUPER_ADMIN"])
-    fun `should create ward successfully`() {
+    fun `should create ward successfully when super admin`() {
         // Arrange
+        mockLoggedInUser(superAdmin)
         val request = WardTestFixtures.createWardRequest()
         val response = WardTestFixtures.createWardResponse()
         whenever(wardService.createWard(any())).thenReturn(response)
@@ -62,9 +78,9 @@ class WardControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
-    fun `should update ward successfully`() {
+    fun `should update ward successfully when municipality admin`() {
         // Arrange
+        mockLoggedInUser(municipalityAdmin)
         val updateRequest = WardTestFixtures.createUpdateWardRequest()
         val response = WardTestFixtures.createWardResponse()
         whenever(wardService.updateWard(1, "TEST-M", updateRequest)).thenReturn(response)
@@ -81,9 +97,9 @@ class WardControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = ["VIEWER"])
-    fun `should get ward detail successfully`() {
+    fun `should get ward detail successfully when viewer`() {
         // Arrange
+        mockLoggedInUser(viewer)
         val response = WardTestFixtures.createWardDetailResponse()
         whenever(wardService.getWardDetail(1, "TEST-M")).thenReturn(response)
 
@@ -92,6 +108,22 @@ class WardControllerTest {
             .perform(get("/api/v1/wards/TEST-M/1"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.wardNumber").value(1))
+    }
+
+    @Test
+    fun `should return 403 when viewer tries to create ward`() {
+        // Arrange
+        mockLoggedInUser(viewer)
+        val request = WardTestFixtures.createWardRequest()
+
+        // Act & Assert
+        mockMvc
+            .perform(
+                post("/api/v1/wards")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .with(csrf()),
+            ).andExpect(status().isForbidden)
     }
 
     // Helper methods

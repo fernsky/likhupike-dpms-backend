@@ -186,18 +186,29 @@ class DistrictControllerIntegrationTest {
         fun `should update district successfully`() {
             // Arrange
             mockLoggedInUser(superAdmin)
-            val district = createTestDistrict()
+            val districtCode = "TEST-D1"
             val updateRequest = DistrictTestFixtures.createUpdateDistrictRequest()
+            val expectedResponse =
+                DistrictTestFixtures.createDistrictResponse(
+                    code = districtCode,
+                    name = updateRequest.name ?: "Updated District",
+                    province = ProvinceTestFixtures.createProvinceSummaryResponse(code = testProvince.code!!),
+                )
+
+            whenever(districtService.updateDistrict(districtCode, updateRequest))
+                .thenReturn(expectedResponse)
 
             // Act & Assert
             mockMvc
                 .perform(
-                    put("/api/v1/districts/${district.code}")
+                    put("/api/v1/districts/$districtCode")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest))
                         .with(csrf()),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.name").value(updateRequest.name))
+                .andExpect(jsonPath("$.data.code").value(districtCode))
+                .andExpect(jsonPath("$.data.name").value(expectedResponse.name))
+                .andExpect(jsonPath("$.data.province.code").value(testProvince.code))
         }
     }
 
@@ -234,11 +245,6 @@ class DistrictControllerIntegrationTest {
                 .andExpect(jsonPath("$.data[0].province.code").value(provinceCode))
         }
     }
-
-    private fun createTestDistrict() =
-        districtService.createDistrict(
-            DistrictTestFixtures.createDistrictRequest(provinceCode = testProvince.code!!),
-        )
 
     private fun createTestMunicipalities(districtCode: String) {
         repeat(3) { i ->
