@@ -20,7 +20,7 @@ object ProvinceTestFixtures {
         Province().apply {
             this.name = name
             this.nameNepali = nameNepali
-            this.code = code
+            this.code = code.toUpperCase()
             this.area = area
             this.population = population
             this.headquarter = headquarter
@@ -38,7 +38,7 @@ object ProvinceTestFixtures {
     ) = CreateProvinceRequest(
         name = name,
         nameNepali = nameNepali,
-        code = code,
+        code = code.toUpperCase(),
         area = area,
         population = population,
         headquarter = headquarter,

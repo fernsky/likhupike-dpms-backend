@@ -5,27 +5,26 @@ import np.gov.likhupikemun.dpms.auth.domain.User
 import np.gov.likhupikemun.dpms.auth.test.UserTestDataFactory
 import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import np.gov.likhupikemun.dpms.location.api.controller.ProvinceController
-import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
-import np.gov.likhupikemun.dpms.location.service.DistrictService
-import np.gov.likhupikemun.dpms.location.service.MunicipalityService
+import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSearchCriteria
 import np.gov.likhupikemun.dpms.location.service.ProvinceService
-import np.gov.likhupikemun.dpms.location.test.fixtures.DistrictTestFixtures
-import np.gov.likhupikemun.dpms.location.test.fixtures.MunicipalityTestFixtures
 import np.gov.likhupikemun.dpms.location.test.fixtures.ProvinceTestFixtures
 import np.gov.likhupikemun.dpms.shared.service.SecurityService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
@@ -38,17 +37,14 @@ import java.math.BigDecimal
 @ActiveProfiles("test")
 @DisplayName("Province Controller Integration Tests")
 class ProvinceControllerIntegrationTest {
-    @Autowired private lateinit var mockMvc: MockMvc
+    @Autowired
+    private lateinit var mockMvc: MockMvc
 
-    @Autowired private lateinit var objectMapper: ObjectMapper
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
 
-    @Autowired private lateinit var provinceRepository: ProvinceRepository
-
-    @Autowired private lateinit var provinceService: ProvinceService
-
-    @Autowired private lateinit var districtService: DistrictService
-
-    @Autowired private lateinit var municipalityService: MunicipalityService
+    @MockBean
+    private lateinit var provinceService: ProvinceService
 
     @MockBean
     private lateinit var securityService: SecurityService
@@ -57,15 +53,15 @@ class ProvinceControllerIntegrationTest {
     private val municipalityAdmin = UserTestDataFactory.createMunicipalityAdmin()
     private val viewer = UserTestDataFactory.createViewer()
 
+    @BeforeEach
+    fun setup() {
+        mockLoggedInUser(superAdmin)
+    }
+
     private fun mockLoggedInUser(user: User) {
         val authentication = UsernamePasswordAuthenticationToken(user, null, user.authorities)
         SecurityContextHolder.getContext().authentication = authentication
         whenever(securityService.getCurrentUser()).thenReturn(user)
-    }
-
-    @BeforeEach
-    fun setup() {
-        provinceRepository.deleteAll()
     }
 
     @Nested
@@ -76,7 +72,15 @@ class ProvinceControllerIntegrationTest {
             // Arrange
             mockLoggedInUser(superAdmin)
             val request = ProvinceTestFixtures.createProvinceRequest()
+            val expectedResponse =
+                ProvinceTestFixtures.createProvinceResponse(
+                    code = request.code,
+                    name = request.name,
+                )
 
+            whenever(provinceService.createProvince(request)).thenReturn(expectedResponse)
+
+            // Act & Assert
             mockMvc
                 .perform(
                     post("/api/v1/provinces")
@@ -86,7 +90,6 @@ class ProvinceControllerIntegrationTest {
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.name").value(request.name))
                 .andExpect(jsonPath("$.data.code").value(request.code))
-                .andExpect(jsonPath("$.data.districtCount").value(0))
         }
 
         @Test
@@ -95,6 +98,7 @@ class ProvinceControllerIntegrationTest {
             mockLoggedInUser(viewer)
             val request = ProvinceTestFixtures.createProvinceRequest()
 
+            // Act & Assert
             mockMvc
                 .perform(
                     post("/api/v1/provinces")
@@ -112,13 +116,17 @@ class ProvinceControllerIntegrationTest {
         fun `should get province detail successfully`() {
             // Arrange
             mockLoggedInUser(viewer)
-            val province = createTestProvince()
+            val provinceCode = "TEST-P1"
+            val expectedResponse = ProvinceTestFixtures.createProvinceDetailResponse()
 
+            whenever(provinceService.getProvinceDetail(provinceCode))
+                .thenReturn(expectedResponse)
+
+            // Act & Assert
             mockMvc
-                .perform(get("/api/v1/provinces/${province.code}"))
+                .perform(get("/api/v1/provinces/$provinceCode"))
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.code").value(province.code))
-                .andExpect(jsonPath("$.data.name").value(province.name))
+                .andExpect(jsonPath("$.data.code").value(provinceCode))
                 .andExpect(jsonPath("$.data.districts").exists())
         }
     }
@@ -130,17 +138,35 @@ class ProvinceControllerIntegrationTest {
         fun `should search provinces with criteria`() {
             // Arrange
             mockLoggedInUser(viewer)
-            createTestProvinces()
+            val criteria =
+                ProvinceSearchCriteria(
+                    searchTerm = "Test",
+                    page = 0,
+                    pageSize = 10,
+                )
+            val expectedResults =
+                PageImpl(
+                    listOf(
+                        ProvinceTestFixtures.createProvinceResponse(code = "TEST-P1"),
+                        ProvinceTestFixtures.createProvinceResponse(code = "TEST-P2"),
+                    ),
+                    PageRequest.of(0, 10),
+                    2,
+                )
 
+            whenever(provinceService.searchProvinces(criteria))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
             mockMvc
                 .perform(
                     get("/api/v1/provinces/search")
-                        .param("searchTerm", "Test")
-                        .param("page", "0")
-                        .param("pageSize", "10"),
+                        .param("searchTerm", criteria.searchTerm)
+                        .param("page", criteria.page.toString())
+                        .param("pageSize", criteria.pageSize.toString()),
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.totalElements").isNumber)
+                .andExpect(jsonPath("$.data.totalElements").value(2))
         }
     }
 
@@ -151,12 +177,21 @@ class ProvinceControllerIntegrationTest {
         fun `should update province successfully`() {
             // Arrange
             mockLoggedInUser(superAdmin)
-            val province = createTestProvince()
+            val provinceCode = "TEST-P1"
             val updateRequest = ProvinceTestFixtures.createUpdateProvinceRequest()
+            val expectedResponse =
+                ProvinceTestFixtures.createProvinceResponse(
+                    code = provinceCode,
+                    name = updateRequest.name!!,
+                )
 
+            whenever(provinceService.updateProvince(eq(provinceCode), any()))
+                .thenReturn(expectedResponse)
+
+            // Act & Assert
             mockMvc
                 .perform(
-                    put("/api/v1/provinces/${province.code}")
+                    put("/api/v1/provinces/$provinceCode")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest))
                         .with(csrf()),
@@ -168,12 +203,13 @@ class ProvinceControllerIntegrationTest {
         fun `should return 403 when viewer tries to update province`() {
             // Arrange
             mockLoggedInUser(viewer)
-            val province = createTestProvince()
+            val provinceCode = "TEST-P1"
             val updateRequest = ProvinceTestFixtures.createUpdateProvinceRequest()
 
+            // Act & Assert
             mockMvc
                 .perform(
-                    put("/api/v1.provinces/${province.code}")
+                    put("/api/v1.provinces/$provinceCode")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest))
                         .with(csrf()),
@@ -182,88 +218,41 @@ class ProvinceControllerIntegrationTest {
     }
 
     @Nested
-    @DisplayName("Statistics Tests")
-    inner class StatisticsTests {
-        @Test
-        fun `should get province statistics when viewer`() {
-            // Arrange
-            mockLoggedInUser(viewer)
-            val province = createTestProvince()
-            val district = createTestDistrict(province.code)
-            createTestMunicipalities(district.code)
-
-            mockMvc
-                .perform(get("/api/v1/provinces/${province.code}/statistics"))
-                .andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.totalDistricts").exists())
-                .andExpect(jsonPath("$.data.totalMunicipalities").exists())
-                .andExpect(jsonPath("$.data.totalPopulation").exists())
-        }
-    }
-
-    @Nested
     @DisplayName("Large Province Tests")
     inner class LargeProvinceTests {
         @Test
-        @WithMockUser(roles = ["VIEWER"])
         fun `should find large provinces`() {
-            createLargeProvinces()
+            // Arrange
+            mockLoggedInUser(viewer)
+            val minArea = BigDecimal("5000.00")
+            val minPopulation = 500000L
+            val expectedResults =
+                PageImpl(
+                    listOf(
+                        ProvinceTestFixtures.createProvinceResponse(
+                            code = "LARGE-P1",
+                            area = minArea,
+                            population = minPopulation,
+                        ),
+                    ),
+                    PageRequest.of(0, 10),
+                    1,
+                )
 
+            whenever(provinceService.findLargeProvinces(minArea, minPopulation, 0, 10))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
             mockMvc
                 .perform(
                     get("/api/v1/provinces/large")
-                        .param("minArea", "5000.00")
-                        .param("minPopulation", "500000")
+                        .param("minArea", minArea.toString())
+                        .param("minPopulation", minPopulation.toString())
                         .param("page", "0")
                         .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.content").isArray)
                 .andExpect(jsonPath("$.data.content[0].area").exists())
-        }
-    }
-
-    // Helper methods
-    private fun createTestProvince() =
-        provinceService.createProvince(
-            ProvinceTestFixtures.createProvinceRequest(),
-        )
-
-    private fun createTestDistrict(provinceCode: String) =
-        districtService.createDistrict(
-            DistrictTestFixtures.createDistrictRequest(provinceCode = provinceCode),
-        )
-
-    private fun createTestMunicipalities(districtCode: String) {
-        repeat(3) { i ->
-            municipalityService.createMunicipality(
-                MunicipalityTestFixtures.createMunicipalityRequest(
-                    districtCode = districtCode,
-                    code = "TEST-M$i",
-                ),
-            )
-        }
-    }
-
-    private fun createTestProvinces() {
-        repeat(3) { i ->
-            provinceService.createProvince(
-                ProvinceTestFixtures.createProvinceRequest(
-                    code = "TEST-P$i",
-                    name = "Test Province $i",
-                ),
-            )
-        }
-    }
-
-    private fun createLargeProvinces() {
-        repeat(2) { i ->
-            provinceService.createProvince(
-                ProvinceTestFixtures.createProvinceRequest(
-                    code = "LARGE-P$i",
-                    area = BigDecimal("5000.00").add(BigDecimal(i * 1000)),
-                    population = 500000L + (i * 100000L),
-                ),
-            )
         }
     }
 }

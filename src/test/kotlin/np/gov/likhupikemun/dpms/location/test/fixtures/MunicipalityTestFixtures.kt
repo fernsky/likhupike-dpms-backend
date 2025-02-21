@@ -11,8 +11,8 @@ import java.math.BigDecimal
 object MunicipalityTestFixtures {
     fun createMunicipality(
         district: District = DistrictTestFixtures.createDistrict(),
-        name: String = "Test Municipality",
-        nameNepali: String = "परीक्षण नगरपालिका",
+        name: String = "TEST MUNICIPALITY",
+        nameNepali: String = "परीक्षण नगरपालिका".uppercase(),
         code: String = "TEST-M",
         type: MunicipalityType = MunicipalityType.MUNICIPALITY,
         area: BigDecimal = BigDecimal("100.50"),
@@ -34,8 +34,8 @@ object MunicipalityTestFixtures {
     }
 
     fun createMunicipalityRequest(
-        name: String = "Test Municipality",
-        nameNepali: String = "परीक्षण नगरपालिका",
+        name: String = "TEST MUNICIPALITY",
+        nameNepali: String = "परीक्षण नगरपालिका".uppercase(),
         code: String = "TEST-M",
         type: MunicipalityType = MunicipalityType.MUNICIPALITY,
         area: BigDecimal = BigDecimal("100.50"),
@@ -58,8 +58,8 @@ object MunicipalityTestFixtures {
     )
 
     fun createUpdateMunicipalityRequest(
-        name: String = "Updated Municipality",
-        nameNepali: String = "अद्यावधिक नगरपालिका",
+        name: String = "UPDATED MUNICIPALITY",
+        nameNepali: String = "अद्यावधिक नगरपालिका".uppercase(),
         area: BigDecimal = BigDecimal("150.75"),
         population: Long = 75000L,
         latitude: BigDecimal = BigDecimal("27.7173"),
@@ -77,8 +77,8 @@ object MunicipalityTestFixtures {
 
     fun createMunicipalityResponse(
         code: String = "TEST-M",
-        name: String = "Test Municipality",
-        nameNepali: String = "परीक्षण नगरपालिका",
+        name: String = "TEST MUNICIPALITY",
+        nameNepali: String = "परीक्षण नगरपालिका".uppercase(),
         type: MunicipalityType = MunicipalityType.MUNICIPALITY,
         area: BigDecimal = BigDecimal("100.50"),
         population: Long = 50000L,
@@ -101,8 +101,8 @@ object MunicipalityTestFixtures {
 
     fun createMunicipalityDetailResponse(
         code: String = "TEST-M",
-        name: String = "Test Municipality",
-        nameNepali: String = "परीक्षण नगरपालिका",
+        name: String = "TEST MUNICIPALITY",
+        nameNepali: String = "परीक्षण नगरपालिका".uppercase(),
         type: MunicipalityType = MunicipalityType.MUNICIPALITY,
         area: BigDecimal = BigDecimal("100.50"),
         population: Long = 50000L,

@@ -3,6 +3,7 @@ package np.gov.likhupikemun.dpms.config
 import io.minio.MinioClient
 import np.gov.likhupikemun.dpms.shared.security.jwt.JwtService
 import np.gov.likhupikemun.dpms.shared.storage.StorageService
+import org.h2gis.ext.H2GISExtension
 import org.mockito.kotlin.mock
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
@@ -41,11 +42,46 @@ class TestConfig {
     }
 
     @Bean
-    fun defaultTestDataSource(): DataSource =
-        EmbeddedDatabaseBuilder()
-            .setType(EmbeddedDatabaseType.H2)
-            .setName("testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1")
-            .build()
+    fun defaultTestDataSource(): DataSource {
+        // Register H2 driver
+        Class.forName("org.h2.Driver")
+
+        // Create datasource with specific settings
+        val dataSource =
+            EmbeddedDatabaseBuilder()
+                .setType(EmbeddedDatabaseType.H2)
+                .setName("testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE")
+                .build()
+
+        // Initialize H2GIS
+        dataSource.connection.use { connection ->
+            // Load H2GIS extension
+            H2GISExtension.load(connection)
+
+            connection.createStatement().use { statement ->
+                // Initialize basic geometry types
+                statement.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS spatial_test (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        geom GEOMETRY
+                    )
+                """,
+                )
+
+                // Add a sample point
+                statement.execute(
+                    """
+                    INSERT INTO spatial_test (geom) VALUES (
+                        'POINT(10 10)'
+                    )
+                """,
+                )
+            }
+        }
+
+        return dataSource
+    }
 
     @Bean
     @Primary
@@ -73,9 +109,10 @@ class TestConfig {
 
         val properties = Properties()
         properties["hibernate.hbm2ddl.auto"] = "create-drop"
-        properties["hibernate.dialect"] = "org.hibernate.dialect.PostgreSQLDialect" // Keep PostgreSQL dialect
+        properties["hibernate.dialect"] = "org.hibernate.dialect.H2Dialect"
         properties["hibernate.show_sql"] = "true"
         properties["hibernate.format_sql"] = "true"
+        properties["hibernate.jdbc.use_get_generated_keys"] = "true"
         em.setJpaProperties(properties)
 
         return em

@@ -11,11 +11,11 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 interface DistrictService {
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Transactional
     fun createDistrict(request: CreateDistrictRequest): DistrictResponse
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Transactional
     fun updateDistrict(
         code: String,

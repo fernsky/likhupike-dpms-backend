@@ -194,8 +194,13 @@ dependencies {
     // Spring Boot configuration processor
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
-    // H2 database
-    testRuntimeOnly("com.h2database:h2")
+    // H2GIS dependencies for testing
+    testImplementation("com.h2database:h2:1.4.200")  // Specific version that works well with H2GIS
+    testImplementation("org.orbisgis:h2gis:1.5.0") {
+        exclude(group = "org.slf4j", module = "slf4j-simple")
+    }
+    testImplementation("org.orbisgis:h2gis-ext:1.3.0")
+    testImplementation("org.orbisgis:h2gis-utilities:1.5.0")
 
     // Fix SLF4J bindings
     configurations.all {
@@ -206,18 +211,16 @@ dependencies {
     implementation("ch.qos.logback:logback-classic")
     implementation("org.slf4j:slf4j-api")
 
-    // Add Spring Security
+    // Spring Security
     implementation("org.springframework.security:spring-security-config")
     implementation("org.springframework.security:spring-security-web")
     
-    // Add Hibernate Core with JPA
+    // Hibernate
     implementation("org.hibernate.orm:hibernate-core:6.4.4.Final")
 
-    // Add JPA metamodel generation
+    // JPA metamodel generation
     kapt("org.hibernate.orm:hibernate-jpamodelgen")
     implementation("org.hibernate.orm:hibernate-jpamodelgen")
-
-    // Make sure service interfaces are compiled before implementations
     kapt("org.springframework.boot:spring-boot-starter-data-jpa")
 
     // JMH dependencies

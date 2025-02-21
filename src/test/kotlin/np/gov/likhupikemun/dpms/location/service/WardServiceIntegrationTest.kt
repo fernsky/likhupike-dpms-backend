@@ -1,5 +1,6 @@
 package np.gov.likhupikemun.dpms.location.service
 
+import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.WardSearchCriteria
 import np.gov.likhupikemun.dpms.location.api.dto.mapper.WardMapper
 import np.gov.likhupikemun.dpms.location.api.dto.request.CreateWardRequest
@@ -15,14 +16,16 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import java.math.BigDecimal
 
-@WebMvcTest(WardService::class)
-@SpringBootTest
+@WebMvcTest(DistrictService::class)
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig::class)
 @ActiveProfiles("test")
 @DisplayName("Ward Service Integration Tests")
 class WardServiceIntegrationTest {

@@ -1,5 +1,6 @@
 package np.gov.likhupikemun.dpms.location.service
 
+import np.gov.likhupikemun.dpms.config.TestSecurityConfig
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSearchCriteria
 import np.gov.likhupikemun.dpms.location.api.dto.criteria.ProvinceSortField
 import np.gov.likhupikemun.dpms.location.exception.ProvinceCodeExistsException
@@ -13,9 +14,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.data.domain.Sort
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -23,10 +26,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@WebMvcTest(ProvinceService::class)
-@SpringBootTest
+@WebMvcTest(DistrictService::class)
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig::class)
 @ActiveProfiles("test")
 @DisplayName("Province Service Integration Tests")
+@WithMockUser(roles = ["SUPER_ADMIN"])
 class ProvinceServiceIntegrationTest {
     @Autowired
     private lateinit var provinceService: ProvinceService

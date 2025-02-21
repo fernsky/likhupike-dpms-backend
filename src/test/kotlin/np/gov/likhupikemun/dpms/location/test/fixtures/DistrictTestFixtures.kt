@@ -10,13 +10,13 @@ import java.math.BigDecimal
 object DistrictTestFixtures {
     fun createDistrict(
         province: Province = ProvinceTestFixtures.createProvince(),
-        name: String = "Test District",
-        nameNepali: String = "परीक्षण जिल्ला",
+        name: String = "TEST DISTRICT",
+        nameNepali: String = "परीक्षण जिल्ला".uppercase(),
         code: String = "TEST-D",
         area: BigDecimal = BigDecimal("1000.50"),
         population: Long = 100000L,
-        headquarter: String = "Test Headquarter",
-        headquarterNepali: String = "परीक्षण सदरमुकाम",
+        headquarter: String = "TEST HEADQUARTER",
+        headquarterNepali: String = "परीक्षण सदरमुकाम".uppercase(),
     ): District =
         District().apply {
             this.province = province
@@ -30,14 +30,14 @@ object DistrictTestFixtures {
         }
 
     fun createDistrictRequest(
-        name: String = "Test District",
-        nameNepali: String = "परीक्षण जिल्ला",
+        name: String = "TEST DISTRICT",
+        nameNepali: String = "परीक्षण जिल्ला".uppercase(),
         code: String = "TEST-D",
         provinceCode: String = "TEST-P",
         area: BigDecimal = BigDecimal("1000.50"),
         population: Long = 100000L,
-        headquarter: String = "Test Headquarter",
-        headquarterNepali: String = "परीक्षण सदरमुकाम",
+        headquarter: String = "TEST HEADQUARTER",
+        headquarterNepali: String = "परीक्षण सदरमुकाम".uppercase(),
     ) = CreateDistrictRequest(
         name = name,
         nameNepali = nameNepali,
@@ -50,11 +50,11 @@ object DistrictTestFixtures {
     )
 
     fun createUpdateDistrictRequest(
-        name: String = "Updated District",
-        nameNepali: String = "अद्यावधिक जिल्ला",
+        name: String = "UPDATED DISTRICT",
+        nameNepali: String = "अद्यावधिक जिल्ला".uppercase(),
         area: BigDecimal = BigDecimal("1500.75"),
         population: Long = 150000L,
-        headquarter: String = "Updated Headquarter",
+        headquarter: String = "UPDATED HEADQUARTER",
         headquarterNepali: String = "अद्यावधिक सदरमुकाम",
     ) = UpdateDistrictRequest(
         name = name,
