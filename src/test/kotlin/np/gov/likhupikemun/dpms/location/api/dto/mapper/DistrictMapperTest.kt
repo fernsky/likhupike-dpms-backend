@@ -21,12 +21,11 @@ import kotlin.test.assertNotNull
 @DisplayName("District Mapper Tests")
 class DistrictMapperTest {
     private val locationSummaryMapper = mockk<LocationSummaryMapper>()
-    private val municipalityMapper = mockk<MunicipalityMapper>()
     private lateinit var districtMapper: DistrictMapper
 
     @BeforeEach
     fun setup() {
-        districtMapper = DistrictMapperImpl(locationSummaryMapper, municipalityMapper)
+        districtMapper = DistrictMapperImpl(locationSummaryMapper)
     }
 
     @Nested
@@ -130,7 +129,7 @@ class DistrictMapperTest {
             } returns provinceSummary
 
             every {
-                municipalityMapper.toSummaryResponse(any())
+                locationSummaryMapper.toMunicipalitySummary(any())
             } returns MunicipalityTestFixtures.createMunicipalitySummaryResponse()
 
             // When
@@ -144,7 +143,7 @@ class DistrictMapperTest {
                 locationSummaryMapper.toProvinceSummary(district.province!!)
             }
             verify(exactly = 2) {
-                municipalityMapper.toSummaryResponse(any())
+                locationSummaryMapper.toMunicipalitySummary(any())
             }
         }
     }

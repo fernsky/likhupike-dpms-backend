@@ -10,12 +10,12 @@ import java.math.BigDecimal
     uniqueConstraints = [
         UniqueConstraint(
             name = "uk_ward_number_municipality",
-            columnNames = ["ward_number", "municipality_id"],
+            columnNames = ["ward_number", "municipality_code"],
         ),
     ],
     indexes = [
         Index(name = "idx_wards_number", columnList = "ward_number"),
-        Index(name = "idx_wards_municipality", columnList = "municipality_id"),
+        Index(name = "idx_wards_municipality", columnList = "municipality_code"),
     ],
 )
 class Ward : BaseEntity() {
@@ -41,7 +41,7 @@ class Ward : BaseEntity() {
     var officeLocationNepali: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "municipality_id", nullable = false)
+    @JoinColumn(name = "municipality_code", nullable = false)
     var municipality: Municipality? = null
 
     override fun equals(other: Any?): Boolean {

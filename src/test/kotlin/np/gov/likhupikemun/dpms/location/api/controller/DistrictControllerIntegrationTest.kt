@@ -1,6 +1,8 @@
 package np.gov.likhupikemun.dpms.location.api.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import np.gov.likhupikemun.dpms.config.TestSecurityConfig
+import np.gov.likhupikemun.dpms.location.api.controller.DistrictController
 import np.gov.likhupikemun.dpms.location.domain.Province
 import np.gov.likhupikemun.dpms.location.repository.ProvinceRepository
 import np.gov.likhupikemun.dpms.location.service.DistrictService
@@ -13,8 +15,8 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
@@ -23,12 +25,10 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.springframework.transaction.annotation.Transactional
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(DistrictController::class)
+@Import(TestSecurityConfig::class)
 @ActiveProfiles("test")
-@Transactional
 @DisplayName("District Controller Integration Tests")
 class DistrictControllerIntegrationTest {
     @Autowired

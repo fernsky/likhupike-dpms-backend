@@ -10,12 +10,12 @@ import java.math.BigDecimal
     uniqueConstraints = [
         UniqueConstraint(
             name = "uk_district_code_province",
-            columnNames = ["code", "province_id"],
+            columnNames = ["code", "province_code"],
         ),
     ],
     indexes = [
         Index(name = "idx_districts_name", columnList = "name"),
-        Index(name = "idx_districts_province", columnList = "province_id"),
+        Index(name = "idx_districts_province", columnList = "province_code"),
     ],
 )
 class District : BaseEntity() {
@@ -41,7 +41,7 @@ class District : BaseEntity() {
     var headquarterNepali: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "province_id", nullable = false)
+    @JoinColumn(name = "province_code", nullable = false)
     var province: Province? = null
 
     @OneToMany(mappedBy = "district", cascade = [CascadeType.ALL])
