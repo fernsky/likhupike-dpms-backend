@@ -1,4 +1,5 @@
 package np.gov.mofaga.imis.location.performance
+import np.gov.mofaga.imis.auth.test.UserTestDataFactory
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSortField
 import np.gov.mofaga.imis.location.domain.Province
@@ -6,32 +7,37 @@ import np.gov.mofaga.imis.location.repository.ProvinceRepository
 import np.gov.mofaga.imis.location.service.DistrictService
 import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
 import np.gov.mofaga.imis.location.test.fixtures.ProvinceTestFixtures
+import np.gov.mofaga.imis.shared.service.SecurityService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
+import org.mockito.kotlin.whenever
 import org.openjdk.jmh.annotations.*
 import org.openjdk.jmh.runner.Runner
 import org.openjdk.jmh.runner.options.OptionsBuilder
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.data.domain.Sort
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
+@WebMvcTest(DistrictService::class)
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 2)
 @Measurement(iterations = 5)
 @Fork(1)
-@SpringBootTest
 @ActiveProfiles("test")
 @Tag("performance")
 @EnabledIfEnvironmentVariable(named = "RUN_PERFORMANCE_TESTS", matches = "true")
+@WithMockUser(roles = ["SUPER_ADMIN"]) // Add this annotation
 class DistrictPerformanceTest {
     @Autowired
     private lateinit var districtService: DistrictService
@@ -39,10 +45,18 @@ class DistrictPerformanceTest {
     @Autowired
     private lateinit var provinceRepository: ProvinceRepository
 
+    @MockBean
+    private lateinit var securityService: SecurityService
+
+    private val superAdmin = UserTestDataFactory.createSuperAdmin()
+
     private lateinit var testProvince: Province
 
     @BeforeEach
     fun setup() {
+        // Mock the security service
+        whenever(securityService.getCurrentUser()).thenReturn(superAdmin)
+
         testProvince = createAndPersistProvince()
         createTestData()
     }
@@ -149,23 +163,51 @@ class DistrictPerformanceTest {
         assert(avgTimePerUpdate < 200) { "Average update time exceeded 200ms: $avgTimePerUpdate ms" }
     }
 
-    private fun createAndPersistProvince(): Province = provinceRepository.save(ProvinceTestFixtures.createProvince())
+    private fun createAndPersistProvince(): Province {
+        // Generate a truly unique code using UUID and timestamp
+        val timestamp = System.currentTimeMillis()
+        val randomPart = (100000..999999).random()
+        val uniqueCode = "PERF-P-$timestamp-$randomPart"
+
+        try {
+            return provinceRepository.save(
+                ProvinceTestFixtures.createProvince(
+                    code = uniqueCode,
+                    name = "Performance Test Province $uniqueCode",
+                ),
+            )
+        } catch (e: Exception) {
+            // If first attempt fails, try one more time with nanoTime
+            val retryCode = "PERF-P-${System.nanoTime()}-$randomPart"
+            return provinceRepository.save(
+                ProvinceTestFixtures.createProvince(
+                    code = retryCode,
+                    name = "Performance Test Province $retryCode",
+                ),
+            )
+        }
+    }
 
     @Transactional
     private fun createTestData() {
         // Create test data for performance testing
         (1..20).forEach { i ->
             try {
+                val timestamp = System.currentTimeMillis()
+                val randomPart = (100000..999999).random()
+                val uniqueCode = "PERF-D-$timestamp-$randomPart-$i"
+
                 districtService.createDistrict(
                     DistrictTestFixtures.createDistrictRequest(
                         provinceCode = testProvince.code!!,
-                        code = "PERF-D$i",
-                        name = "Performance Test District $i",
+                        code = uniqueCode,
+                        name = "Performance Test District $uniqueCode",
                         population = (50000L + (i * 10000L)),
                     ),
                 )
             } catch (e: Exception) {
-                // Ignore duplicate codes
+                // Log the error but continue with the test
+                println("Error creating test district: ${e.message}")
             }
         }
     }

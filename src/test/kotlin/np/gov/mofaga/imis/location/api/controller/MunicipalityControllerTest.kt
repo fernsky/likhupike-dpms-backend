@@ -33,8 +33,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 @WebMvcTest(MunicipalityController::class)
 @Import(TestSecurityConfig::class)
 @ActiveProfiles("test")
-@DisplayName("Municipality Controller Integration Tests")
-class MunicipalityControllerIntegrationTest {
+@DisplayName("Municipality Controller Unit Tests")
+class MunicipalityControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 

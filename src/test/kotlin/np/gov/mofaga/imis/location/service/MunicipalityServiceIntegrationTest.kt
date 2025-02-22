@@ -29,6 +29,7 @@ import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
+
 @WebMvcTest(MunicipalityService::class)
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig::class)

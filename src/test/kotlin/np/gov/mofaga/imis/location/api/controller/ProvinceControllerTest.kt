@@ -35,7 +35,7 @@ import java.math.BigDecimal
 @WebMvcTest(ProvinceController::class)
 @Import(TestSecurityConfig::class)
 @ActiveProfiles("test")
-@DisplayName("Province Controller Integration Tests")
+@DisplayName("Province Controller Unit Tests")
 class ProvinceControllerIntegrationTest {
     @Autowired
     private lateinit var mockMvc: MockMvc

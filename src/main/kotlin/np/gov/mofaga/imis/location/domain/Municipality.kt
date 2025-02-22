@@ -21,7 +21,7 @@ import java.math.BigDecimal
     ],
 )
 class Municipality : BaseEntity() {
-    @Column(nullable = false, length = 10, unique = true)
+    @Column(nullable = false, length = 36, unique = true)
     var code: String? = null
 
     @Column(nullable = false, length = 100)

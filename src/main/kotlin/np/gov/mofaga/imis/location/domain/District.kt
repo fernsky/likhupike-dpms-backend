@@ -19,7 +19,7 @@ import java.math.BigDecimal
     ],
 )
 class District : BaseEntity() {
-    @Column(nullable = false, unique = true, length = 10)
+    @Column(nullable = false, unique = true, length = 36)
     var code: String? = null
 
     @Column(nullable = false, length = 100)

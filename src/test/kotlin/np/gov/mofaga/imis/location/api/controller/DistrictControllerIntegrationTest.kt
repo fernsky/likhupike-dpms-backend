@@ -1,45 +1,35 @@
 package np.gov.mofaga.imis.location.api.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import np.gov.mofaga.imis.auth.domain.User
+import np.gov.mofaga.imis.config.IntegrationTest
 import np.gov.mofaga.imis.auth.test.UserTestDataFactory
-import np.gov.mofaga.imis.config.TestSecurityConfig
-import np.gov.mofaga.imis.location.api.controller.DistrictController
+import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Province
+import np.gov.mofaga.imis.location.repository.DistrictRepository
 import np.gov.mofaga.imis.location.repository.ProvinceRepository
-import np.gov.mofaga.imis.location.service.DistrictService
-import np.gov.mofaga.imis.location.service.MunicipalityService
 import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
-import np.gov.mofaga.imis.location.test.fixtures.MunicipalityTestFixtures
 import np.gov.mofaga.imis.location.test.fixtures.ProvinceTestFixtures
-import np.gov.mofaga.imis.shared.service.SecurityService
+import np.gov.mofaga.imis.test.clearDatabase
+import np.gov.mofaga.imis.test.loginAs
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.context.annotation.Import
-import org.springframework.data.domain.PageImpl
 import org.springframework.http.MediaType
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.math.BigDecimal
 import java.util.UUID
+import javax.sql.DataSource
 
-@WebMvcTest(DistrictController::class)
-@Import(TestSecurityConfig::class)
-@ActiveProfiles("test")
+@IntegrationTest
 @DisplayName("District Controller Integration Tests")
 class DistrictControllerIntegrationTest {
+
     @Autowired
     private lateinit var mockMvc: MockMvc
 
@@ -47,70 +37,80 @@ class DistrictControllerIntegrationTest {
     private lateinit var objectMapper: ObjectMapper
 
     @Autowired
-    private lateinit var provinceRepository: ProvinceRepository
-
-    @MockBean
-    private lateinit var districtService: DistrictService // Make sure this is mocked
+    private lateinit var districtRepository: DistrictRepository
 
     @Autowired
-    private lateinit var municipalityService: MunicipalityService
+    private lateinit var provinceRepository: ProvinceRepository
 
-    @MockBean
-    private lateinit var securityService: SecurityService
+    @Autowired
+    private lateinit var dataSource: DataSource
 
     private lateinit var testProvince: Province
+    private lateinit var testDistrict: District
 
     private val superAdmin = UserTestDataFactory.createSuperAdmin()
-    private val municipalityAdmin = UserTestDataFactory.createMunicipalityAdmin()
     private val viewer = UserTestDataFactory.createViewer()
 
     @BeforeEach
     fun setup() {
-        // Use UUID to ensure unique province code
-        val uniqueCode = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}"
-        testProvince = ProvinceTestFixtures.createProvince(code = uniqueCode)
+        // Create test province using fixture
+        testProvince = ProvinceTestFixtures.createProvince(
+            code = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}"
+        )
         testProvince = provinceRepository.save(testProvince)
+
+        // Create test district using fixture
+        testDistrict = DistrictTestFixtures.createDistrict(
+            province = testProvince,
+            code = "TEST-D-${UUID.randomUUID().toString().substring(0, 2)}"
+        )
+        testDistrict = districtRepository.save(testDistrict)
     }
 
-    private fun mockLoggedInUser(user: User) {
-        val authentication = UsernamePasswordAuthenticationToken(user, null, user.authorities)
-        SecurityContextHolder.getContext().authentication = authentication
-        whenever(securityService.getCurrentUser()).thenReturn(user)
+    @AfterEach
+    fun cleanup() {
+        clearDatabase(dataSource)
     }
 
     @Nested
     @DisplayName("Create District Tests")
     inner class CreateDistrictTests {
         @Test
-        fun `should create district successfully when super admin`() {
-            // Arrange
-            mockLoggedInUser(superAdmin)
-            val request = DistrictTestFixtures.createDistrictRequest(provinceCode = testProvince.code!!)
-            val expectedResponse = DistrictTestFixtures.createDistrictResponse()
+        fun `should create district when super admin`() {
+            loginAs(superAdmin)
 
-            whenever(districtService.createDistrict(any())).thenReturn(expectedResponse)
+            val request = DistrictTestFixtures.createDistrictRequest(
+                provinceCode = testProvince.code!!,
+                name = "New District",
+                nameNepali = "नयाँ जिल्ला",
+                code = "TEST-D-NEW",
+                area = BigDecimal("1000.50"),
+                population = 100000L,
+                headquarter = "Test HQ",
+                headquarterNepali = "परीक्षण सदरमुकाम"
+            )
 
-            // Act & Assert
-            mockMvc
-                .perform(
-                    post("/api/v1/districts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .with(csrf()),
-                ).andDo(print())
+            mockMvc.perform(
+                post("/api/v1/districts")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request))
+                    .with(csrf())
+            )
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.name").value(request.name))
                 .andExpect(jsonPath("$.data.code").value(request.code))
-                .andExpect(jsonPath("$.data.province").exists())
+                .andExpect(jsonPath("$.data.name").value(request.name))
+                .andExpect(jsonPath("$.data.nameNepali").value(request.nameNepali))
         }
 
         @Test
         fun `should return 403 when viewer tries to create district`() {
-            // Arrange
-            mockLoggedInUser(viewer)
-            val request = DistrictTestFixtures.createDistrictRequest(provinceCode = testProvince.code!!)
+            loginAs(viewer)
 
-            // Act & Assert
+            val request =
+                DistrictTestFixtures.createDistrictRequest(
+                    provinceCode = testProvince.code!!,
+                )
+
             mockMvc
                 .perform(
                     post("/api/v1/districts")
@@ -126,25 +126,45 @@ class DistrictControllerIntegrationTest {
     inner class GetDistrictTests {
         @Test
         fun `should get district detail successfully`() {
-            // Arrange
-            mockLoggedInUser(viewer)
-            val districtCode = "TEST-D1"
-            val expectedResponse =
-                DistrictTestFixtures.createDistrictDetailResponse(
-                    code = districtCode,
-                    provinceCode = testProvince.code!!,
+            loginAs(viewer)
+
+            mockMvc
+                .perform(get("/api/v1/districts/${testDistrict.code}"))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.code").value(testDistrict.code))
+                .andExpect(jsonPath("$.data.name").value(testDistrict.name))
+        }
+
+        @Test
+        fun `should return 404 for non-existent district`() {
+            loginAs(viewer)
+
+            mockMvc
+                .perform(get("/api/v1/districts/NONEXISTENT"))
+                .andExpect(status().isNotFound)
+        }
+    }
+
+    @Nested
+    @DisplayName("Update District Tests")
+    inner class UpdateDistrictTests {
+        @Test
+        fun `should update district when super admin`() {
+            loginAs(superAdmin)
+
+            val updateRequest =
+                DistrictTestFixtures.createUpdateDistrictRequest(
+                    name = "Updated District",
                 )
 
-            whenever(districtService.getDistrictDetail(districtCode))
-                .thenReturn(expectedResponse)
-
-            // Act & Assert
             mockMvc
-                .perform(get("/api/v1/districts/$districtCode"))
-                .andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.code").value(districtCode))
-                .andExpect(jsonPath("$.data.name").value(expectedResponse.name))
-                .andExpect(jsonPath("$.data.municipalities").exists())
+                .perform(
+                    put("/api/v1/districts/${testDistrict.code}")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest))
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.name").value(updateRequest.name))
         }
     }
 
@@ -153,66 +173,18 @@ class DistrictControllerIntegrationTest {
     inner class SearchDistrictTests {
         @Test
         fun `should search districts with criteria`() {
-            // Arrange
-            mockLoggedInUser(viewer)
-            val expectedResults =
-                PageImpl(
-                    listOf(
-                        DistrictTestFixtures.createDistrictResponse(
-                            code = "TEST-D1",
-                            name = "Test District 1",
-                            province = ProvinceTestFixtures.createProvinceSummaryResponse(code = testProvince.code!!),
-                        ),
-                    ),
-                )
+            loginAs(viewer)
 
-            whenever(districtService.searchDistricts(any()))
-                .thenReturn(expectedResults)
-
-            // Act & Assert
             mockMvc
                 .perform(
                     get("/api/v1/districts/search")
                         .param("provinceCode", testProvince.code)
-                        .param("searchTerm", "Test")
+                        .param("searchTerm", testDistrict.name)
                         .param("page", "0")
-                        .param("pageSize", "10"),
+                        .param("size", "10"),
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.totalElements").isNumber)
-        }
-    }
-
-    @Nested
-    @DisplayName("Update District Tests")
-    inner class UpdateDistrictTests {
-        @Test
-        fun `should update district successfully`() {
-            // Arrange
-            mockLoggedInUser(superAdmin)
-            val districtCode = "TEST-D1"
-            val updateRequest = DistrictTestFixtures.createUpdateDistrictRequest()
-            val expectedResponse =
-                DistrictTestFixtures.createDistrictResponse(
-                    code = districtCode,
-                    name = updateRequest.name ?: "Updated District",
-                    province = ProvinceTestFixtures.createProvinceSummaryResponse(code = testProvince.code!!),
-                )
-
-            whenever(districtService.updateDistrict(districtCode, updateRequest))
-                .thenReturn(expectedResponse)
-
-            // Act & Assert
-            mockMvc
-                .perform(
-                    put("/api/v1/districts/$districtCode")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest))
-                        .with(csrf()),
-                ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.code").value(districtCode))
-                .andExpect(jsonPath("$.data.name").value(expectedResponse.name))
-                .andExpect(jsonPath("$.data.province.code").value(testProvince.code))
+                .andExpect(jsonPath("$.data.content[0].code").value(testDistrict.code))
         }
     }
 
@@ -221,43 +193,13 @@ class DistrictControllerIntegrationTest {
     inner class ProvinceBasedDistrictTests {
         @Test
         fun `should get districts by province`() {
-            // Arrange
-            mockLoggedInUser(viewer)
-            val provinceCode = testProvince.code!!
-            val expectedDistricts =
-                listOf(
-                    DistrictTestFixtures.createDistrictResponse(
-                        code = "TEST-D1",
-                        name = "Test District 1",
-                        province = ProvinceTestFixtures.createProvinceSummaryResponse(code = provinceCode),
-                    ),
-                    DistrictTestFixtures.createDistrictResponse(
-                        code = "TEST-D2",
-                        name = "Test District 2",
-                        province = ProvinceTestFixtures.createProvinceSummaryResponse(code = provinceCode),
-                    ),
-                )
+            loginAs(viewer)
 
-            whenever(districtService.getDistrictsByProvince(provinceCode))
-                .thenReturn(expectedDistricts)
-
-            // Act & Assert
             mockMvc
-                .perform(get("/api/v1/districts/by-province/$provinceCode"))
+                .perform(get("/api/v1/districts/by-province/${testProvince.code}"))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.data").isArray)
-                .andExpect(jsonPath("$.data[0].province.code").value(provinceCode))
-        }
-    }
-
-    private fun createTestMunicipalities(districtCode: String) {
-        repeat(3) { i ->
-            municipalityService.createMunicipality(
-                MunicipalityTestFixtures.createMunicipalityRequest(
-                    districtCode = districtCode,
-                    code = "TEST-M$i",
-                ),
-            )
+                .andExpect(jsonPath("$.data[0].code").value(testDistrict.code))
         }
     }
 }

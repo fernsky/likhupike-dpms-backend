@@ -8,10 +8,18 @@ import java.math.BigDecimal
 import java.util.UUID
 
 object ProvinceTestFixtures {
+    private var counter = 0L
+    
+    private fun generateUniqueCode(): String {
+        val timestamp = System.currentTimeMillis()
+        val count = counter++
+        return "TEST-P-$timestamp-$count"
+    }
+
     fun createProvince(
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
-        code: String = "TEST-P",  // Made code parameter optional with default value
+        code: String = generateUniqueCode(),
         area: BigDecimal = BigDecimal("1000.50"),
         population: Long = 100000L,
         headquarter: String = "Test Headquarter",
@@ -30,7 +38,7 @@ object ProvinceTestFixtures {
     fun createProvinceRequest(
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
-        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+        code: String = generateUniqueCode(),
         area: BigDecimal = BigDecimal("10000.50"),
         population: Long = 500000L,
         headquarter: String = "Test Headquarter",
@@ -62,7 +70,7 @@ object ProvinceTestFixtures {
     )
 
     fun createProvinceResponse(
-        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+        code: String = generateUniqueCode(),
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
         area: BigDecimal = BigDecimal("10000.50"),
@@ -86,7 +94,7 @@ object ProvinceTestFixtures {
     )
 
     fun createProvinceDetailResponse(
-        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+        code: String = generateUniqueCode(),
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
         area: BigDecimal = BigDecimal("10000.50"),
@@ -106,7 +114,7 @@ object ProvinceTestFixtures {
     )
 
     fun createProvinceSummaryResponse(
-        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+        code: String = generateUniqueCode(),
         name: String = "Test Province",
         nameNepali: String = "परीक्षण प्रदेश",
     ) = ProvinceSummaryResponse(

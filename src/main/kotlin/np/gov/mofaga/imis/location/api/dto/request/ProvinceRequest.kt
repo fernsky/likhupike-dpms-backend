@@ -11,7 +11,7 @@ data class CreateProvinceRequest(
     @field:Size(max = 100, message = "Nepali name must not exceed 100 characters")
     val nameNepali: String,
     @field:NotBlank(message = "Code is required")
-    @field:Pattern(regexp = "^[A-Z0-9_-]{1,10}$", message = "Code must be 1-10 uppercase letters, numbers, dashes or underscores")
+    @field:Pattern(regexp = "^[A-Z0-9_-]{1,36}$", message = "Code must be 1-36 uppercase letters, numbers, dashes or underscores")
     val code: String,
     @field:Positive(message = "Area must be positive")
     @field:Digits(integer = 8, fraction = 2, message = "Area must have at most 8 digits and 2 decimal places")
