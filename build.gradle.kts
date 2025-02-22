@@ -13,11 +13,11 @@ plugins {
 }
 
 springBoot {
-    mainClass.set("np.gov.likhupikemun.dpms.DpmsApiApplicationKt")
+    mainClass.set("np.gov.mofaga.imis.ImisApiApplicationKt")
 }
 
 // Project metadata
-group = "np.gov.likhupikemun"
+group = "np.gov.mofaga"
 version = "0.0.1-SNAPSHOT"
 
 // Java configuration
@@ -544,7 +544,7 @@ jib {
         image = "eclipse-temurin:21-jre-alpine"
     }
     to {
-        image = "dpms-api"
+        image = "imis-api"
         tags = setOf("latest")
     }
     container {

@@ -25,5 +25,5 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
-    np.gov.likhupikemun.dpms: DEBUG
+    np.gov.mofaga.imis: DEBUG
     liquibase: DEBUG

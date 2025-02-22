@@ -1,0 +1,127 @@
+package np.gov.mofaga.imis.location.test.fixtures
+
+import np.gov.mofaga.imis.location.api.dto.request.CreateProvinceRequest
+import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
+import np.gov.mofaga.imis.location.api.dto.response.*
+import np.gov.mofaga.imis.location.domain.Province
+import java.math.BigDecimal
+import java.util.UUID
+
+object ProvinceTestFixtures {
+    fun createProvince(
+        name: String = "Test Province",
+        nameNepali: String = "परीक्षण प्रदेश",
+        code: String = "TEST-P",  // Made code parameter optional with default value
+        area: BigDecimal = BigDecimal("1000.50"),
+        population: Long = 100000L,
+        headquarter: String = "Test Headquarter",
+        headquarterNepali: String = "परीक्षण सदरमुकाम",
+    ): Province =
+        Province().apply {
+            this.name = name
+            this.nameNepali = nameNepali
+            this.code = code
+            this.area = area
+            this.population = population
+            this.headquarter = headquarter
+            this.headquarterNepali = headquarterNepali
+        }
+
+    fun createProvinceRequest(
+        name: String = "Test Province",
+        nameNepali: String = "परीक्षण प्रदेश",
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+        area: BigDecimal = BigDecimal("10000.50"),
+        population: Long = 500000L,
+        headquarter: String = "Test Headquarter",
+        headquarterNepali: String = "परीक्षण सदरमुकाम",
+    ) = CreateProvinceRequest(
+        name = name,
+        nameNepali = nameNepali,
+        code = code.toUpperCase(),
+        area = area,
+        population = population,
+        headquarter = headquarter,
+        headquarterNepali = headquarterNepali,
+    )
+
+    fun createUpdateProvinceRequest(
+        name: String = "Updated Province",
+        nameNepali: String = "अद्यावधिक प्रदेश",
+        area: BigDecimal = BigDecimal("12000.75"),
+        population: Long = 600000L,
+        headquarter: String = "Updated Headquarter",
+        headquarterNepali: String = "अद्यावधिक सदरमुकाम",
+    ) = UpdateProvinceRequest(
+        name = name,
+        nameNepali = nameNepali,
+        area = area,
+        population = population,
+        headquarter = headquarter,
+        headquarterNepali = headquarterNepali,
+    )
+
+    fun createProvinceResponse(
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+        name: String = "Test Province",
+        nameNepali: String = "परीक्षण प्रदेश",
+        area: BigDecimal = BigDecimal("10000.50"),
+        population: Long = 500000L,
+        headquarter: String = "Test Headquarter",
+        headquarterNepali: String = "परीक्षण सदरमुकाम",
+        districtCount: Int = 5,
+        totalPopulation: Long = 450000L,
+        totalArea: BigDecimal = BigDecimal("9500.25"),
+    ) = ProvinceResponse(
+        code = code,
+        name = name,
+        nameNepali = nameNepali,
+        area = area,
+        population = population,
+        headquarter = headquarter,
+        headquarterNepali = headquarterNepali,
+        districtCount = districtCount,
+        totalPopulation = totalPopulation,
+        totalArea = totalArea,
+    )
+
+    fun createProvinceDetailResponse(
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+        name: String = "Test Province",
+        nameNepali: String = "परीक्षण प्रदेश",
+        area: BigDecimal = BigDecimal("10000.50"),
+        population: Long = 500000L,
+        headquarter: String = "Test Headquarter",
+        headquarterNepali: String = "परीक्षण सदरमुकाम",
+        districts: List<DistrictSummaryResponse> = createDistrictSummaries(),
+    ) = ProvinceDetailResponse(
+        code = code,
+        name = name,
+        nameNepali = nameNepali,
+        area = area,
+        population = population,
+        headquarter = headquarter,
+        headquarterNepali = headquarterNepali,
+        districts = districts,
+    )
+
+    fun createProvinceSummaryResponse(
+        code: String = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+        name: String = "Test Province",
+        nameNepali: String = "परीक्षण प्रदेश",
+    ) = ProvinceSummaryResponse(
+        code = code,
+        name = name,
+        nameNepali = nameNepali,
+    )
+
+    private fun createDistrictSummaries(): List<DistrictSummaryResponse> =
+        (1..3).map { index ->
+            DistrictSummaryResponse(
+                code = "DIST-$index",
+                name = "Test District $index",
+                nameNepali = "परीक्षण जिल्ला $index",
+                municipalityCount = 5,
+            )
+        }
+}

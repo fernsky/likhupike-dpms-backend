@@ -11,5 +11,5 @@ spring:
 logging:
   level:
     root: INFO
-    np.gov.likhupikemun.dpms: DEBUG
+    np.gov.mofaga.imis: DEBUG
     org.springframework: INFO

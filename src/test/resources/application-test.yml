@@ -40,7 +40,7 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.redisson.spring.starter.RedissonAutoConfiguration
-      - np.gov.likhupikemun.dpms.config.RedisConfig # Add this line
+      - np.gov.mofaga.imis.config.RedisConfig # Add this line
   data:
     redis:
       repositories:
