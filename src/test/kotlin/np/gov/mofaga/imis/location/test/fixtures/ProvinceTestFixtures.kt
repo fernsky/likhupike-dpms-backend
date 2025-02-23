@@ -4,12 +4,12 @@ import np.gov.mofaga.imis.location.api.dto.request.CreateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.Province
+import np.gov.mofaga.imis.shared.dto.GeometryRequest
 import java.math.BigDecimal
-import java.util.UUID
 
 object ProvinceTestFixtures {
     private var counter = 0L
-    
+
     private fun generateUniqueCode(): String {
         val timestamp = System.currentTimeMillis()
         val count = counter++
@@ -43,6 +43,17 @@ object ProvinceTestFixtures {
         population: Long = 500000L,
         headquarter: String = "Test Headquarter",
         headquarterNepali: String = "परीक्षण सदरमुकाम",
+        geometry: GeometryRequest =
+            GeometryRequest(
+                type = "polygon",
+                coordinates =
+                    listOf(
+                        arrayOf(85.0, 27.0),
+                        arrayOf(85.5, 27.0),
+                        arrayOf(85.5, 27.5),
+                        arrayOf(85.0, 27.5),
+                    ),
+            ),
     ) = CreateProvinceRequest(
         name = name,
         nameNepali = nameNepali,
@@ -51,6 +62,7 @@ object ProvinceTestFixtures {
         population = population,
         headquarter = headquarter,
         headquarterNepali = headquarterNepali,
+        geometry = geometry,
     )
 
     fun createUpdateProvinceRequest(
@@ -60,6 +72,17 @@ object ProvinceTestFixtures {
         population: Long = 600000L,
         headquarter: String = "Updated Headquarter",
         headquarterNepali: String = "अद्यावधिक सदरमुकाम",
+        geometry: GeometryRequest? =
+            GeometryRequest(
+                type = "polygon",
+                coordinates =
+                    listOf(
+                        arrayOf(85.0, 27.0),
+                        arrayOf(85.5, 27.0),
+                        arrayOf(85.5, 27.5),
+                        arrayOf(85.0, 27.5),
+                    ),
+            ),
     ) = UpdateProvinceRequest(
         name = name,
         nameNepali = nameNepali,
@@ -67,6 +90,7 @@ object ProvinceTestFixtures {
         population = population,
         headquarter = headquarter,
         headquarterNepali = headquarterNepali,
+        geometry = geometry,
     )
 
     fun createProvinceResponse(

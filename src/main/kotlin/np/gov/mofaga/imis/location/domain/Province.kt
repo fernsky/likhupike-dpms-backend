@@ -2,6 +2,9 @@ package np.gov.mofaga.imis.location.domain
 
 import jakarta.persistence.*
 import np.gov.mofaga.imis.common.entity.BaseEntity
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+import org.locationtech.jts.geom.Polygon
 import java.math.BigDecimal
 
 @Entity
@@ -10,6 +13,7 @@ import java.math.BigDecimal
     indexes = [
         Index(name = "idx_provinces_name", columnList = "name"),
         Index(name = "idx_provinces_code", columnList = "code"),
+        Index(name = "idx_provinces_geometry", columnList = "geometry"),
     ],
 )
 class Province : BaseEntity() {
@@ -36,6 +40,10 @@ class Province : BaseEntity() {
 
     @OneToMany(mappedBy = "province", cascade = [CascadeType.ALL])
     var districts: MutableSet<District> = mutableSetOf()
+
+    @Column(columnDefinition = "geometry")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    var geometry: Polygon? = null
 
     fun addDistrict(district: District) {
         districts.add(district)

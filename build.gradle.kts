@@ -228,6 +228,10 @@ dependencies {
     testImplementation("org.openjdk.jmh:jmh-core:1.35")
     testAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.35")
     kaptTest("org.openjdk.jmh:jmh-generator-annprocess:1.35")
+
+    // Jakarta Validation API
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+    implementation("org.hibernate.validator:hibernate-validator:7.0.5.Final")
 }
 
 // Liquibase configuration
@@ -554,12 +558,24 @@ jib {
 }
 
 tasks.bootRun {
+    // Load environment variables from .env.local
+
     jvmArgs = listOf(
-        "-XX:+AllowRedefinitionToAddDeleteMethods",
-        "-Dspring.devtools.restart.enabled=false",
-        "-Dspring.profiles.active=local",
-        "-Dspring.devtools.restart.poll-interval=2s",
-        "-Dspring.devtools.restart.quiet-period=1s"
+        "-XX:+AllowRedefinitionToAddDeleteMethods"
+    )
+
+    args = listOf(
+        "--spring.profiles.active=${System.getProperty("spring.profiles.active", "local")}",
+        "--spring.data.redis.host=${System.getProperty("spring.data.redis.host", "johnpc")}",
+        "--spring.data.redis.port=${System.getProperty("spring.data.redis.port", "6379")}",
+        "--spring.data.redis.password=${System.getProperty("spring.data.redis.password", "redisSecurePass123!")}",
+        "--spring.datasource.url=${System.getProperty("spring.datasource.url", "jdbc:postgresql://johnpc:5432/dpms")}",
+        "--spring.datasource.username=${System.getProperty("spring.datasource.username", "dpms")}",
+        "--spring.datasource.password=${System.getProperty("spring.datasource.password", "dpmsSecurePass123!")}",
+        "--dpms.minio.endpoint=${System.getProperty("dpms.minio.endpoint", "http://johnpc:9000")}",
+        "--dpms.minio.access-key=${System.getProperty("dpms.minio.access.key", "minioadmin")}",
+        "--dpms.minio.secret-key=${System.getProperty("dpms.minio.secret.key", "miniopass")}",
+        "--spring.kafka.bootstrap-servers=${System.getProperty("spring.kafka.bootstrap.servers", "johnpc:9092")}"
     )
 }
 

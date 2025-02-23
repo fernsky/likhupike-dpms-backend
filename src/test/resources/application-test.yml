@@ -4,21 +4,29 @@ testcontainers:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     username: sa
     password:
     driver-class-name: org.h2.Driver
   jpa:
-    database-platform: org.hibernate.spatial.dialect.h2geodb.GeoDBDialect
+    database-platform: np.gov.mofaga.imis.config.H2GISDialect
     show-sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
     properties:
       hibernate:
         format_sql: true
+        hbm2ddl.auto: none
+        jakarta:
+          persistence:
+            schema-generation:
+              database:
+                action: drop-and-create
+              create-source: script-then-metadata
+              create-script-source: classpath:scripts/init-h2gis.sql
   sql:
     init:
       schema-locations: classpath:scripts/init-h2gis.sql

@@ -186,17 +186,6 @@
             <column name="updated_by" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-7">
-        <createTable tableName="spatial_ref_sys">
-            <column name="srid" type="INTEGER">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="spatial_ref_sys_pkey"/>
-            </column>
-            <column name="auth_name" type="VARCHAR(256)"/>
-            <column name="auth_srid" type="INTEGER"/>
-            <column name="srtext" type="VARCHAR(2048)"/>
-            <column name="proj4text" type="VARCHAR(2048)"/>
-        </createTable>
-    </changeSet>
     <changeSet author="trilochan (generated)" id="1739595213044-10">
         <createIndex indexName="spring_session_ix1" tableName="spring_session" unique="true">
             <column name="session_id"/>

@@ -11,6 +11,8 @@ import np.gov.mofaga.imis.location.exception.*
 import np.gov.mofaga.imis.location.repository.ProvinceRepository
 import np.gov.mofaga.imis.location.repository.specification.ProvinceSpecifications
 import np.gov.mofaga.imis.location.service.ProvinceService
+import np.gov.mofaga.imis.shared.util.GeometryConverter
+import org.locationtech.jts.geom.Polygon
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -22,6 +24,7 @@ import java.math.BigDecimal
 class ProvinceServiceImpl(
     private val provinceRepository: ProvinceRepository,
     private val provinceMapper: ProvinceMapper,
+    private val geometryConverter: GeometryConverter,
 ) : ProvinceService {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -39,6 +42,7 @@ class ProvinceServiceImpl(
                 population = request.population
                 headquarter = request.headquarter
                 headquarterNepali = request.headquarterNepali
+                geometry = request.geometry?.let { geometryConverter.toGeometry(it) as? Polygon }
             }
 
         return provinceRepository

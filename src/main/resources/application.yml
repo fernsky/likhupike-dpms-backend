@@ -6,7 +6,7 @@ spring:
     name: dpms-api
   data:
     redis:
-      host: ${SPRING_REDIS_HOST:localhost}
+      host: ${SPRING_REDIS_HOST:johnpc}
       port: 6379
       password: ${REDIS_PASSWORD:redisSecurePass123!}
       connect-timeout: 10000
@@ -57,7 +57,7 @@ spring:
     init:
       mode: never
   liquibase:
-    enabled: true
+    enabled: false
     change-log: classpath:db/changelog/db.changelog-master.xml
     contexts: ${SPRING_PROFILES_ACTIVE:prod}
     default-schema: public
@@ -84,7 +84,7 @@ spring:
   main:
     allow-bean-definition-overriding: true # Changed from false to true
   redis:
-    host: localhost
+    host: ${SPRING_REDIS_HOST:localhost}
     port: 6379
   mail:
     # For Gmail

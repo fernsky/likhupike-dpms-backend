@@ -3,13 +3,12 @@ package np.gov.mofaga.imis.shared.security.config
 import np.gov.mofaga.imis.shared.config.JwtAuthenticationFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
@@ -33,6 +32,7 @@ class SecurityConfig(
                 it.authenticationEntryPoint(authenticationEntryPoint)
             }.authorizeHttpRequests {
                 it
+                    // Public endpoints - no authentication required
                     .requestMatchers(
                         "/api/v1/auth/**",
                         "/v3/api-docs/**",
@@ -42,6 +42,33 @@ class SecurityConfig(
                         "/error",
                         "/webjars/**",
                     ).permitAll()
+                    // Public GET endpoints for location data
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/v1/provinces/**",
+                        "/api/v1/districts/**",
+                        "/api/v1/municipalities/**",
+                        "/api/v1/wards/**"
+                    ).permitAll()
+                    // Super Admin only endpoints
+                    .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/v1/provinces/**",
+                        "/api/v1/districts/**",
+                        "/api/v1/municipalities/**"
+                    ).hasRole("SUPER_ADMIN")
+                    .requestMatchers(
+                        HttpMethod.PUT,
+                        "/api/v1/provinces/**",
+                        "/api/v1/districts/**",
+                        "/api/v1/municipalities/**"
+                    ).hasRole("SUPER_ADMIN")
+                    // Municipality Admin and Super Admin endpoints
+                    .requestMatchers(
+                        HttpMethod.PUT,
+                        "/api/v1/wards/**"
+                    ).hasAnyRole("MUNICIPALITY_ADMIN", "SUPER_ADMIN")
+                    // Default rule - require authentication for any other endpoint
                     .anyRequest()
                     .authenticated()
             }.sessionManagement {

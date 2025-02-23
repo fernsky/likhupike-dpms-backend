@@ -1,74 +1,74 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/dpms
-    username: dpms
-    password: dpmsSecurePass123!
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/dpms}
+    username: ${SPRING_DATASOURCE_USERNAME:dpms}
+    password: ${SPRING_DATASOURCE_PASSWORD:dpmsSecurePass123!}
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: redisSecurePass123!
+      host: ${SPRING_DATA_REDIS_HOST:johnpc}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:redisSecurePass123!}
     rest:
-      base-path: /api
+      base-path: ${SPRING_DATA_REST_BASE_PATH:/api}
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
   liquibase:
-    enabled: false
-    url: jdbc:postgresql://localhost:5432/dpms
-    user: dpms
-    password: dpmsSecurePass123!
-    contexts: local
-    change-log: classpath:db/changelog/db.changelog-master.xml
-    drop-first: false
+    enabled: ${SPRING_LIQUIBASE_ENABLED:false}
+    url: ${SPRING_LIQUIBASE_URL:jdbc:postgresql://localhost:5432/dpms}
+    user: ${SPRING_LIQUIBASE_USER:dpms}
+    password: ${SPRING_LIQUIBASE_PASSWORD:dpmsSecurePass123!}
+    contexts: ${SPRING_LIQUIBASE_CONTEXTS:local}
+    change-log: ${SPRING_LIQUIBASE_CHANGE_LOG:classpath:db/changelog/db.changelog-master.xml}
+    drop-first: ${SPRING_LIQUIBASE_DROP_FIRST:false}
     parameters:
-      textColumnType: text
-      timestampType: timestamptz
-      uuidType: uuid
-    rollback-file: src/main/resources/db/rollback/rollback-local-${TIMESTAMP}.sql
+      textColumnType: ${SPRING_LIQUIBASE_PARAMETERS_TEXT_COLUMN_TYPE:text}
+      timestampType: ${SPRING_LIQUIBASE_PARAMETERS_TIMESTAMP_TYPE:timestamptz}
+      uuidType: ${SPRING_LIQUIBASE_PARAMETERS_UUID_TYPE:uuid}
+    rollback-file: ${SPRING_LIQUIBASE_ROLLBACK_FILE:src/main/resources/db/rollback/rollback-local-${TIMESTAMP}.sql}
   devtools:
     restart:
-      enabled: true
-      additional-paths: src/main/kotlin
-      trigger-file: .reloadtrigger
+      enabled: ${SPRING_DEVTOOLS_RESTART_ENABLED:true}
+      additional-paths: ${SPRING_DEVTOOLS_RESTART_ADDITIONAL_PATHS:src/main/kotlin}
+      trigger-file: ${SPRING_DEVTOOLS_RESTART_TRIGGER_FILE:.reloadtrigger}
   mail:
-    host: localhost
-    port: 1025
-    username: test # These credentials don't matter for MailHog
-    password: test # but are required by Spring Mail
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:1025}
+    username: ${SPRING_MAIL_USERNAME:test}
+    password: ${SPRING_MAIL_PASSWORD:test}
     properties:
       mail:
         smtp:
-          auth: false # Disable auth for local development
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:false}
           starttls:
-            enable: false
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:false}
   session:
-    store-type: jdbc
+    store-type: ${SPRING_SESSION_STORE_TYPE:jdbc}
     jdbc:
-      initialize-schema: always
-      schema: classpath:org/springframework/session/jdbc/schema-postgresql.sql
-      table-name: spring_session
-    timeout: 30m
+      initialize-schema: ${SPRING_SESSION_JDBC_INITIALIZE_SCHEMA:always}
+      schema: ${SPRING_SESSION_JDBC_SCHEMA:classpath:org/springframework/session/jdbc/schema-postgresql.sql}
+      table-name: ${SPRING_SESSION_JDBC_TABLE_NAME:spring_session}
+    timeout: ${SPRING_SESSION_TIMEOUT:30m}
   jpa:
     hibernate:
       naming:
-        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
-        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
-      ddl-auto: validate
-    show-sql: true
+        physical-strategy: ${SPRING_JPA_HIBERNATE_NAMING_PHYSICAL_STRATEGY:org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy}
+        implicit-strategy: ${SPRING_JPA_HIBERNATE_NAMING_IMPLICIT_STRATEGY:org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:create}
+    show-sql: ${SPRING_JPA_SHOW_SQL:true}
     properties:
       hibernate:
-        format_sql: true
+        format_sql: ${SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL:true}
 
 dpms:
   minio:
-    endpoint: http://localhost:9000
-    access-key: minioadmin
-    secret-key: miniopass
-    bucket: dpms-files
+    endpoint: ${DPMS_MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${DPMS_MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${DPMS_MINIO_SECRET_KEY:miniopass}
+    bucket: ${DPMS_MINIO_BUCKET:dpms-files}
 
 logging:
   level:
-    np.gov.mofaga.imis: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
-    liquibase: DEBUG
+    np.gov.mofaga.imis: ${LOGGING_LEVEL_NP_GOV_MOFAGA_IMIS:DEBUG}
+    org.hibernate.SQL: ${LOGGING_LEVEL_ORG_HIBERNATE_SQL:DEBUG}
+    org.hibernate.type.descriptor.sql: ${LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL:TRACE}
+    liquibase: ${LOGGING_LEVEL_LIQUIBASE:DEBUG}
