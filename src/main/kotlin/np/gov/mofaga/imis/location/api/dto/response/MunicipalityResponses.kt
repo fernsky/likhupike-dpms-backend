@@ -2,6 +2,7 @@ package np.gov.mofaga.imis.location.api.dto.response
 
 import io.swagger.v3.oas.annotations.media.Schema
 import np.gov.mofaga.imis.location.domain.MunicipalityType
+import org.geojson.GeoJsonObject
 import java.math.BigDecimal
 import java.util.*
 
@@ -31,6 +32,7 @@ data class MunicipalityDetailResponse(
     val longitude: BigDecimal?,
     val totalWards: Int,
     val district: DistrictDetailResponse,
+    val geometry: GeoJsonObject?,
 )
 
 @Schema(description = "Summary response for municipality listings")

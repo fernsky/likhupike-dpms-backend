@@ -1,6 +1,8 @@
 package np.gov.mofaga.imis.location.api.dto.request
 
+import jakarta.validation.Valid
 import jakarta.validation.constraints.*
+import np.gov.mofaga.imis.shared.dto.GeometryRequest
 import java.math.BigDecimal
 import java.util.*
 
@@ -26,6 +28,9 @@ data class CreateWardRequest(
     val officeLocation: String?,
     @field:Size(max = 100, message = "Office location in Nepali must not exceed 100 characters")
     val officeLocationNepali: String?,
+    @field:NotNull(message = "Geometry is required")
+    @field:Valid
+    val geometry: GeometryRequest,
 )
 
 data class UpdateWardRequest(
@@ -44,4 +49,6 @@ data class UpdateWardRequest(
     val officeLocation: String?,
     @field:Size(max = 100, message = "Office location in Nepali must not exceed 100 characters")
     val officeLocationNepali: String?,
+    @field:Valid
+    val geometry: GeometryRequest?,
 )

@@ -232,6 +232,10 @@ dependencies {
     // Jakarta Validation API
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
     implementation("org.hibernate.validator:hibernate-validator:7.0.5.Final")
+
+    // GeoJSON-Jackson
+    implementation("de.grundid.opendatalab:geojson-jackson:1.14")
+    implementation("org.locationtech.jts.io:jts-io-common:1.19.0")
 }
 
 // Liquibase configuration

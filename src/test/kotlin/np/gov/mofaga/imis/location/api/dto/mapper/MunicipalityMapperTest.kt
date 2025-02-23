@@ -3,6 +3,7 @@ package np.gov.mofaga.imis.location.api.dto.mapper
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import np.gov.mofaga.imis.location.api.dto.mapper.impl.MunicipalityMapperImpl
 import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
 import np.gov.mofaga.imis.location.test.fixtures.MunicipalityTestFixtures
@@ -13,15 +14,22 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import org.geojson.GeoJsonObject
 
 @DisplayName("Municipality Mapper Tests")
 class MunicipalityMapperTest {
     private val districtMapper = mockk<DistrictMapper>()
+    private val geometryConverter = mockk<GeometryConverter>()
     private lateinit var municipalityMapper: MunicipalityMapper
+    private val mockGeoJson = mockk<GeoJsonObject>()
 
     @BeforeEach
     fun setup() {
-        municipalityMapper = MunicipalityMapperImpl(districtMapper)
+        municipalityMapper = MunicipalityMapperImpl(districtMapper, geometryConverter)
+
+        every {
+            geometryConverter.convertToGeoJson(any())
+        } returns mockGeoJson
     }
 
     @Nested

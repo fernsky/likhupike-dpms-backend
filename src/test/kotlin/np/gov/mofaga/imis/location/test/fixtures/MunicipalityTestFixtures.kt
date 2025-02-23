@@ -6,6 +6,9 @@ import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.location.domain.MunicipalityType
+import np.gov.mofaga.imis.shared.dto.GeometryRequest
+import org.geojson.GeoJsonObject
+import org.geojson.LngLatAlt
 import java.math.BigDecimal
 
 object MunicipalityTestFixtures {
@@ -44,6 +47,18 @@ object MunicipalityTestFixtures {
         longitude: BigDecimal = BigDecimal("85.3240"),
         totalWards: Int = 12,
         districtCode: String = "TEST-D",
+        geometry: GeometryRequest =
+            GeometryRequest(
+                type = "Polygon",
+                coordinates =
+                    listOf(
+                        arrayOf(85.3240, 27.7172),
+                        arrayOf(85.3340, 27.7172),
+                        arrayOf(85.3340, 27.7272),
+                        arrayOf(85.3240, 27.7272),
+                        arrayOf(85.3240, 27.7172),
+                    ),
+            ),
     ) = CreateMunicipalityRequest(
         name = name,
         nameNepali = nameNepali,
@@ -55,6 +70,7 @@ object MunicipalityTestFixtures {
         longitude = longitude,
         totalWards = totalWards,
         districtCode = districtCode,
+        geometry = geometry,
     )
 
     fun createUpdateMunicipalityRequest(
@@ -65,6 +81,18 @@ object MunicipalityTestFixtures {
         latitude: BigDecimal = BigDecimal("27.7173"),
         longitude: BigDecimal = BigDecimal("85.3241"),
         totalWards: Int = 15,
+        geometry: GeometryRequest? =
+            GeometryRequest(
+                type = "Polygon",
+                coordinates =
+                    listOf(
+                        arrayOf(85.3241, 27.7173),
+                        arrayOf(85.3341, 27.7173),
+                        arrayOf(85.3341, 27.7273),
+                        arrayOf(85.3241, 27.7273),
+                        arrayOf(85.3241, 27.7173),
+                    ),
+            ),
     ) = UpdateMunicipalityRequest(
         name = name,
         nameNepali = nameNepali,
@@ -73,6 +101,7 @@ object MunicipalityTestFixtures {
         latitude = latitude,
         longitude = longitude,
         totalWards = totalWards,
+        geometry = geometry,
     )
 
     fun createMunicipalityResponse(
@@ -110,6 +139,7 @@ object MunicipalityTestFixtures {
         longitude: BigDecimal = BigDecimal("85.3240"),
         totalWards: Int = 12,
         district: DistrictDetailResponse = DistrictTestFixtures.createDistrictDetailResponse(),
+        geometry: GeoJsonObject? = createTestGeometry(),
     ) = MunicipalityDetailResponse(
         code = code,
         name = name,
@@ -121,7 +151,36 @@ object MunicipalityTestFixtures {
         longitude = longitude,
         totalWards = totalWards,
         district = district,
+        geometry = geometry,
     )
+
+    fun createTestGeometry(): GeoJsonObject {
+        val polygon = org.geojson.Polygon()
+
+        // Create and set exterior ring first
+        val exteriorRing =
+            listOf(
+                LngLatAlt(85.3240, 27.7172),
+                LngLatAlt(85.3340, 27.7172),
+                LngLatAlt(85.3340, 27.7272),
+                LngLatAlt(85.3240, 27.7272),
+                LngLatAlt(85.3240, 27.7172), // Close the ring
+            )
+        polygon.coordinates = mutableListOf(exteriorRing)
+
+        // Add interior ring if needed
+        val interiorRing =
+            listOf(
+                LngLatAlt(85.3270, 27.7192),
+                LngLatAlt(85.3310, 27.7192),
+                LngLatAlt(85.3310, 27.7252),
+                LngLatAlt(85.3270, 27.7252),
+                LngLatAlt(85.3270, 27.7192), // Close the ring
+            )
+        polygon.coordinates.add(interiorRing)
+
+        return polygon
+    }
 
     fun createMunicipalitySummaryResponse(
         code: String = "TEST-M",

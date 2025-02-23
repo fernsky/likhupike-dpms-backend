@@ -5,29 +5,55 @@ import np.gov.mofaga.imis.location.api.dto.request.UpdateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Province
+import np.gov.mofaga.imis.shared.dto.GeometryRequest
+import org.geojson.GeoJsonObject
+import org.geojson.LngLatAlt
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.LinearRing
+import org.locationtech.jts.geom.Polygon
+import org.locationtech.jts.geom.impl.CoordinateArraySequence
 import java.math.BigDecimal
 
 object DistrictTestFixtures {
+    private val geometryFactory = GeometryFactory()
+
     fun createDistrict(
-        province: Province = ProvinceTestFixtures.createProvince(),
+        code: String = "D1",
         name: String = "Test District",
-        nameNepali: String = "परीक्षण जिल्ला".uppercase(),
-        code: String = "TEST-D",
-        area: BigDecimal = BigDecimal("1000.50"),
-        population: Long = 100000L,
-        headquarter: String = "TEST HEADQUARTER",
-        headquarterNepali: String = "परीक्षण सदरमुकाम".uppercase(),
+        nameNepali: String = "परीक्षण जिल्ला",
+        area: BigDecimal = BigDecimal("100.00"),
+        population: Long = 10000L,
+        headquarter: String = "Test HQ",
+        headquarterNepali: String = "परीक्षण सदरमुकाम",
+        province: Province = ProvinceTestFixtures.createProvince(),
+        geometry: Polygon = createTestJTSPolygon(),
     ): District =
         District().apply {
-            this.province = province
+            this.code = code
             this.name = name
             this.nameNepali = nameNepali
-            this.code = code
             this.area = area
             this.population = population
             this.headquarter = headquarter
             this.headquarterNepali = headquarterNepali
+            this.province = province
+            this.geometry = geometry
         }
+
+    private fun createTestJTSPolygon(): Polygon {
+        val coordinates =
+            arrayOf(
+                Coordinate(85.0000, 27.0000),
+                Coordinate(85.5000, 27.0000),
+                Coordinate(85.5000, 27.5000),
+                Coordinate(85.0000, 27.5000),
+                Coordinate(85.0000, 27.0000), // Close the ring
+            )
+
+        val ring = LinearRing(CoordinateArraySequence(coordinates), geometryFactory)
+        return geometryFactory.createPolygon(ring)
+    }
 
     fun createDistrictRequest(
         name: String = "Test District",
@@ -38,6 +64,18 @@ object DistrictTestFixtures {
         population: Long = 100000L,
         headquarter: String = "TEST HEADQUARTER",
         headquarterNepali: String = "परीक्षण सदरमुकाम".uppercase(),
+        geometry: GeometryRequest =
+            GeometryRequest(
+                type = "Polygon",
+                coordinates =
+                    listOf(
+                        arrayOf(85.0000, 27.0000),
+                        arrayOf(85.5000, 27.0000),
+                        arrayOf(85.5000, 27.5000),
+                        arrayOf(85.0000, 27.5000),
+                        arrayOf(85.0000, 27.0000),
+                    ),
+            ),
     ) = CreateDistrictRequest(
         name = name,
         nameNepali = nameNepali,
@@ -47,6 +85,7 @@ object DistrictTestFixtures {
         population = population,
         headquarter = headquarter,
         headquarterNepali = headquarterNepali,
+        geometry = geometry,
     )
 
     fun createUpdateDistrictRequest(
@@ -56,6 +95,18 @@ object DistrictTestFixtures {
         population: Long = 150000L,
         headquarter: String = "UPDATED HEADQUARTER",
         headquarterNepali: String = "अद्यावधिक सदरमुकाम",
+        geometry: GeometryRequest? =
+            GeometryRequest(
+                type = "Polygon",
+                coordinates =
+                    listOf(
+                        arrayOf(85.0001, 27.0001),
+                        arrayOf(85.5001, 27.0001),
+                        arrayOf(85.5001, 27.5001),
+                        arrayOf(85.0001, 27.5001),
+                        arrayOf(85.0001, 27.0001),
+                    ),
+            ),
     ) = UpdateDistrictRequest(
         name = name,
         nameNepali = nameNepali,
@@ -63,6 +114,7 @@ object DistrictTestFixtures {
         population = population,
         headquarter = headquarter,
         headquarterNepali = headquarterNepali,
+        geometry = geometry,
     )
 
     fun createDistrictResponse(
@@ -101,6 +153,7 @@ object DistrictTestFixtures {
         headquarterNepali: String = "परीक्षण सदरमुकाम",
         province: ProvinceSummaryResponse = ProvinceTestFixtures.createProvinceSummaryResponse(),
         municipalities: List<MunicipalitySummaryResponse> = emptyList(),
+        geometry: GeoJsonObject? = createTestGeometry(),
     ) = DistrictDetailResponse(
         code = code,
         name = name,
@@ -111,7 +164,36 @@ object DistrictTestFixtures {
         headquarterNepali = headquarterNepali,
         province = province,
         municipalities = municipalities,
+        geometry = geometry,
     )
+
+    fun createTestGeometry(): GeoJsonObject {
+        val polygon = org.geojson.Polygon()
+
+        // Create and set exterior ring first
+        val exteriorRing =
+            listOf(
+                LngLatAlt(85.0000, 27.0000),
+                LngLatAlt(85.5000, 27.0000),
+                LngLatAlt(85.5000, 27.5000),
+                LngLatAlt(85.0000, 27.5000),
+                LngLatAlt(85.0000, 27.0000), // Close the ring
+            )
+        polygon.coordinates = mutableListOf(exteriorRing)
+
+        // Add interior ring if needed
+        val interiorRing =
+            listOf(
+                LngLatAlt(85.1000, 27.1000),
+                LngLatAlt(85.4000, 27.1000),
+                LngLatAlt(85.4000, 27.4000),
+                LngLatAlt(85.1000, 27.4000),
+                LngLatAlt(85.1000, 27.1000), // Close the ring
+            )
+        polygon.coordinates.add(interiorRing)
+
+        return polygon
+    }
 
     fun createDistrictSummaryResponse(
         code: String = "TEST-D",
@@ -148,5 +230,6 @@ object DistrictTestFixtures {
                 name = "Test Province",
             ),
         municipalities = emptyList(),
+        geometry = createTestGeometry(),
     )
 }

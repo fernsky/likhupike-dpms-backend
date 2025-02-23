@@ -7,6 +7,8 @@ import np.gov.mofaga.imis.location.api.dto.response.MunicipalitySummaryResponse
 import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.domain.Ward
+import np.gov.mofaga.imis.shared.util.GeometryConverter
+import org.geojson.GeoJsonObject
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,13 +16,15 @@ import java.math.BigDecimal
 
 class WardMapperTest {
     private val municipalityMapper = mockk<MunicipalityMapper>()
+    private val geometryConverter = mockk<GeometryConverter>()
     private lateinit var wardMapper: WardMapper
     private lateinit var testMunicipality: Municipality
     private lateinit var testWard: Ward
+    private val mockGeoJson = mockk<GeoJsonObject>()
 
     @BeforeEach
     fun setup() {
-        wardMapper = WardMapperImpl(municipalityMapper)
+        wardMapper = WardMapperImpl(municipalityMapper, geometryConverter)
         testMunicipality = createTestMunicipality()
         testWard = createTestWard(testMunicipality)
 
@@ -34,6 +38,10 @@ class WardMapperTest {
                 type = testMunicipality.type!!,
                 totalWards = testMunicipality.totalWards!!,
             )
+
+        every {
+            geometryConverter.convertToGeoJson(any())
+        } returns mockGeoJson
     }
 
     @Test
@@ -99,5 +107,6 @@ class WardMapperTest {
             longitude = BigDecimal("85.3240")
             officeLocation = "Test Office"
             officeLocationNepali = "परीक्षण कार्यालय"
+            geometry = mockk()
         }
 }

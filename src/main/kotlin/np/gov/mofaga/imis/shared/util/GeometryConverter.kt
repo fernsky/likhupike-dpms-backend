@@ -1,7 +1,11 @@
 package np.gov.mofaga.imis.shared.util
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import np.gov.mofaga.imis.shared.dto.*
+import org.geojson.GeoJsonObject
+import org.geojson.LngLatAlt
 import org.locationtech.jts.geom.*
+import org.locationtech.jts.io.geojson.GeoJsonWriter
 import org.locationtech.jts.util.GeometricShapeFactory
 import org.springframework.stereotype.Component
 import kotlin.math.cos
@@ -10,6 +14,8 @@ import kotlin.math.cos
 class GeometryConverter(
     private val geometryFactory: GeometryFactory = GeometryFactory(PrecisionModel(), 4326),
 ) {
+    private val geoJsonWriter = GeoJsonWriter()
+
     // Helper function to convert Array<Double> to JTS Coordinate
     private fun Array<Double>.toJtsCoordinate(): org.locationtech.jts.geom.Coordinate =
         org.locationtech.jts.geom
@@ -137,5 +143,75 @@ class GeometryConverter(
             coords.add(coords.first())
         }
         return geometryFactory.createLinearRing(coords.toTypedArray())
+    }
+
+    fun convertToGeoJson(geometry: Geometry?): GeoJsonObject? {
+        if (geometry == null) return null
+
+        return when (geometry) {
+            is Point -> {
+                org.geojson.Point(LngLatAlt(geometry.coordinate.y, geometry.coordinate.x))
+            }
+            is LineString -> {
+                org.geojson.LineString().apply {
+                    coordinates =
+                        geometry.coordinates.map { coord ->
+                            LngLatAlt(coord.y, coord.x)
+                        }
+                }
+            }
+            is Polygon -> {
+                org.geojson.Polygon().apply {
+                    // Add exterior ring first
+                    val exterior =
+                        geometry.exteriorRing.coordinates.map { coordinate ->
+                            LngLatAlt(coordinate.y, coordinate.x)
+                        }
+                    coordinates = mutableListOf(exterior)
+
+                    // Add interior rings
+                    for (i in 0 until geometry.numInteriorRing) {
+                        coordinates.add(
+                            geometry.getInteriorRingN(i).coordinates.map { coordinate ->
+                                LngLatAlt(coordinate.y, coordinate.x)
+                            },
+                        )
+                    }
+                }
+            }
+            is MultiPolygon -> {
+                org.geojson.MultiPolygon().apply {
+                    coordinates =
+                        mutableListOf<List<List<LngLatAlt>>>().apply {
+                            for (i in 0 until geometry.numGeometries) {
+                                val polygon = geometry.getGeometryN(i) as Polygon
+                                val polygonCoordinates = mutableListOf<List<LngLatAlt>>()
+
+                                // Add exterior ring
+                                polygonCoordinates.add(
+                                    polygon.exteriorRing.coordinates.map { coordinate ->
+                                        LngLatAlt(coordinate.y, coordinate.x)
+                                    },
+                                )
+
+                                // Add interior rings
+                                for (j in 0 until polygon.numInteriorRing) {
+                                    polygonCoordinates.add(
+                                        polygon.getInteriorRingN(j).coordinates.map { coordinate ->
+                                            LngLatAlt(coordinate.y, coordinate.x)
+                                        },
+                                    )
+                                }
+                                add(polygonCoordinates)
+                            }
+                        }
+                }
+            }
+            else -> {
+                // For other geometry types, use the default conversion
+                val geoJsonString = geoJsonWriter.write(geometry)
+                ObjectMapper().readValue(geoJsonString, GeoJsonObject::class.java)
+            }
+        }
     }
 }

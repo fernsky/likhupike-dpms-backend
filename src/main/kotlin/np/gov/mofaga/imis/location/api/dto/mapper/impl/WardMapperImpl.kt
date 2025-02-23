@@ -6,11 +6,13 @@ import np.gov.mofaga.imis.location.api.dto.response.WardDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardSummaryResponse
 import np.gov.mofaga.imis.location.domain.Ward
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.springframework.stereotype.Component
 
 @Component
 class WardMapperImpl(
     private val municipalityMapper: MunicipalityMapper,
+    private val geometryConverter: GeometryConverter,
 ) : WardMapper {
     override fun toResponse(ward: Ward): WardResponse {
         require(ward.wardNumber != null) { "Ward number cannot be null" }
@@ -41,6 +43,7 @@ class WardMapperImpl(
             officeLocation = ward.officeLocation,
             officeLocationNepali = ward.officeLocationNepali,
             municipality = municipalityMapper.toSummaryResponse(ward.municipality!!),
+            geometry = geometryConverter.convertToGeoJson(ward.geometry),
         )
     }
 

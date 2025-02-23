@@ -6,11 +6,13 @@ import np.gov.mofaga.imis.location.api.dto.response.MunicipalityDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.MunicipalityResponse
 import np.gov.mofaga.imis.location.api.dto.response.MunicipalitySummaryResponse
 import np.gov.mofaga.imis.location.domain.Municipality
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.springframework.stereotype.Component
 
 @Component
 class MunicipalityMapperImpl(
     private val districtMapper: DistrictMapper,
+    private val geometryConverter: GeometryConverter,
 ) : MunicipalityMapper {
     override fun toResponse(municipality: Municipality): MunicipalityResponse {
         validateRequiredFields(municipality)
@@ -43,6 +45,7 @@ class MunicipalityMapperImpl(
             longitude = municipality.longitude,
             totalWards = municipality.totalWards ?: 0,
             district = districtMapper.toDetailResponse(municipality.district!!),
+            geometry = geometryConverter.convertToGeoJson(municipality.geometry),
         )
     }
 

@@ -6,6 +6,7 @@ import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.repository.MunicipalityRepository
 import np.gov.mofaga.imis.location.service.WardService
+import np.gov.mofaga.imis.shared.dto.GeometryRequest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -136,14 +137,26 @@ class WardPerformanceTest {
 
     private fun createWardRequest(number: Int = 1) =
         CreateWardRequest(
-            municipalityCode = testMunicipality.code!!, // Add null-safe operator
-            wardNumber = number, // Remove unnecessary null-safe operator
+            municipalityCode = testMunicipality.code!!,
+            wardNumber = number,
             area = BigDecimal("10.00"),
             population = 1000L,
             latitude = BigDecimal("27.7172"),
             longitude = BigDecimal("85.3240"),
             officeLocation = "Test Office $number",
             officeLocationNepali = "परीक्षण कार्यालय $number",
+            geometry =
+                GeometryRequest(
+                    type = "Polygon",
+                    coordinates =
+                        listOf(
+                            arrayOf(85.0000, 27.0000),
+                            arrayOf(85.5000, 27.0000),
+                            arrayOf(85.5000, 27.5000),
+                            arrayOf(85.0000, 27.5000),
+                            arrayOf(85.0000, 27.0000),
+                        ),
+                ),
         )
 
     @Transactional

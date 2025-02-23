@@ -2,6 +2,9 @@ package np.gov.mofaga.imis.location.domain
 
 import jakarta.persistence.*
 import np.gov.mofaga.imis.common.entity.BaseEntity
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+import org.locationtech.jts.geom.Polygon
 import java.math.BigDecimal
 
 @Entity
@@ -18,6 +21,7 @@ import java.math.BigDecimal
         Index(name = "idx_municipalities_code", columnList = "code"),
         Index(name = "idx_municipalities_district", columnList = "district_code"),
         Index(name = "idx_municipalities_type", columnList = "type"),
+        Index(name = "idx_municipalities_geometry", columnList = "geometry"),
     ],
 )
 class Municipality : BaseEntity() {
@@ -58,6 +62,10 @@ class Municipality : BaseEntity() {
 
     @Transient
     var distanceInMeters: Double? = null
+
+    @Column(columnDefinition = "geometry")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    var geometry: Polygon? = null
 
     fun addWard(ward: Ward) {
         wards.add(ward)

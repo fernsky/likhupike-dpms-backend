@@ -4,12 +4,14 @@ import np.gov.mofaga.imis.location.api.dto.mapper.DistrictMapper
 import np.gov.mofaga.imis.location.api.dto.mapper.LocationSummaryMapper
 import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.District
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 @Component
 class DistrictMapperImpl(
     private val locationSummaryMapper: LocationSummaryMapper,
+    private val geometryConverter: GeometryConverter,
 ) : DistrictMapper {
     override fun toResponse(district: District): DistrictResponse {
         validateRequiredFields(district)
@@ -44,6 +46,7 @@ class DistrictMapperImpl(
             municipalities =
                 district.municipalities
                     .map { locationSummaryMapper.toMunicipalitySummary(it) },
+            geometry = geometryConverter.convertToGeoJson(district.geometry),
         )
     }
 

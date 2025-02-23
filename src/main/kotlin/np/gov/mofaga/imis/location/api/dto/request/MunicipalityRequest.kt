@@ -1,8 +1,10 @@
 package np.gov.mofaga.imis.location.api.dto.request
 
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.Valid
 import jakarta.validation.constraints.*
 import np.gov.mofaga.imis.location.domain.MunicipalityType
+import np.gov.mofaga.imis.shared.dto.GeometryRequest
 import java.math.BigDecimal
 import java.util.*
 
@@ -45,6 +47,10 @@ data class CreateMunicipalityRequest(
     @field:NotNull(message = "District ID is required")
     @Schema(description = "ID of the district this municipality belongs to")
     val districtCode: String,
+    @field:NotNull(message = "Geometry is required")
+    @field:Valid
+    @Schema(description = "Geometry data of the municipality")
+    val geometry: GeometryRequest,
 )
 
 @Schema(description = "Request payload for updating an existing municipality")
@@ -74,4 +80,7 @@ data class UpdateMunicipalityRequest(
     @field:Max(value = 35, message = "Total wards cannot exceed 35")
     @Schema(description = "Total number of wards", example = "33")
     val totalWards: Int?,
+    @field:Valid
+    @Schema(description = "Geometry data of the municipality")
+    val geometry: GeometryRequest?,
 )

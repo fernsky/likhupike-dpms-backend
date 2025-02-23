@@ -2,6 +2,9 @@ package np.gov.mofaga.imis.location.domain
 
 import jakarta.persistence.*
 import np.gov.mofaga.imis.common.entity.BaseEntity
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+import org.locationtech.jts.geom.Polygon
 import java.math.BigDecimal
 
 @Entity
@@ -16,6 +19,7 @@ import java.math.BigDecimal
     indexes = [
         Index(name = "idx_wards_number", columnList = "ward_number"),
         Index(name = "idx_wards_municipality", columnList = "municipality_code"),
+        Index(name = "idx_wards_geometry", columnList = "geometry"),
     ],
 )
 class Ward : BaseEntity() {
@@ -43,6 +47,10 @@ class Ward : BaseEntity() {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "municipality_code", nullable = false)
     var municipality: Municipality? = null
+
+    @Column(columnDefinition = "geometry")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    var geometry: Polygon? = null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

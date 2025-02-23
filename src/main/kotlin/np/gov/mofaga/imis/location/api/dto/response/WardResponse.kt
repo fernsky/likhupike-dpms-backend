@@ -1,5 +1,6 @@
 package np.gov.mofaga.imis.location.api.dto.response
 
+import org.geojson.GeoJsonObject
 import java.math.BigDecimal
 import java.util.*
 
@@ -23,6 +24,7 @@ data class WardDetailResponse(
     val officeLocation: String?,
     val officeLocationNepali: String?,
     val municipality: MunicipalitySummaryResponse,
+    val geometry: GeoJsonObject?,
 )
 
 data class WardSummaryResponse(

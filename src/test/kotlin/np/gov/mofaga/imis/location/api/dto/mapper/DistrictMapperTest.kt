@@ -5,16 +5,18 @@ import io.mockk.mockk
 import io.mockk.verify
 import np.gov.mofaga.imis.location.api.dto.mapper.impl.DistrictMapperImpl
 import np.gov.mofaga.imis.location.api.dto.response.DistrictSummaryResponse
-import np.gov.mofaga.imis.location.api.dto.response.ProvinceDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceSummaryResponse
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.location.test.fixtures.MunicipalityTestFixtures
+import np.gov.mofaga.imis.shared.util.GeometryConverter
+import org.geojson.GeoJsonObject
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.locationtech.jts.geom.Polygon
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -23,11 +25,18 @@ import kotlin.test.assertNotNull
 class DistrictMapperTest {
     private lateinit var districtMapper: DistrictMapper
     private lateinit var locationSummaryMapper: LocationSummaryMapper
+    private val geometryConverter = mockk<GeometryConverter>()
+    private val mockGeoJson = mockk<GeoJsonObject>()
+    private val mockGeometry = mockk<Polygon>()
 
     @BeforeEach
     fun setup() {
         locationSummaryMapper = mockk<LocationSummaryMapper>()
-        districtMapper = DistrictMapperImpl(locationSummaryMapper)
+        districtMapper = DistrictMapperImpl(locationSummaryMapper, geometryConverter)
+
+        every {
+            geometryConverter.convertToGeoJson(any())
+        } returns mockGeoJson
     }
 
     @Nested
@@ -202,6 +211,7 @@ class DistrictMapperTest {
             headquarter = "Test HQ"
             headquarterNepali = "परीक्षण सदरमुकाम"
             this.province = province
+            this.geometry = mockGeometry // Using the class-level mockGeometry property
         }
     }
 
@@ -210,17 +220,5 @@ class DistrictMapperTest {
             code = "P1",
             name = "Test Province",
             nameNepali = "परीक्षण प्रदेश",
-        )
-
-    private fun createTestProvinceDetail() =
-        ProvinceDetailResponse(
-            code = "P1",
-            name = "Test Province",
-            nameNepali = "परीक्षण प्रदेश",
-            area = BigDecimal("1000.00"),
-            population = 1000000L,
-            headquarter = "Test HQ",
-            headquarterNepali = "परीक्षण सदरमुकाम",
-            districts = emptyList(),
         )
 }

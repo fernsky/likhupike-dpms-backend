@@ -5,6 +5,8 @@ import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.shared.dto.GeometryRequest
+import org.geojson.GeoJsonObject
+import org.geojson.LngLatAlt
 import java.math.BigDecimal
 
 object ProvinceTestFixtures {
@@ -126,6 +128,7 @@ object ProvinceTestFixtures {
         headquarter: String = "Test Headquarter",
         headquarterNepali: String = "परीक्षण सदरमुकाम",
         districts: List<DistrictSummaryResponse> = createDistrictSummaries(),
+        geometry: GeoJsonObject? = createTestGeometry(),
     ) = ProvinceDetailResponse(
         code = code,
         name = name,
@@ -135,7 +138,36 @@ object ProvinceTestFixtures {
         headquarter = headquarter,
         headquarterNepali = headquarterNepali,
         districts = districts,
+        geometry = geometry,
     )
+
+    fun createTestGeometry(): GeoJsonObject {
+        val polygon = org.geojson.Polygon()
+
+        // Create and set exterior ring first
+        val exteriorRing =
+            listOf(
+                LngLatAlt(85.3, 27.7),
+                LngLatAlt(85.4, 27.7),
+                LngLatAlt(85.4, 27.8),
+                LngLatAlt(85.3, 27.8),
+                LngLatAlt(85.3, 27.7), // Close the ring
+            )
+        polygon.coordinates = mutableListOf(exteriorRing)
+
+        // Add interior ring if needed
+        val interiorRing =
+            listOf(
+                LngLatAlt(85.35, 27.72),
+                LngLatAlt(85.38, 27.72),
+                LngLatAlt(85.38, 27.75),
+                LngLatAlt(85.35, 27.75),
+                LngLatAlt(85.35, 27.72), // Close the ring
+            )
+        polygon.coordinates.add(interiorRing)
+
+        return polygon
+    }
 
     fun createProvinceSummaryResponse(
         code: String = generateUniqueCode(),
