@@ -4,6 +4,7 @@ import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.request.CreateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceDetailResponse
+import np.gov.mofaga.imis.location.api.dto.response.ProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceResponse
 import org.springframework.data.domain.Page
 import org.springframework.security.access.prepost.PreAuthorize
@@ -35,7 +36,6 @@ interface ProvinceService {
      * Gets detailed province information with statistics
      * @throws ProvinceNotFoundException if province not found
      */
-    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun getProvinceDetail(code: String): ProvinceDetailResponse
 
@@ -43,28 +43,26 @@ interface ProvinceService {
      * Gets basic province information
      * @throws ProvinceNotFoundException if province not found
      */
-    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun getProvince(code: String): ProvinceResponse
 
     /**
      * Searches provinces based on various criteria
      */
-    @PreAuthorize("isAuthenticated()")
+
     @Transactional(readOnly = true)
-    fun searchProvinces(criteria: ProvinceSearchCriteria): Page<ProvinceResponse>
+    fun searchProvinces(criteria: ProvinceSearchCriteria): Page<ProvinceProjection>
 
     /**
      * Lists all provinces
      */
-    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun getAllProvinces(): List<ProvinceResponse>
 
     /**
      * Finds large provinces based on area and population
      */
-    @PreAuthorize("isAuthenticated()")
+
     @Transactional(readOnly = true)
     fun findLargeProvinces(
         minArea: BigDecimal,

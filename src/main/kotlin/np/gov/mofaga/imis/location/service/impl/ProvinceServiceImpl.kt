@@ -1,10 +1,12 @@
 package np.gov.mofaga.imis.location.service.impl
 
 import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
+import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
 import np.gov.mofaga.imis.location.api.dto.mapper.ProvinceMapper
 import np.gov.mofaga.imis.location.api.dto.request.CreateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceDetailResponse
+import np.gov.mofaga.imis.location.api.dto.response.ProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceResponse
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.location.exception.*
@@ -87,7 +89,7 @@ class ProvinceServiceImpl(
         return getProvinceEntity(code).let { provinceMapper.toResponse(it) }
     }
 
-    override fun searchProvinces(criteria: ProvinceSearchCriteria): Page<ProvinceResponse> {
+    override fun searchProvinces(criteria: ProvinceSearchCriteria): Page<ProvinceProjection> {
         logger.debug("Searching provinces with criteria: $criteria")
 
         val specification = ProvinceSpecifications.withSearchCriteria(criteria)
@@ -98,9 +100,37 @@ class ProvinceServiceImpl(
                 Sort.by(criteria.sortDirection, criteria.sortBy.toEntityField()),
             )
 
+        val fields = buildFieldSet(criteria)
+
         return provinceRepository
             .findAll(specification, pageable)
-            .map { provinceMapper.toResponse(it) }
+            .map { province -> provinceMapper.toProjection(province, fields) }
+    }
+
+    private fun buildFieldSet(criteria: ProvinceSearchCriteria): Set<ProvinceField> {
+        val fields = criteria.fields.toMutableSet()
+
+        // Add required fields based on criteria flags
+        if (criteria.includeTotals) {
+            fields.addAll(
+                setOf(
+                    ProvinceField.TOTAL_AREA,
+                    ProvinceField.TOTAL_POPULATION,
+                    ProvinceField.TOTAL_MUNICIPALITIES,
+                    ProvinceField.DISTRICT_COUNT,
+                ),
+            )
+        }
+
+        if (criteria.includeGeometry) {
+            fields.add(ProvinceField.GEOMETRY)
+        }
+
+        if (criteria.includeDistricts) {
+            fields.add(ProvinceField.DISTRICTS)
+        }
+
+        return fields
     }
 
     override fun getAllProvinces(): List<ProvinceResponse> {

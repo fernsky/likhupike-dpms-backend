@@ -7,10 +7,14 @@ import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.shared.dto.GeometryRequest
 import org.geojson.GeoJsonObject
 import org.geojson.LngLatAlt
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.PrecisionModel
 import java.math.BigDecimal
 
 object ProvinceTestFixtures {
     private var counter = 0L
+    private val geometryFactory = GeometryFactory(PrecisionModel(), 4326)
 
     private fun generateUniqueCode(): String {
         val timestamp = System.currentTimeMillis()
@@ -188,4 +192,65 @@ object ProvinceTestFixtures {
                 municipalityCount = 5,
             )
         }
+
+    fun createProvinceProjection(
+        code: String,
+        includeTotals: Boolean = false,
+        includeGeometry: Boolean = false,
+        includeDistricts: Boolean = false,
+    ): ProvinceProjection =
+        TestProvinceProjection(
+            code = code,
+            name = "Test Province",
+            nameNepali = "परीक्षण प्रदेश",
+            area = BigDecimal("1000.00"),
+            population = 500000L,
+            headquarter = "Test HQ",
+            headquarterNepali = "परीक्षण सदरमुकाम",
+            totalArea = if (includeTotals) BigDecimal("950.00") else null,
+            totalPopulation = if (includeTotals) 450000L else null,
+            totalMunicipalities = if (includeTotals) 10 else null,
+            districtCount = if (includeTotals) 5 else null,
+            geometry = if (includeGeometry) createTestGeometry() else null,
+            districts = if (includeDistricts) createDistrictSummaries() else null,
+        )
+
+    fun createSearchTestData(): List<Province> =
+        listOf(
+            Province().apply {
+                name = "Bagmati Province"
+                nameNepali = "बागमती प्रदेश"
+                code = "P3"
+                population = 6084042
+                area = BigDecimal("20300.0")
+                geometry = createSampleGeometry(27.0, 85.0)
+            },
+            Province().apply {
+                name = "Gandaki Province"
+                nameNepali = "गण्डकी प्रदेश"
+                code = "P4"
+                area = BigDecimal("21504.00")
+                population = 2403757L
+            },
+            Province().apply {
+                name = "Lumbini Province"
+                nameNepali = "लुम्बिनी प्रदेश"
+                code = "P5"
+                area = BigDecimal("22288.00")
+                population = 4499272L
+            },
+        )
+
+    private fun createSampleGeometry(
+        lat: Double,
+        lon: Double,
+    ) = geometryFactory.createPolygon(
+        arrayOf(
+            Coordinate(lon, lat),
+            Coordinate(lon + 1, lat),
+            Coordinate(lon + 1, lat + 1),
+            Coordinate(lon, lat + 1),
+            Coordinate(lon, lat),
+        ),
+    )
 }

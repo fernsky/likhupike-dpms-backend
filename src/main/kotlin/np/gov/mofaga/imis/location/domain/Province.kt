@@ -13,7 +13,6 @@ import java.math.BigDecimal
     indexes = [
         Index(name = "idx_provinces_name", columnList = "name"),
         Index(name = "idx_provinces_code", columnList = "code"),
-        Index(name = "idx_provinces_geometry", columnList = "geometry"),
     ],
 )
 class Province : BaseEntity() {

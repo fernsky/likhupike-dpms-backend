@@ -21,7 +21,6 @@ import java.math.BigDecimal
         Index(name = "idx_municipalities_code", columnList = "code"),
         Index(name = "idx_municipalities_district", columnList = "district_code"),
         Index(name = "idx_municipalities_type", columnList = "type"),
-        Index(name = "idx_municipalities_geometry", columnList = "geometry"),
     ],
 )
 class Municipality : BaseEntity() {
@@ -54,7 +53,7 @@ class Municipality : BaseEntity() {
     var totalWards: Int? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "district_code", nullable = false)
+    @JoinColumn(name = "district_code", nullable = false, referencedColumnName = "code")
     var district: District? = null
 
     @OneToMany(mappedBy = "municipality", cascade = [CascadeType.ALL])

@@ -7,6 +7,7 @@ import np.gov.mofaga.imis.location.api.dto.response.MunicipalityResponse
 import np.gov.mofaga.imis.location.api.dto.response.MunicipalitySummaryResponse
 import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.shared.util.GeometryConverter
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Component
@@ -14,8 +15,17 @@ class MunicipalityMapperImpl(
     private val districtMapper: DistrictMapper,
     private val geometryConverter: GeometryConverter,
 ) : MunicipalityMapper {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     override fun toResponse(municipality: Municipality): MunicipalityResponse {
         validateRequiredFields(municipality)
+        logger.debug(
+            "Municipality details: code=${municipality.code}, name=${municipality.name}, " +
+                "nameNepali=${municipality.nameNepali}, type=${municipality.type}, area=${municipality.area}, " +
+                "population=${municipality.population}, latitude=${municipality.latitude}, " +
+                "longitude=${municipality.longitude}, totalWards=${municipality.totalWards}, " +
+                "district=${municipality.district?.code}",
+        )
 
         return MunicipalityResponse(
             code = municipality.code!!,

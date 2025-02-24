@@ -48,25 +48,25 @@ class SecurityConfig(
                         "/api/v1/provinces/**",
                         "/api/v1/districts/**",
                         "/api/v1/municipalities/**",
-                        "/api/v1/wards/**"
+                        "/api/v1/wards/**",
                     ).permitAll()
                     // Super Admin only endpoints
                     .requestMatchers(
                         HttpMethod.POST,
                         "/api/v1/provinces/**",
                         "/api/v1/districts/**",
-                        "/api/v1/municipalities/**"
+                        "/api/v1/municipalities/**",
                     ).hasRole("SUPER_ADMIN")
                     .requestMatchers(
                         HttpMethod.PUT,
                         "/api/v1/provinces/**",
                         "/api/v1/districts/**",
-                        "/api/v1/municipalities/**"
+                        "/api/v1/municipalities/**",
                     ).hasRole("SUPER_ADMIN")
                     // Municipality Admin and Super Admin endpoints
                     .requestMatchers(
                         HttpMethod.PUT,
-                        "/api/v1/wards/**"
+                        "/api/v1/wards/**",
                     ).hasAnyRole("MUNICIPALITY_ADMIN", "SUPER_ADMIN")
                     // Default rule - require authentication for any other endpoint
                     .anyRequest()

@@ -6,9 +6,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
+import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
 import np.gov.mofaga.imis.location.api.dto.request.CreateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceDetailResponse
+import np.gov.mofaga.imis.location.api.dto.response.ProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceResponse
 import np.gov.mofaga.imis.location.service.ProvinceService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
@@ -70,16 +72,40 @@ class ProvinceController(
         return ResponseEntity.ok(ApiResponse.success(data = provinceDetail))
     }
 
-    @Operation(summary = "Search provinces", description = "Search provinces with various filters and criteria")
+    @Operation(
+        summary = "Search provinces",
+        description = "Search provinces with various filters and criteria. Supports field selection and dynamic loading of related data.",
+    )
     @GetMapping("/search")
     fun searchProvinces(
         @Parameter(description = "Search criteria")
         @Valid criteria: ProvinceSearchCriteria,
-    ): ResponseEntity<ApiResponse<PagedResponse<ProvinceResponse>>> {
-        logger.debug("Searching provinces with criteria: $criteria")
-        val searchResults = provinceService.searchProvinces(criteria)
+        @Parameter(
+            description =
+                "Comma-separated list of fields to include. Available fields: " +
+                    "CODE, NAME, NAME_NEPALI, AREA, POPULATION, HEADQUARTER, HEADQUARTER_NEPALI, " +
+                    "DISTRICT_COUNT, TOTAL_MUNICIPALITIES, TOTAL_POPULATION, TOTAL_AREA, GEOMETRY, " +
+                    "DISTRICTS, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY",
+        )
+        @RequestParam(required = false) fields: String?,
+    ): ResponseEntity<ApiResponse<PagedResponse<ProvinceProjection>>> {
+        logger.debug("Searching provinces with criteria: $criteria, fields: $fields")
+
+        val selectedFields =
+            fields
+                ?.split(",")
+                ?.map { ProvinceField.fromString(it.trim()) }
+                ?.toSet()
+                ?: criteria.fields
+
+        val searchCriteria = criteria.copy(fields = selectedFields)
+        val searchResults = provinceService.searchProvinces(searchCriteria)
+
         return ResponseEntity.ok(
-            ApiResponse.success(data = PagedResponse.from(searchResults)),
+            ApiResponse.success(
+                data = PagedResponse.from(searchResults),
+                message = "Found ${searchResults.totalElements} provinces",
+            ),
         )
     }
 

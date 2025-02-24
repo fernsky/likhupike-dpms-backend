@@ -6,6 +6,7 @@ import np.gov.mofaga.imis.auth.test.UserTestDataFactory
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.controller.ProvinceController
 import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
+import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
 import np.gov.mofaga.imis.location.service.ProvinceService
 import np.gov.mofaga.imis.location.test.fixtures.ProvinceTestFixtures
 import np.gov.mofaga.imis.shared.service.SecurityService
@@ -151,14 +152,14 @@ class ProvinceControllerIntegrationTest {
             val expectedResults =
                 PageImpl(
                     listOf(
-                        ProvinceTestFixtures.createProvinceResponse(code = "TEST-P1"),
-                        ProvinceTestFixtures.createProvinceResponse(code = "TEST-P2"),
+                        ProvinceTestFixtures.createProvinceProjection(code = "TEST-P1"),
+                        ProvinceTestFixtures.createProvinceProjection(code = "TEST-P2"),
                     ),
                     PageRequest.of(0, 10),
                     2,
                 )
 
-            whenever(provinceService.searchProvinces(criteria))
+            whenever(provinceService.searchProvinces(any()))
                 .thenReturn(expectedResults)
 
             // Act & Assert
@@ -171,6 +172,63 @@ class ProvinceControllerIntegrationTest {
                 ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.content").isArray)
                 .andExpect(jsonPath("$.data.totalElements").value(2))
+        }
+
+        @Test
+        fun `should search provinces with criteria and fields`() {
+            // Arrange
+            mockLoggedInUser(viewer)
+            val criteria =
+                ProvinceSearchCriteria(
+                    searchTerm = "Test",
+                    page = 0,
+                    pageSize = 10,
+                    includeTotals = true,
+                    includeGeometry = true,
+                    includeDistricts = true,
+                    fields = setOf(ProvinceField.NAME, ProvinceField.CODE),
+                )
+
+            val expectedResults =
+                PageImpl(
+                    listOf(
+                        ProvinceTestFixtures.createProvinceProjection(
+                            code = "TEST-P1",
+                            includeTotals = true,
+                            includeGeometry = true,
+                            includeDistricts = true,
+                        ),
+                        ProvinceTestFixtures.createProvinceProjection(
+                            code = "TEST-P2",
+                            includeTotals = true,
+                            includeGeometry = true,
+                            includeDistricts = true,
+                        ),
+                    ),
+                    PageRequest.of(0, 10),
+                    2,
+                )
+
+            whenever(provinceService.searchProvinces(any()))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
+            mockMvc
+                .perform(
+                    get("/api/v1/provinces/search")
+                        .param("searchTerm", criteria.searchTerm)
+                        .param("page", criteria.page.toString())
+                        .param("pageSize", criteria.pageSize.toString())
+                        .param("includeTotals", "true")
+                        .param("includeGeometry", "true")
+                        .param("includeDistricts", "true")
+                        .param("fields", "NAME,CODE"),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.content").isArray)
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.content[0].totalArea").exists())
+                .andExpect(jsonPath("$.data.content[0].geometry").exists())
+                .andExpect(jsonPath("$.data.content[0].districts").exists())
         }
     }
 
