@@ -226,6 +226,60 @@ class MunicipalityControllerTest {
     }
 
     @Nested
+    @DisplayName("Dynamic Search Tests")
+    inner class DynamicSearchTests {
+        @Test
+        fun `should search with specific fields`() {
+            // Arrange
+            loginAs(viewer)
+            val fields = "CODE,NAME,TYPE"
+            val projection =
+                MunicipalityTestFixtures.createMunicipalityProjection(
+                    code = "TEST-M1",
+                    fields = setOf(MunicipalityField.CODE, MunicipalityField.NAME, MunicipalityField.TYPE),
+                )
+            val expectedResults = PageImpl(listOf(projection))
+
+            whenever(municipalityService.searchMunicipalities(any()))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
+            mockMvc
+                .perform(
+                    get("/api/v1/municipalities/search")
+                        .param("fields", fields),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.content[0].code").exists())
+                .andExpect(jsonPath("$.data.content[0].name").exists())
+                .andExpect(jsonPath("$.data.content[0].type").exists())
+                .andExpect(jsonPath("$.data.content[0].area").doesNotExist())
+        }
+
+        @Test
+        fun `should search with geometry included`() {
+            // Arrange
+            loginAs(viewer)
+            val projection =
+                MunicipalityTestFixtures.createMunicipalityProjection(
+                    code = "TEST-M1",
+                    includeGeometry = true,
+                )
+            val expectedResults = PageImpl(listOf(projection))
+
+            whenever(municipalityService.searchMunicipalities(any()))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
+            mockMvc
+                .perform(
+                    get("/api/v1/municipalities/search")
+                        .param("fields", "CODE,GEOMETRY"),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.content[0].geometry").exists())
+        }
+    }
+
+    @Nested
     @DisplayName("Detail Tests")
     inner class DetailAndStatsTests {
         @Test

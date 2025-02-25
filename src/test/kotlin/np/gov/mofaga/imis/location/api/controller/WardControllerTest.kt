@@ -11,6 +11,8 @@ import np.gov.mofaga.imis.location.service.WardService
 import np.gov.mofaga.imis.location.test.fixtures.WardTestFixtures
 import np.gov.mofaga.imis.shared.service.SecurityService
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
@@ -125,6 +127,60 @@ class WardControllerTest {
                     .content(objectMapper.writeValueAsString(request))
                     .with(csrf()),
             ).andExpect(status().isForbidden)
+    }
+
+    @Nested
+    @DisplayName("Dynamic Search Tests")
+    inner class DynamicSearchTests {
+        @Test
+        fun `should search with specific fields`() {
+            // Arrange
+            loginAs(viewer)
+            val fields = "WARD_NUMBER,POPULATION,MUNICIPALITY"
+            val projection =
+                WardTestFixtures.createWardProjection(
+                    wardNumber = 1,
+                    fields = setOf(WardField.WARD_NUMBER, WardField.POPULATION, WardField.MUNICIPALITY),
+                )
+            val expectedResults = PageImpl(listOf(projection))
+
+            whenever(wardService.searchWards(any()))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
+            mockMvc
+                .perform(
+                    get("/api/v1/wards/search")
+                        .param("fields", fields),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.content[0].wardNumber").exists())
+                .andExpect(jsonPath("$.data.content[0].population").exists())
+                .andExpect(jsonPath("$.data.content[0].municipality").exists())
+                .andExpect(jsonPath("$.data.content[0].area").doesNotExist())
+        }
+
+        @Test
+        fun `should search with geometry included`() {
+            // Arrange
+            loginAs(viewer)
+            val projection =
+                WardTestFixtures.createWardProjection(
+                    wardNumber = 1,
+                    includeGeometry = true,
+                )
+            val expectedResults = PageImpl(listOf(projection))
+
+            whenever(wardService.searchWards(any()))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
+            mockMvc
+                .perform(
+                    get("/api/v1/wards/search")
+                        .param("fields", "WARD_NUMBER,GEOMETRY"),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.content[0].geometry").exists())
+        }
     }
 
     // Helper methods

@@ -1,8 +1,8 @@
 package np.gov.mofaga.imis.location.api.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import np.gov.mofaga.imis.config.IntegrationTest
 import np.gov.mofaga.imis.auth.test.UserTestDataFactory
+import np.gov.mofaga.imis.config.IntegrationTest
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.location.repository.DistrictRepository
@@ -29,7 +29,6 @@ import javax.sql.DataSource
 @IntegrationTest
 @DisplayName("District Controller Integration Tests")
 class DistrictControllerIntegrationTest {
-
     @Autowired
     private lateinit var mockMvc: MockMvc
 
@@ -54,16 +53,18 @@ class DistrictControllerIntegrationTest {
     @BeforeEach
     fun setup() {
         // Create test province using fixture
-        testProvince = ProvinceTestFixtures.createProvince(
-            code = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}"
-        )
+        testProvince =
+            ProvinceTestFixtures.createProvince(
+                code = "TEST-P-${UUID.randomUUID().toString().substring(0, 2)}",
+            )
         testProvince = provinceRepository.save(testProvince)
 
         // Create test district using fixture
-        testDistrict = DistrictTestFixtures.createDistrict(
-            province = testProvince,
-            code = "TEST-D-${UUID.randomUUID().toString().substring(0, 2)}"
-        )
+        testDistrict =
+            DistrictTestFixtures.createDistrict(
+                province = testProvince,
+                code = "TEST-D-${UUID.randomUUID().toString().substring(0, 2)}",
+            )
         testDistrict = districtRepository.save(testDistrict)
     }
 
@@ -79,24 +80,25 @@ class DistrictControllerIntegrationTest {
         fun `should create district when super admin`() {
             loginAs(superAdmin)
 
-            val request = DistrictTestFixtures.createDistrictRequest(
-                provinceCode = testProvince.code!!,
-                name = "New District",
-                nameNepali = "नयाँ जिल्ला",
-                code = "TEST-D-NEW",
-                area = BigDecimal("1000.50"),
-                population = 100000L,
-                headquarter = "Test HQ",
-                headquarterNepali = "परीक्षण सदरमुकाम"
-            )
+            val request =
+                DistrictTestFixtures.createDistrictRequest(
+                    provinceCode = testProvince.code!!,
+                    name = "New District",
+                    nameNepali = "नयाँ जिल्ला",
+                    code = "TEST-D-NEW",
+                    area = BigDecimal("1000.50"),
+                    population = 100000L,
+                    headquarter = "Test HQ",
+                    headquarterNepali = "परीक्षण सदरमुकाम",
+                )
 
-            mockMvc.perform(
-                post("/api/v1/districts")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request))
-                    .with(csrf())
-            )
-                .andExpect(status().isOk)
+            mockMvc
+                .perform(
+                    post("/api/v1/districts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(csrf()),
+                ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.data.code").value(request.code))
                 .andExpect(jsonPath("$.data.name").value(request.name))
                 .andExpect(jsonPath("$.data.nameNepali").value(request.nameNepali))

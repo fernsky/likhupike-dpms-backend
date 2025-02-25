@@ -200,6 +200,60 @@ class DistrictControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("Dynamic Search Tests")
+    inner class DynamicSearchTests {
+        @Test
+        fun `should search with specific fields`() {
+            // Arrange
+            loginAs(viewer)
+            val fields = "CODE,NAME,POPULATION"
+            val projection =
+                DistrictTestFixtures.createDistrictProjection(
+                    code = "TEST-D1",
+                    fields = setOf(DistrictField.CODE, DistrictField.NAME, DistrictField.POPULATION),
+                )
+            val expectedResults = PageImpl(listOf(projection))
+
+            whenever(districtService.searchDistricts(any()))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
+            mockMvc
+                .perform(
+                    get("/api/v1/districts/search")
+                        .param("fields", fields),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.content[0].code").exists())
+                .andExpect(jsonPath("$.data.content[0].name").exists())
+                .andExpect(jsonPath("$.data.content[0].population").exists())
+                .andExpect(jsonPath("$.data.content[0].area").doesNotExist())
+        }
+
+        @Test
+        fun `should search with municipalities included`() {
+            // Arrange
+            loginAs(viewer)
+            val projection =
+                DistrictTestFixtures.createDistrictProjection(
+                    code = "TEST-D1",
+                    includeMunicipalities = true,
+                )
+            val expectedResults = PageImpl(listOf(projection))
+
+            whenever(districtService.searchDistricts(any()))
+                .thenReturn(expectedResults)
+
+            // Act & Assert
+            mockMvc
+                .perform(
+                    get("/api/v1/districts/search")
+                        .param("fields", "CODE,MUNICIPALITIES"),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.content[0].municipalities").exists())
+        }
+    }
+
     // TODO: Fix this failing test
     // @Nested
     // @DisplayName("Update District Tests")
