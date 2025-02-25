@@ -20,7 +20,16 @@ enum class ProvinceField {
     UPDATED_BY,
     ;
 
-    fun toJsonFieldName(): String = name.lowercase().replace("_", "-")
+    fun toJsonFieldName(): String =
+        name
+            .split('_')
+            .mapIndexed { index, part ->
+                if (index == 0) {
+                    part.lowercase()
+                } else {
+                    part.lowercase().capitalize()
+                }
+            }.joinToString("")
 
     fun toPropertyName(): String = name.lowercase().replace("_", "")
 
