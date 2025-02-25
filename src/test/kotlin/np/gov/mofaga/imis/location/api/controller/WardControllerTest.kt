@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -136,14 +138,14 @@ class WardControllerTest {
         @Test
         fun `should search with specific fields`() {
             // Arrange
-            loginAs(viewer)
+            mockLoggedInUser(viewer) // Changed from loginAs
             val fields = "WARD_NUMBER,POPULATION,MUNICIPALITY"
             val projection =
                 WardTestFixtures.createWardProjection(
                     wardNumber = 1,
                     fields = setOf(WardField.WARD_NUMBER, WardField.POPULATION, WardField.MUNICIPALITY),
                 )
-            val expectedResults = PageImpl(listOf(projection))
+            val expectedResults: Page<DynamicWardProjection> = PageImpl(listOf(projection))
 
             whenever(wardService.searchWards(any()))
                 .thenReturn(expectedResults)
@@ -163,13 +165,13 @@ class WardControllerTest {
         @Test
         fun `should search with geometry included`() {
             // Arrange
-            loginAs(viewer)
+            mockLoggedInUser(viewer) // Changed from loginAs
             val projection =
                 WardTestFixtures.createWardProjection(
                     wardNumber = 1,
                     includeGeometry = true,
                 )
-            val expectedResults = PageImpl(listOf(projection))
+            val expectedResults: Page<DynamicWardProjection> = PageImpl(listOf(projection))
 
             whenever(wardService.searchWards(any()))
                 .thenReturn(expectedResults)
