@@ -26,7 +26,7 @@ enum class ProvinceSortField {
     CODE,
     POPULATION,
     AREA,
-    DISTRIC\T_COUNT,
+    DISTRICT_COUNT,
     CREATED_AT,
     ;
 
