@@ -9,6 +9,9 @@ data class WardSearchCriteria(
     val municipalityCode: String? = null,
     val districtCode: String? = null,
     val provinceCode: String? = null,
+    val fields: Set<WardField> = WardField.DEFAULT_FIELDS,
+    val includeTotals: Boolean = false,
+    val includeGeometry: Boolean = false,
     val wardNumber: Int? = null,
     @field:Min(1) @field:Max(33)
     val wardNumberFrom: Int? = null,

@@ -9,13 +9,17 @@ import java.math.BigDecimal
 import java.util.*
 
 data class MunicipalitySearchCriteria(
-    @field:Size(max = 100)
+    @field:Size(max = 100, message = "Search term must not exceed 100 characters")
     val searchTerm: String? = null,
-    @field:Pattern(regexp = "^[A-Z0-9]{1,10}$")
+    @field:Pattern(regexp = "^[A-Z0-9]{1,10}$", message = "Code must be 1-10 uppercase letters or numbers")
     val code: String? = null,
     val districtCode: String? = null,
     val provinceCode: String? = null,
     val types: Set<MunicipalityType>? = null,
+    val fields: Set<MunicipalityField> = MunicipalityField.DEFAULT_FIELDS,
+    val includeTotals: Boolean = false,
+    val includeGeometry: Boolean = false,
+    val includeWards: Boolean = false,
     @field:Min(1) @field:Max(33)
     val minWards: Int? = null,
     @field:Min(1) @field:Max(33)
