@@ -160,13 +160,13 @@ class MunicipalityServiceIntegrationTest {
                     MunicipalityTestFixtures.createMunicipality(
                         district = testDistrict,
                         name = "Test Municipality 1",
-                        code = "TEST-M1", // Fixed: Unique code
+                        code = "TEST-M1",
                         population = 50000,
                     ),
                     MunicipalityTestFixtures.createMunicipality(
                         district = testDistrict,
                         name = "Test Municipality 2",
-                        code = "TEST-M2", // Fixed: Unique code
+                        code = "TEST-M2",
                         population = 100000,
                     ),
                 )
@@ -175,6 +175,8 @@ class MunicipalityServiceIntegrationTest {
             val criteria =
                 MunicipalitySearchCriteria(
                     searchTerm = "Test",
+                    districtCode = testDistrict.code,
+                    fields = setOf(MunicipalityField.NAME, MunicipalityField.POPULATION),
                     sortBy = MunicipalitySortField.POPULATION,
                     sortDirection = Sort.Direction.DESC,
                     page = 0,
@@ -187,14 +189,13 @@ class MunicipalityServiceIntegrationTest {
             // Then
             assertEquals(2, result.totalElements)
             val firstResult = result.content.first()
-            assertEquals(
-                "Test Municipality 2",
-                firstResult.getValue(MunicipalityField.NAME) as String,
-            )
-            assertEquals(
-                100000L,
-                firstResult.getValue(MunicipalityField.POPULATION) as Long,
-            )
+
+            // Safe type casting using Number for numeric values
+            val name = firstResult.getValue(MunicipalityField.NAME) as String
+            val population = (firstResult.getValue(MunicipalityField.POPULATION) as Number).toLong()
+
+            assertEquals("Test Municipality 2", name)
+            assertEquals(100000L, population)
         }
     }
 
