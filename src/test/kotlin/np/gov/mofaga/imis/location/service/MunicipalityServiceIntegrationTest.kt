@@ -2,6 +2,7 @@ package np.gov.mofaga.imis.location.service
 
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.MunicipalitySearchCriteria
+import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
 import np.gov.mofaga.imis.location.api.dto.enums.MunicipalitySortField
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Province
@@ -28,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-
 
 @WebMvcTest(MunicipalityService::class)
 @AutoConfigureMockMvc
@@ -186,8 +186,15 @@ class MunicipalityServiceIntegrationTest {
 
             // Then
             assertEquals(2, result.totalElements)
-            assertEquals("Test Municipality 2", result.content.first().name)
-            assertEquals(100000, result.content.first().population)
+            val firstResult = result.content.first()
+            assertEquals(
+                "Test Municipality 2",
+                firstResult.getValue(MunicipalityField.NAME) as String,
+            )
+            assertEquals(
+                100000L,
+                firstResult.getValue(MunicipalityField.POPULATION) as Long,
+            )
         }
     }
 

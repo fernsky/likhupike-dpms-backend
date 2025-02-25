@@ -2,6 +2,7 @@ package np.gov.mofaga.imis.location.performance
 import np.gov.mofaga.imis.auth.test.UserTestDataFactory
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSortField
+import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.location.repository.ProvinceRepository
 import np.gov.mofaga.imis.location.service.DistrictService
@@ -140,18 +141,21 @@ class DistrictPerformanceTest {
             districtService
                 .searchDistricts(
                     DistrictSearchCriteria(
-                        code = testProvince.code,
+                        provinceCode = testProvince.code,
                         page = 0,
                         pageSize = 50,
                     ),
                 ).content
+                .map { projection ->
+                    projection.getValue(DistrictField.CODE) as String
+                }
 
         val elapsed =
             measureTimeMillis {
-                districts.forEach { district ->
+                districts.forEach { districtCode ->
                     try {
                         districtService.updateDistrict(
-                            district.code,
+                            districtCode,
                             DistrictTestFixtures.createUpdateDistrictRequest(),
                         )
                     } catch (e: Exception) {

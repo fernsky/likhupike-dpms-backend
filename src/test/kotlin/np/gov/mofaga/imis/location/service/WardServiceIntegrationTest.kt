@@ -2,6 +2,7 @@ package np.gov.mofaga.imis.location.service
 
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.WardSearchCriteria
+import np.gov.mofaga.imis.location.api.dto.enums.WardField
 import np.gov.mofaga.imis.location.api.dto.response.WardResponse
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Municipality
@@ -212,8 +213,11 @@ class WardServiceIntegrationTest {
             // Then
             assertTrue(result.totalElements > 0)
             result.content.forEach { ward ->
-                assertTrue(ward.population!! in 1000L..2000L)
-                assertEquals(testMunicipality.code, ward.municipality.code)
+                val population = ward.getValue(WardField.POPULATION) as Long
+                val municipalityData = ward.getValue(WardField.MUNICIPALITY) as Map<String, Any>
+
+                assertTrue(population in 1000L..2000L)
+                assertEquals(testMunicipality.code, municipalityData["code"])
             }
         }
     }

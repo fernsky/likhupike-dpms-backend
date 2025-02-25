@@ -3,6 +3,7 @@ package np.gov.mofaga.imis.location.service
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSortField
+import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.location.exception.*
 import np.gov.mofaga.imis.location.repository.DistrictRepository
@@ -175,8 +176,15 @@ class DistrictServiceIntegrationTest {
 
             // Then
             assertEquals(2, result.totalElements) // Changed to expect 2 results
-            assertEquals("Test District 2", result.content.first().name)
-            assertEquals(200000, result.content.first().population)
+            val firstResult = result.content.first()
+            assertEquals(
+                "Test District 2",
+                firstResult.getValue(DistrictField.NAME) as String,
+            )
+            assertEquals(
+                200000L,
+                firstResult.getValue(DistrictField.POPULATION) as Long,
+            )
         }
     }
 

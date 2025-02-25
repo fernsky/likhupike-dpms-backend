@@ -175,8 +175,10 @@ class DistrictControllerIntegrationTest {
     inner class SearchDistrictTests {
         @Test
         fun `should search districts with criteria`() {
+            // Given: Setup test data
             loginAs(viewer)
 
+            // When & Then: Perform search and verify
             mockMvc
                 .perform(
                     get("/api/v1/districts/search")
@@ -185,8 +187,32 @@ class DistrictControllerIntegrationTest {
                         .param("page", "0")
                         .param("size", "10"),
                 ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.content").isArray)
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].name").value(testDistrict.name))
                 .andExpect(jsonPath("$.data.content[0].code").value(testDistrict.code))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.totalPages").value(1))
+                .andExpect(jsonPath("$.data.number").value(0))
+        }
+
+        @Test
+        fun `should return empty result when no districts match criteria`() {
+            loginAs(viewer)
+
+            mockMvc
+                .perform(
+                    get("/api/v1/districts/search")
+                        .param("searchTerm", "NonExistentDistrict")
+                        .param("page", "0")
+                        .param("size", "10"),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.content").isArray)
+                .andExpect(jsonPath("$.data.content").isEmpty)
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.totalPages").value(0))
         }
     }
 

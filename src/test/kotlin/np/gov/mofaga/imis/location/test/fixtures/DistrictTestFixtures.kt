@@ -7,6 +7,7 @@ import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.shared.dto.GeometryRequest
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.geojson.GeoJsonObject
 import org.geojson.LngLatAlt
 import org.locationtech.jts.geom.Coordinate
@@ -18,6 +19,8 @@ import java.math.BigDecimal
 
 object DistrictTestFixtures {
     private val geometryFactory = GeometryFactory()
+
+    private val defaultGeometryConverter = GeometryConverter()
 
     fun createDistrict(
         code: String = "D1",
@@ -234,6 +237,25 @@ object DistrictTestFixtures {
         geometry = createTestGeometry(),
     )
 
+    private fun createTestMunicipalities(district: District) =
+        listOf(
+            MunicipalityTestFixtures.createMunicipality(
+                district = district,
+                code = "${district.code}-M1",
+                name = "Test Municipality 1",
+            ),
+            MunicipalityTestFixtures.createMunicipality(
+                district = district,
+                code = "${district.code}-M2",
+                name = "Test Municipality 2",
+            ),
+            MunicipalityTestFixtures.createMunicipality(
+                district = district,
+                code = "${district.code}-M3",
+                name = "Test Municipality 3",
+            ),
+        )
+
     fun createDistrictProjection(
         code: String,
         fields: Set<DistrictField> = DistrictField.DEFAULT_FIELDS,
@@ -260,7 +282,7 @@ object DistrictTestFixtures {
         }
         if (includeMunicipalities) {
             allFields.add(DistrictField.MUNICIPALITIES)
-            district.municipalities = createTestMunicipalities(district)
+            district.municipalities = createTestMunicipalities(district).toMutableSet()
         }
 
         return DynamicDistrictProjection.from(district, allFields, geometryConverter)

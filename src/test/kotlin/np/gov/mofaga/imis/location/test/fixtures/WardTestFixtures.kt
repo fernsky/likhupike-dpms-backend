@@ -1,16 +1,27 @@
 package np.gov.mofaga.imis.location.test.fixtures
 
+import np.gov.mofaga.imis.location.api.dto.enums.WardField
 import np.gov.mofaga.imis.location.api.dto.request.CreateWardRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateWardRequest
 import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.location.domain.Ward
 import np.gov.mofaga.imis.shared.dto.GeometryRequest
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.geojson.GeoJsonObject
 import org.geojson.LngLatAlt
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.LinearRing
+import org.locationtech.jts.geom.Polygon
+import org.locationtech.jts.geom.PrecisionModel
+import org.locationtech.jts.geom.impl.CoordinateArraySequence
 import java.math.BigDecimal
 
 object WardTestFixtures {
+    private val geometryFactory = GeometryFactory(PrecisionModel(), 4326)
+    private val defaultGeometryConverter = GeometryConverter()
+
     fun createWard(
         municipality: Municipality = MunicipalityTestFixtures.createMunicipality(),
         wardNumber: Int = 1,

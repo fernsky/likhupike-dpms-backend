@@ -2,19 +2,33 @@ package np.gov.mofaga.imis.location.service
 
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.WardSearchCriteria
+import np.gov.mofaga.imis.location.api.dto.criteria.WardSortField
 import np.gov.mofaga.imis.location.api.dto.enums.WardField
+import np.gov.mofaga.imis.location.domain.District
+import np.gov.mofaga.imis.location.domain.Municipality
+import np.gov.mofaga.imis.location.domain.Province
+import np.gov.mofaga.imis.location.repository.DistrictRepository
+import np.gov.mofaga.imis.location.repository.MunicipalityRepository
+import np.gov.mofaga.imis.location.repository.ProvinceRepository
+import np.gov.mofaga.imis.location.repository.WardRepository
+import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
+import np.gov.mofaga.imis.location.test.fixtures.MunicipalityTestFixtures
+import np.gov.mofaga.imis.location.test.fixtures.ProvinceTestFixtures
+import np.gov.mofaga.imis.location.test.fixtures.WardTestFixtures
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.Sort
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import org.springframework.beans.factory.annotation.Autowired
-import org.junit.jupiter.api.BeforeEach
 
 @WebMvcTest(WardService::class)
 @Import(TestSecurityConfig::class)
@@ -54,7 +68,7 @@ class WardSearchIntegrationTest {
         testProvince = provinceRepository.save(ProvinceTestFixtures.createProvince())
         testDistrict = districtRepository.save(DistrictTestFixtures.createDistrict(province = testProvince))
         testMunicipality = municipalityRepository.save(MunicipalityTestFixtures.createMunicipality(district = testDistrict))
-        
+
         WardTestFixtures.createSearchTestData().forEach { ward ->
             ward.municipality = testMunicipality
             wardRepository.save(ward)
@@ -88,10 +102,11 @@ class WardSearchIntegrationTest {
         @Test
         @Transactional
         fun `should search with geometry included`() {
-            val criteria = WardSearchCriteria(
-                fields = setOf(WardField.WARD_NUMBER, WardField.GEOMETRY),
-                includeGeometry = true
-            )
+            val criteria =
+                WardSearchCriteria(
+                    fields = setOf(WardField.WARD_NUMBER, WardField.GEOMETRY),
+                    includeGeometry = true,
+                )
 
             val result = wardService.searchWards(criteria)
             val ward = result.content.first()
@@ -102,16 +117,18 @@ class WardSearchIntegrationTest {
         @Test
         @Transactional
         fun `should sort by population in descending order`() {
-            val criteria = WardSearchCriteria(
-                sortBy = WardSortField.POPULATION,
-                sortDirection = Sort.Direction.DESC,
-                fields = setOf(WardField.WARD_NUMBER, WardField.POPULATION)
-            )
+            val criteria =
+                WardSearchCriteria(
+                    sortBy = WardSortField.POPULATION,
+                    sortDirection = Sort.Direction.DESC,
+                    fields = setOf(WardField.WARD_NUMBER, WardField.POPULATION),
+                )
 
             val result = wardService.searchWards(criteria)
-            val populations = result.content.mapNotNull { 
-                it.getValue(WardField.POPULATION) as? Long 
-            }
+            val populations =
+                result.content.mapNotNull {
+                    it.getValue(WardField.POPULATION) as? Long
+                }
             assertEquals(populations, populations.sortedDescending())
         }
     }
