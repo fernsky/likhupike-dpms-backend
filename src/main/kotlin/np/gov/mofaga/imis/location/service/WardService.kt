@@ -3,6 +3,7 @@ package np.gov.mofaga.imis.location.service
 import np.gov.mofaga.imis.location.api.dto.criteria.WardSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.request.CreateWardRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateWardRequest
+import np.gov.mofaga.imis.location.api.dto.response.DynamicWardProjection
 import np.gov.mofaga.imis.location.api.dto.response.WardDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardSummaryResponse
@@ -61,7 +62,7 @@ interface WardService {
      * No authentication required for search
      */
     @Transactional(readOnly = true)
-    fun searchWards(criteria: WardSearchCriteria): Page<WardResponse>
+    fun searchWards(criteria: WardSearchCriteria): Page<DynamicWardProjection> // Updated return type
 
     /**
      * Lists all wards in a municipality

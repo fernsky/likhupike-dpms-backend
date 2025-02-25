@@ -1,8 +1,10 @@
 package np.gov.mofaga.imis.location.api.dto.mapper.impl
 
+import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
 import np.gov.mofaga.imis.location.api.dto.mapper.DistrictMapper
 import np.gov.mofaga.imis.location.api.dto.mapper.LocationSummaryMapper
 import np.gov.mofaga.imis.location.api.dto.response.*
+import np.gov.mofaga.imis.location.api.dto.response.DynamicDistrictProjection
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.springframework.stereotype.Component
@@ -51,6 +53,14 @@ class DistrictMapperImpl(
     }
 
     override fun toSummaryResponse(district: District): DistrictSummaryResponse = locationSummaryMapper.toDistrictSummary(district)
+
+    override fun toProjection(
+        district: District,
+        fields: Set<DistrictField>,
+    ): DynamicDistrictProjection {
+        validateRequiredFields(district)
+        return DynamicDistrictProjection.from(district, fields, geometryConverter)
+    }
 
     private fun validateRequiredFields(district: District) {
         requireNotNull(district.code) { "District code cannot be null" }

@@ -4,6 +4,7 @@ import np.gov.mofaga.imis.location.api.dto.criteria.MunicipalitySearchCriteria
 import np.gov.mofaga.imis.location.api.dto.mapper.MunicipalityMapper
 import np.gov.mofaga.imis.location.api.dto.request.CreateMunicipalityRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateMunicipalityRequest
+import np.gov.mofaga.imis.location.api.dto.response.DynamicMunicipalityProjection
 import np.gov.mofaga.imis.location.api.dto.response.MunicipalityDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.MunicipalityResponse
 import np.gov.mofaga.imis.location.domain.Municipality
@@ -97,7 +98,7 @@ class MunicipalityServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun searchMunicipalities(criteria: MunicipalitySearchCriteria): Page<MunicipalityResponse> {
+    override fun searchMunicipalities(criteria: MunicipalitySearchCriteria): Page<DynamicMunicipalityProjection> {
         logger.debug("Searching municipalities with criteria: $criteria")
 
         criteria.validate()
@@ -112,7 +113,7 @@ class MunicipalityServiceImpl(
 
         return municipalityRepository
             .findAll(specification, pageable)
-            .map { municipalityMapper.toResponse(it) }
+            .map { municipality -> DynamicMunicipalityProjection.from(municipality, criteria.fields, geometryConverter) }
     }
 
     @Transactional(readOnly = true)

@@ -9,6 +9,8 @@ import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
+import np.gov.mofaga.imis.location.api.dto.response.DynamicMunicipalityProjection
 
 @Component
 class MunicipalityMapperImpl(
@@ -69,6 +71,11 @@ class MunicipalityMapperImpl(
             type = municipality.type!!,
             totalWards = municipality.totalWards ?: 0,
         )
+    }
+
+    override fun toProjection(municipality: Municipality, fields: Set<MunicipalityField>): DynamicMunicipalityProjection {
+        validateRequiredFields(municipality)
+        return DynamicMunicipalityProjection.from(municipality, fields, geometryConverter)
     }
 
     private fun validateRequiredFields(municipality: Municipality) {

@@ -105,7 +105,7 @@ class WardServiceImpl(
     ): WardResponse = wardMapper.toResponse(getWardEntity(wardNumber, municipalityCode))
 
     @Transactional(readOnly = true)
-    override fun searchWards(criteria: WardSearchCriteria): Page<WardResponse> {
+    override fun searchWards(criteria: WardSearchCriteria): Page<DynamicWardProjection> {
         logger.debug("Searching wards with criteria: $criteria")
 
         criteria.validate()
@@ -113,7 +113,7 @@ class WardServiceImpl(
             .findAll(
                 WardSpecifications.withSearchCriteria(criteria),
                 PageRequest.of(criteria.page, criteria.pageSize, criteria.getSort()),
-            ).map(wardMapper::toResponse)
+            ).map { ward -> DynamicWardProjection.from(ward, criteria.fields, geometryConverter) }
     }
 
     @Transactional(readOnly = true)

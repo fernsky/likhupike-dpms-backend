@@ -4,6 +4,7 @@ import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.request.CreateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.response.DistrictDetailResponse
+import np.gov.mofaga.imis.location.api.dto.response.DynamicDistrictProjection
 import np.gov.mofaga.imis.location.api.dto.response.DistrictResponse
 import org.springframework.data.domain.Page
 import org.springframework.security.access.prepost.PreAuthorize
@@ -29,7 +30,7 @@ interface DistrictService {
     fun getDistrict(code: String): DistrictResponse
 
     @Transactional(readOnly = true)
-    fun searchDistricts(criteria: DistrictSearchCriteria): Page<DistrictResponse>
+    fun searchDistricts(criteria: DistrictSearchCriteria): Page<DynamicDistrictProjection> // Updated return type
 
     @Transactional(readOnly = true)
     fun getAllDistricts(): List<DistrictResponse>

@@ -6,6 +6,7 @@ import np.gov.mofaga.imis.location.api.dto.request.CreateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.response.DistrictDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.DistrictResponse
+import np.gov.mofaga.imis.location.api.dto.response.DynamicDistrictProjection
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.exception.*
 import np.gov.mofaga.imis.location.repository.DistrictRepository
@@ -89,7 +90,7 @@ class DistrictServiceImpl(
     }
 
     @Transactional(readOnly = true)
-    override fun searchDistricts(criteria: DistrictSearchCriteria): Page<DistrictResponse> {
+    override fun searchDistricts(criteria: DistrictSearchCriteria): Page<DynamicDistrictProjection> {
         logger.debug("Searching districts with criteria: $criteria")
 
         criteria.validate()
@@ -99,7 +100,7 @@ class DistrictServiceImpl(
 
         return districtRepository
             .findAll(specification, pageable)
-            .map { districtMapper.toResponse(it) }
+            .map { district -> DynamicDistrictProjection.from(district, criteria.fields, geometryConverter) }
     }
 
     @Transactional(readOnly = true)

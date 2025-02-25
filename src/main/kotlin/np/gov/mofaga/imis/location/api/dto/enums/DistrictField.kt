@@ -2,7 +2,7 @@ package np.gov.mofaga.imis.location.api.dto.enums
 
 import np.gov.mofaga.imis.shared.enums.FieldSupport
 
-enum class ProvinceField : FieldSupport {
+enum class DistrictField : FieldSupport {
     CODE,
     NAME,
     NAME_NEPALI,
@@ -10,12 +10,12 @@ enum class ProvinceField : FieldSupport {
     POPULATION,
     HEADQUARTER,
     HEADQUARTER_NEPALI,
-    DISTRICT_COUNT,
-    TOTAL_MUNICIPALITIES,
+    PROVINCE,
+    MUNICIPALITY_COUNT,
     TOTAL_POPULATION,
     TOTAL_AREA,
     GEOMETRY,
-    DISTRICTS,
+    MUNICIPALITIES,
     CREATED_AT,
     CREATED_BY,
     UPDATED_AT,
@@ -30,6 +30,6 @@ enum class ProvinceField : FieldSupport {
         val DETAIL_FIELDS = values().toSet()
         val AUDIT_FIELDS = setOf(CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY)
 
-        fun fromString(value: String): ProvinceField = valueOf(value.uppercase())
+        fun fromString(value: String): DistrictField = valueOf(value.uppercase())
     }
 }

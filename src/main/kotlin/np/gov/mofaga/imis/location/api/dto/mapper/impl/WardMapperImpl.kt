@@ -1,7 +1,9 @@
 package np.gov.mofaga.imis.location.api.dto.mapper.impl
 
+import np.gov.mofaga.imis.location.api.dto.enums.WardField
 import np.gov.mofaga.imis.location.api.dto.mapper.MunicipalityMapper
 import np.gov.mofaga.imis.location.api.dto.mapper.WardMapper
+import np.gov.mofaga.imis.location.api.dto.response.DynamicWardProjection
 import np.gov.mofaga.imis.location.api.dto.response.WardDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardSummaryResponse
@@ -54,5 +56,13 @@ class WardMapperImpl(
             wardNumber = ward.wardNumber!!,
             population = ward.population,
         )
+    }
+
+    override fun toProjection(
+        ward: Ward,
+        fields: Set<WardField>,
+    ): DynamicWardProjection {
+        validateRequiredFields(ward)
+        return DynamicWardProjection.from(ward, fields, geometryConverter)
     }
 }

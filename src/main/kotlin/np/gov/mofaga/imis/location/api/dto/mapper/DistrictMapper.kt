@@ -1,8 +1,7 @@
 package np.gov.mofaga.imis.location.api.dto.mapper
 
-import np.gov.mofaga.imis.location.api.dto.response.DistrictDetailResponse
-import np.gov.mofaga.imis.location.api.dto.response.DistrictResponse
-import np.gov.mofaga.imis.location.api.dto.response.DistrictSummaryResponse
+import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
+import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.District
 
 interface DistrictMapper {
@@ -23,4 +22,14 @@ interface DistrictMapper {
      * @throws IllegalArgumentException if required fields are null
      */
     fun toSummaryResponse(district: District): DistrictSummaryResponse
+
+    /**
+     * Creates a dynamic projection of District entity with selected fields
+     * @param district Source entity
+     * @param fields Set of fields to include in projection
+     */
+    fun toProjection(
+        district: District,
+        fields: Set<DistrictField>,
+    ): DynamicDistrictProjection
 }
