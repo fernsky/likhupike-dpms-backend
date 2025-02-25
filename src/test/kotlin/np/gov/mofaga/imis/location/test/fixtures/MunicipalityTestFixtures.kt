@@ -1,5 +1,6 @@
 package np.gov.mofaga.imis.location.test.fixtures
 
+import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
 import np.gov.mofaga.imis.location.api.dto.request.CreateMunicipalityRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateMunicipalityRequest
 import np.gov.mofaga.imis.location.api.dto.response.*

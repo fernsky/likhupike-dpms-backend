@@ -9,6 +9,7 @@ import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.service.MunicipalityService
 import np.gov.mofaga.imis.location.test.fixtures.MunicipalityTestFixtures
 import np.gov.mofaga.imis.shared.service.SecurityService
+import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

@@ -1,5 +1,6 @@
 package np.gov.mofaga.imis.location.test.fixtures
 
+import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
 import np.gov.mofaga.imis.location.api.dto.request.CreateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.response.*

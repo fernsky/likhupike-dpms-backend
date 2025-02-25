@@ -5,6 +5,7 @@ import np.gov.mofaga.imis.auth.domain.User
 import np.gov.mofaga.imis.auth.test.UserTestDataFactory
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.controller.DistrictController
+import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.location.repository.ProvinceRepository
 import np.gov.mofaga.imis.location.service.DistrictService
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -172,13 +174,12 @@ class DistrictControllerTest {
         fun `should search districts with criteria`() {
             // Arrange
             mockLoggedInUser(viewer)
-            val expectedResults =
+            val expectedResults: Page<DynamicDistrictProjection> =
                 PageImpl(
                     listOf(
-                        DistrictTestFixtures.createDistrictResponse(
+                        DistrictTestFixtures.createDistrictProjection(
                             code = "TEST-D1",
-                            name = "Test District 1",
-                            province = ProvinceTestFixtures.createProvinceSummaryResponse(code = testProvince.code!!),
+                            fields = DistrictField.DEFAULT_FIELDS,
                         ),
                     ),
                 )
@@ -206,14 +207,14 @@ class DistrictControllerTest {
         @Test
         fun `should search with specific fields`() {
             // Arrange
-            loginAs(viewer)
+            mockLoggedInUser(viewer) // Replace loginAs with mockLoggedInUser
             val fields = "CODE,NAME,POPULATION"
             val projection =
                 DistrictTestFixtures.createDistrictProjection(
                     code = "TEST-D1",
                     fields = setOf(DistrictField.CODE, DistrictField.NAME, DistrictField.POPULATION),
                 )
-            val expectedResults = PageImpl(listOf(projection))
+            val expectedResults: Page<DynamicDistrictProjection> = PageImpl(listOf(projection))
 
             whenever(districtService.searchDistricts(any()))
                 .thenReturn(expectedResults)
@@ -233,13 +234,13 @@ class DistrictControllerTest {
         @Test
         fun `should search with municipalities included`() {
             // Arrange
-            loginAs(viewer)
+            mockLoggedInUser(viewer) // Replace loginAs with mockLoggedInUser
             val projection =
                 DistrictTestFixtures.createDistrictProjection(
                     code = "TEST-D1",
                     includeMunicipalities = true,
                 )
-            val expectedResults = PageImpl(listOf(projection))
+            val expectedResults: Page<DynamicDistrictProjection> = PageImpl(listOf(projection))
 
             whenever(districtService.searchDistricts(any()))
                 .thenReturn(expectedResults)
