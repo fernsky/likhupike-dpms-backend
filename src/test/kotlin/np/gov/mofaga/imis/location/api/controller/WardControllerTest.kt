@@ -5,6 +5,7 @@ import np.gov.mofaga.imis.auth.domain.User
 import np.gov.mofaga.imis.auth.test.UserTestDataFactory
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.controller.WardController
+import np.gov.mofaga.imis.location.api.dto.enums.WardField
 import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.service.WardService

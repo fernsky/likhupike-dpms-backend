@@ -3,6 +3,13 @@ package np.gov.mofaga.imis.location.service
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.MunicipalitySearchCriteria
 import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
+import np.gov.mofaga.imis.location.api.dto.enums.MunicipalitySortField
+import np.gov.mofaga.imis.location.repository.DistrictRepository
+import np.gov.mofaga.imis.location.repository.MunicipalityRepository
+import np.gov.mofaga.imis.location.repository.ProvinceRepository
+import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
+import np.gov.mofaga.imis.location.test.fixtures.MunicipalityTestFixtures
+import np.gov.mofaga.imis.location.test.fixtures.ProvinceTestFixtures
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -79,10 +86,11 @@ class MunicipalitySearchIntegrationTest {
         @Test
         @Transactional
         fun `should search with geometry included`() {
-            val criteria = MunicipalitySearchCriteria(
-                fields = setOf(MunicipalityField.NAME, MunicipalityField.GEOMETRY),
-                includeGeometry = true
-            )
+            val criteria =
+                MunicipalitySearchCriteria(
+                    fields = setOf(MunicipalityField.NAME, MunicipalityField.GEOMETRY),
+                    includeGeometry = true,
+                )
 
             val result = municipalityService.searchMunicipalities(criteria)
             val municipality = result.content.first()
@@ -93,16 +101,18 @@ class MunicipalitySearchIntegrationTest {
         @Test
         @Transactional
         fun `should sort by population in descending order`() {
-            val criteria = MunicipalitySearchCriteria(
-                sortBy = MunicipalitySortField.POPULATION,
-                sortDirection = Sort.Direction.DESC,
-                fields = setOf(MunicipalityField.NAME, MunicipalityField.POPULATION)
-            )
+            val criteria =
+                MunicipalitySearchCriteria(
+                    sortBy = MunicipalitySortField.POPULATION,
+                    sortDirection = Sort.Direction.DESC,
+                    fields = setOf(MunicipalityField.NAME, MunicipalityField.POPULATION),
+                )
 
             val result = municipalityService.searchMunicipalities(criteria)
-            val populations = result.content.mapNotNull { 
-                it.getValue(MunicipalityField.POPULATION) as? Long 
-            }
+            val populations =
+                result.content.mapNotNull {
+                    it.getValue(MunicipalityField.POPULATION) as? Long
+                }
             assertEquals(populations, populations.sortedDescending())
         }
     }

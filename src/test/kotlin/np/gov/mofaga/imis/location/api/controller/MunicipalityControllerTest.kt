@@ -5,11 +5,12 @@ import np.gov.mofaga.imis.auth.domain.User
 import np.gov.mofaga.imis.auth.test.UserTestDataFactory
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.controller.MunicipalityController
+import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
+import np.gov.mofaga.imis.location.api.dto.response.DynamicMunicipalityProjection
 import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.service.MunicipalityService
 import np.gov.mofaga.imis.location.test.fixtures.MunicipalityTestFixtures
 import np.gov.mofaga.imis.shared.service.SecurityService
-import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -20,8 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -159,14 +160,12 @@ class MunicipalityControllerTest {
         fun `should search municipalities with filters when viewer`() {
             // Arrange
             mockLoggedInUser(viewer)
-            val expectedResponse =
+            val expectedResponse: Page<DynamicMunicipalityProjection> =
                 PageImpl(
                     listOf(
-                        MunicipalityTestFixtures.createMunicipalityResponse(),
-                        MunicipalityTestFixtures.createMunicipalityResponse(code = "TEST-M2"),
+                        MunicipalityTestFixtures.createMunicipalityProjection(code = "TEST-M1"),
+                        MunicipalityTestFixtures.createMunicipalityProjection(code = "TEST-M2"),
                     ),
-                    PageRequest.of(0, 10),
-                    2,
                 )
 
             whenever(municipalityService.searchMunicipalities(any()))
@@ -232,7 +231,7 @@ class MunicipalityControllerTest {
         @Test
         fun `should search with specific fields`() {
             // Arrange
-            loginAs(viewer)
+            mockLoggedInUser(viewer) // Changed from loginAs to mockLoggedInUser
             val fields = "CODE,NAME,TYPE"
             val projection =
                 MunicipalityTestFixtures.createMunicipalityProjection(
@@ -259,7 +258,7 @@ class MunicipalityControllerTest {
         @Test
         fun `should search with geometry included`() {
             // Arrange
-            loginAs(viewer)
+            mockLoggedInUser(viewer) // Changed from loginAs to mockLoggedInUser
             val projection =
                 MunicipalityTestFixtures.createMunicipalityProjection(
                     code = "TEST-M1",

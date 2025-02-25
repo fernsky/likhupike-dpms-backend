@@ -6,6 +6,7 @@ import np.gov.mofaga.imis.auth.test.UserTestDataFactory
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.controller.DistrictController
 import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
+import np.gov.mofaga.imis.location.api.dto.response.DynamicDistrictProjection
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.location.repository.ProvinceRepository
 import np.gov.mofaga.imis.location.service.DistrictService
