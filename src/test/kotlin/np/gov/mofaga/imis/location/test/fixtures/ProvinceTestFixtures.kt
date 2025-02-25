@@ -1,10 +1,13 @@
 package np.gov.mofaga.imis.location.test.fixtures
 
+import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
 import np.gov.mofaga.imis.location.api.dto.request.CreateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.response.*
 import np.gov.mofaga.imis.location.domain.Province
+import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
 import np.gov.mofaga.imis.shared.dto.GeometryRequest
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.geojson.GeoJsonObject
 import org.geojson.LngLatAlt
 import org.locationtech.jts.geom.Coordinate
@@ -15,6 +18,9 @@ import java.math.BigDecimal
 object ProvinceTestFixtures {
     private var counter = 0L
     private val geometryFactory = GeometryFactory(PrecisionModel(), 4326)
+
+    // Add a default geometry converter for testing
+    private val defaultGeometryConverter = GeometryConverter()
 
     private fun generateUniqueCode(): String {
         val timestamp = System.currentTimeMillis()
@@ -183,7 +189,7 @@ object ProvinceTestFixtures {
         nameNepali = nameNepali,
     )
 
-    private fun createDistrictSummaries(): List<DistrictSummaryResponse> =
+    fun createDistrictSummaries(): List<DistrictSummaryResponse> =
         (1..3).map { index ->
             DistrictSummaryResponse(
                 code = "DIST-$index",
@@ -193,33 +199,59 @@ object ProvinceTestFixtures {
             )
         }
 
+    // Add helper method to create test districts
+    private fun createTestDistricts(province: Province? = null): MutableSet<np.gov.mofaga.imis.location.domain.District> {
+        val testProvince = province ?: createProvince(code = "TEST-P-PARENT")
+        return mutableSetOf(
+            DistrictTestFixtures.createDistrict(
+                code = "TEST-D1",
+                province = testProvince,
+                name = "Test District 1",
+                nameNepali = "परीक्षण जिल्ला १",
+                area = BigDecimal("500.00"),
+                population = 50000L,
+            ),
+        )
+    }
+
     fun createProvinceProjection(
         code: String,
+        fields: Set<ProvinceField> = ProvinceField.DEFAULT_FIELDS,
         includeTotals: Boolean = false,
         includeGeometry: Boolean = false,
         includeDistricts: Boolean = false,
-    ): ProvinceProjection =
-        TestProvinceProjection(
-            code = code,
-            name = "Test Province",
-            nameNepali = "परीक्षण प्रदेश",
-            area = BigDecimal("1000.00"),
-            population = 500000L,
-            headquarter = "Test HQ",
-            headquarterNepali = "परीक्षण सदरमुकाम",
-            totalArea = if (includeTotals) BigDecimal("950.00") else null,
-            totalPopulation = if (includeTotals) 450000L else null,
-            totalMunicipalities = if (includeTotals) 10 else null,
-            districtCount = if (includeTotals) 5 else null,
-            geometry = if (includeGeometry) createTestGeometry() else null,
-            districts = if (includeDistricts) createDistrictSummaries() else null,
-        )
+        geometryConverter: GeometryConverter = defaultGeometryConverter,
+    ): DynamicProvinceProjection {
+        val province = createProvince(code = code)
+        val allFields = fields.toMutableSet()
+
+        if (includeTotals) {
+            allFields.addAll(
+                setOf(
+                    ProvinceField.TOTAL_AREA,
+                    ProvinceField.TOTAL_POPULATION,
+                    ProvinceField.TOTAL_MUNICIPALITIES,
+                    ProvinceField.DISTRICT_COUNT,
+                ),
+            )
+        }
+        if (includeGeometry) {
+            allFields.add(ProvinceField.GEOMETRY)
+            province.geometry = createSampleGeometry(27.0, 85.0)
+        }
+        if (includeDistricts) {
+            allFields.add(ProvinceField.DISTRICTS)
+            province.districts = createTestDistricts(province) // Pass the province
+        }
+
+        return DynamicProvinceProjection.from(province, allFields, geometryConverter)
+    }
 
     fun createSearchTestData(): List<Province> =
         listOf(
             Province().apply {
                 name = "Bagmati Province"
-                nameNepali = "बागमती प्रदेश"
+                nameNepali = "बागमती प्रदेश" // Make sure this is set
                 code = "P3"
                 population = 6084042
                 area = BigDecimal("20300.0")

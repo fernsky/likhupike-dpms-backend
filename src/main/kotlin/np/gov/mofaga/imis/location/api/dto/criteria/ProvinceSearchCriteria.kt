@@ -11,7 +11,7 @@ data class ProvinceSearchCriteria(
     val searchTerm: String? = null,
     @field:Pattern(regexp = "^[A-Z0-9]{1,10}$", message = "Code must be 1-10 uppercase letters or numbers")
     val code: String? = null,
-    val fields: Set<ProvinceField> = ProvinceField.DEFAULT_FIELDS,
+    val fields: Set<ProvinceField> = ProvinceField.DEFAULT_FIELDS, // Updated default
     val includeTotals: Boolean = false,
     val includeGeometry: Boolean = false,
     val includeDistricts: Boolean = false,

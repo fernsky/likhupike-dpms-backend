@@ -9,8 +9,8 @@ import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
 import np.gov.mofaga.imis.location.api.dto.request.CreateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
+import np.gov.mofaga.imis.location.api.dto.response.DynamicProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceDetailResponse
-import np.gov.mofaga.imis.location.api.dto.response.ProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceResponse
 import np.gov.mofaga.imis.location.service.ProvinceService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
@@ -80,23 +80,18 @@ class ProvinceController(
     fun searchProvinces(
         @Parameter(description = "Search criteria")
         @Valid criteria: ProvinceSearchCriteria,
-        @Parameter(
-            description =
-                "Comma-separated list of fields to include. Available fields: " +
-                    "CODE, NAME, NAME_NEPALI, AREA, POPULATION, HEADQUARTER, HEADQUARTER_NEPALI, " +
-                    "DISTRICT_COUNT, TOTAL_MUNICIPALITIES, TOTAL_POPULATION, TOTAL_AREA, GEOMETRY, " +
-                    "DISTRICTS, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY",
-        )
+        @Parameter(description = "Comma-separated list of fields to include")
         @RequestParam(required = false) fields: String?,
-    ): ResponseEntity<ApiResponse<PagedResponse<ProvinceProjection>>> {
-        logger.debug("Searching provinces with criteria: $criteria, fields: $fields")
+    ): ResponseEntity<ApiResponse<PagedResponse<DynamicProvinceProjection>>> { // Changed return type
+        logger.debug("Raw fields parameter: $fields")
 
         val selectedFields =
-            fields
-                ?.split(",")
-                ?.map { ProvinceField.fromString(it.trim()) }
-                ?.toSet()
-                ?: criteria.fields
+            fields?.let {
+                it
+                    .split(",")
+                    .map { field -> ProvinceField.valueOf(field.trim().uppercase()) }
+                    .toSet()
+            } ?: ProvinceField.DEFAULT_FIELDS // Use default fields from enum
 
         val searchCriteria = criteria.copy(fields = selectedFields)
         val searchResults = provinceService.searchProvinces(searchCriteria)

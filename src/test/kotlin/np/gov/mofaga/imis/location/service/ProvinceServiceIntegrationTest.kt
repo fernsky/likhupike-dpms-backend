@@ -3,6 +3,7 @@ package np.gov.mofaga.imis.location.service
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSortField
+import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
 import np.gov.mofaga.imis.location.exception.ProvinceCodeExistsException
 import np.gov.mofaga.imis.location.repository.ProvinceRepository
 import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
@@ -123,6 +124,7 @@ class ProvinceServiceIntegrationTest {
                     sortDirection = Sort.Direction.DESC,
                     page = 0,
                     pageSize = 10,
+                    fields = setOf(ProvinceField.CODE, ProvinceField.NAME, ProvinceField.POPULATION),
                 )
 
             // When
@@ -130,7 +132,11 @@ class ProvinceServiceIntegrationTest {
 
             // Then
             assertTrue(result.totalElements > 0)
-            assertTrue(result.content.all { it.population!! >= 400000L })
+            assertTrue(
+                result.content.all {
+                    (it.getValue(ProvinceField.POPULATION) as Long?) ?: 0L >= 400000L
+                },
+            )
         }
     }
 

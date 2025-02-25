@@ -3,8 +3,8 @@ package np.gov.mofaga.imis.location.service
 import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.request.CreateProvinceRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateProvinceRequest
+import np.gov.mofaga.imis.location.api.dto.response.DynamicProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceDetailResponse
-import np.gov.mofaga.imis.location.api.dto.response.ProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceResponse
 import org.springframework.data.domain.Page
 import org.springframework.security.access.prepost.PreAuthorize
@@ -51,7 +51,7 @@ interface ProvinceService {
      */
 
     @Transactional(readOnly = true)
-    fun searchProvinces(criteria: ProvinceSearchCriteria): Page<ProvinceProjection>
+    fun searchProvinces(criteria: ProvinceSearchCriteria): Page<DynamicProvinceProjection> // Updated return type
 
     /**
      * Lists all provinces

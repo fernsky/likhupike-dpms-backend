@@ -4,9 +4,10 @@ import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
 import np.gov.mofaga.imis.location.api.dto.mapper.LocationSummaryMapper
 import np.gov.mofaga.imis.location.api.dto.mapper.ProvinceMapper
 import np.gov.mofaga.imis.location.api.dto.response.*
-import np.gov.mofaga.imis.location.api.dto.response.ProvinceProjection
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.shared.util.GeometryConverter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
@@ -15,6 +16,8 @@ class ProvinceMapperImpl(
     private val locationSummaryMapper: LocationSummaryMapper,
     private val geometryConverter: GeometryConverter,
 ) : ProvinceMapper {
+    private val logger: Logger = LoggerFactory.getLogger(ProvinceMapperImpl::class.java)
+
     override fun toResponse(province: Province): ProvinceResponse {
         validateRequiredFields(province)
 
@@ -56,52 +59,9 @@ class ProvinceMapperImpl(
     override fun toProjection(
         province: Province,
         fields: Set<ProvinceField>,
-    ): ProvinceProjection {
+    ): DynamicProvinceProjection {
         validateRequiredFields(province)
-        return ProvinceProjectionImpl(
-            code = province.code!!,
-            name = province.name.takeIf { fields.contains(ProvinceField.NAME) },
-            nameNepali = province.nameNepali.takeIf { fields.contains(ProvinceField.NAME_NEPALI) },
-            area = province.area.takeIf { fields.contains(ProvinceField.AREA) },
-            population = province.population.takeIf { fields.contains(ProvinceField.POPULATION) },
-            headquarter = province.headquarter.takeIf { fields.contains(ProvinceField.HEADQUARTER) },
-            headquarterNepali = province.headquarterNepali.takeIf { fields.contains(ProvinceField.HEADQUARTER_NEPALI) },
-            districtCount = province.districts.size.takeIf { fields.contains(ProvinceField.DISTRICT_COUNT) },
-            totalMunicipalities =
-                province.districts
-                    .sumOf { it.municipalities.size }
-                    .takeIf { fields.contains(ProvinceField.TOTAL_MUNICIPALITIES) },
-            totalPopulation =
-                province.districts
-                    .sumOf { it.population ?: 0L }
-                    .takeIf { fields.contains(ProvinceField.TOTAL_POPULATION) },
-            totalArea =
-                province.districts
-                    .mapNotNull { it.area }
-                    .fold(BigDecimal.ZERO) { acc, area -> acc.add(area) }
-                    .takeIf { fields.contains(ProvinceField.TOTAL_AREA) },
-            geometry =
-                geometryConverter
-                    .convertToGeoJson(province.geometry)
-                    .takeIf { fields.contains(ProvinceField.GEOMETRY) },
-            districts =
-                if (fields.contains(ProvinceField.DISTRICTS)) {
-                    province.districts.map { district ->
-                        DistrictSummaryResponse(
-                            code = district.code!!,
-                            name = district.name!!,
-                            nameNepali = district.nameNepali!!,
-                            municipalityCount = district.municipalities.size,
-                        )
-                    }
-                } else {
-                    null
-                },
-            createdAt = province.createdAt.takeIf { fields.contains(ProvinceField.CREATED_AT) },
-            createdBy = province.createdBy.takeIf { fields.contains(ProvinceField.CREATED_BY) },
-            updatedAt = province.updatedAt.takeIf { fields.contains(ProvinceField.UPDATED_AT) },
-            updatedBy = province.updatedBy.takeIf { fields.contains(ProvinceField.UPDATED_BY) },
-        )
+        return DynamicProvinceProjection.from(province, fields, geometryConverter)
     }
 
     private fun computeTotalPopulation(province: Province): Long = province.districts.sumOf { it.population ?: 0L }

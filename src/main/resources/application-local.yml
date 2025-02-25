@@ -53,7 +53,7 @@ spring:
       naming:
         physical-strategy: ${SPRING_JPA_HIBERNATE_NAMING_PHYSICAL_STRATEGY:org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy}
         implicit-strategy: ${SPRING_JPA_HIBERNATE_NAMING_IMPLICIT_STRATEGY:org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:create}
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     show-sql: ${SPRING_JPA_SHOW_SQL:true}
     properties:
       hibernate:

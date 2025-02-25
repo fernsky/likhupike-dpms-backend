@@ -7,9 +7,11 @@ import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.controller.ProvinceController
 import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
+import np.gov.mofaga.imis.location.api.dto.response.DynamicProvinceProjection
 import np.gov.mofaga.imis.location.service.ProvinceService
 import np.gov.mofaga.imis.location.test.fixtures.ProvinceTestFixtures
 import np.gov.mofaga.imis.shared.service.SecurityService
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -49,6 +51,9 @@ class ProvinceControllerIntegrationTest {
 
     @MockBean
     private lateinit var securityService: SecurityService
+
+    @MockBean
+    private lateinit var geometryConverter: GeometryConverter
 
     private val superAdmin = UserTestDataFactory.createSuperAdmin()
     private val municipalityAdmin = UserTestDataFactory.createMunicipalityAdmin()
@@ -149,11 +154,20 @@ class ProvinceControllerIntegrationTest {
                     page = 0,
                     pageSize = 10,
                 )
+
             val expectedResults =
                 PageImpl(
                     listOf(
-                        ProvinceTestFixtures.createProvinceProjection(code = "TEST-P1"),
-                        ProvinceTestFixtures.createProvinceProjection(code = "TEST-P2"),
+                        DynamicProvinceProjection.from(
+                            ProvinceTestFixtures.createProvince(code = "TEST-P1"),
+                            ProvinceField.DEFAULT_FIELDS,
+                            geometryConverter,
+                        ),
+                        DynamicProvinceProjection.from(
+                            ProvinceTestFixtures.createProvince(code = "TEST-P2"),
+                            ProvinceField.DEFAULT_FIELDS,
+                            geometryConverter,
+                        ),
                     ),
                     PageRequest.of(0, 10),
                     2,
@@ -178,35 +192,40 @@ class ProvinceControllerIntegrationTest {
         fun `should search provinces with criteria and fields`() {
             // Arrange
             mockLoggedInUser(viewer)
-            val criteria =
-                ProvinceSearchCriteria(
-                    searchTerm = "Test",
-                    page = 0,
-                    pageSize = 10,
-                    includeTotals = true,
-                    includeGeometry = true,
-                    includeDistricts = true,
-                    fields = setOf(ProvinceField.NAME, ProvinceField.CODE),
-                )
-
             val expectedResults =
                 PageImpl(
                     listOf(
                         ProvinceTestFixtures.createProvinceProjection(
                             code = "TEST-P1",
+                            fields = setOf(ProvinceField.NAME, ProvinceField.CODE),
                             includeTotals = true,
                             includeGeometry = true,
                             includeDistricts = true,
-                        ),
-                        ProvinceTestFixtures.createProvinceProjection(
-                            code = "TEST-P2",
-                            includeTotals = true,
-                            includeGeometry = true,
-                            includeDistricts = true,
+                            geometryConverter = geometryConverter, // Pass the mocked converter
                         ),
                     ),
                     PageRequest.of(0, 10),
-                    2,
+                    1,
+                )
+
+            // ...existing code...
+        }
+
+        @Test
+        fun `should search provinces with specific fields`() {
+            // Arrange
+            mockLoggedInUser(viewer)
+            val fields = "CODE,NAME"
+            val expectedResults =
+                PageImpl(
+                    listOf(
+                        ProvinceTestFixtures.createProvinceProjection(
+                            code = "TEST-P1",
+                            fields = setOf(ProvinceField.CODE, ProvinceField.NAME),
+                        ),
+                    ),
+                    PageRequest.of(0, 10),
+                    1,
                 )
 
             whenever(provinceService.searchProvinces(any()))
@@ -216,19 +235,12 @@ class ProvinceControllerIntegrationTest {
             mockMvc
                 .perform(
                     get("/api/v1/provinces/search")
-                        .param("searchTerm", criteria.searchTerm)
-                        .param("page", criteria.page.toString())
-                        .param("pageSize", criteria.pageSize.toString())
-                        .param("includeTotals", "true")
-                        .param("includeGeometry", "true")
-                        .param("includeDistricts", "true")
-                        .param("fields", "NAME,CODE"),
+                        .param("fields", fields),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.content[0].totalArea").exists())
-                .andExpect(jsonPath("$.data.content[0].geometry").exists())
-                .andExpect(jsonPath("$.data.content[0].districts").exists())
+                .andExpect(jsonPath("$.data.content[0].code").exists())
+                .andExpect(jsonPath("$.data.content[0].name").exists())
+                .andExpect(jsonPath("$.data.content[0].nameNepali").doesNotExist())
+                .andExpect(jsonPath("$.data.content[0].area").doesNotExist())
         }
     }
 

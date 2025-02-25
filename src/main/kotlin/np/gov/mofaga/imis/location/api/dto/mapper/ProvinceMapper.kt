@@ -1,8 +1,8 @@
 package np.gov.mofaga.imis.location.api.dto.mapper
 
 import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
+import np.gov.mofaga.imis.location.api.dto.response.DynamicProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceDetailResponse
-import np.gov.mofaga.imis.location.api.dto.response.ProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceResponse
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceSummaryResponse
 import np.gov.mofaga.imis.location.domain.Province
@@ -34,5 +34,5 @@ interface ProvinceMapper {
     fun toProjection(
         province: Province,
         fields: Set<ProvinceField>,
-    ): ProvinceProjection
+    ): DynamicProvinceProjection // Updated return type
 }
