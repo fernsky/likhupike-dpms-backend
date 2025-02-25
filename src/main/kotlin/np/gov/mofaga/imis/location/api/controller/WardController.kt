@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import np.gov.mofaga.imis.location.api.dto.criteria.WardSearchCriteria
+import np.gov.mofaga.imis.location.api.dto.enums.WardField
 import np.gov.mofaga.imis.location.api.dto.request.CreateWardRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateWardRequest
+import np.gov.mofaga.imis.location.api.dto.response.DynamicWardProjection
 import np.gov.mofaga.imis.location.api.dto.response.WardDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardSummaryResponse
@@ -106,11 +108,27 @@ class WardController(
     fun searchWards(
         @Parameter(description = "Search criteria")
         @Valid criteria: WardSearchCriteria,
-    ): ResponseEntity<ApiResponse<PagedResponse<WardResponse>>> {
-        logger.debug("Searching wards with criteria: $criteria")
-        val searchResults = wardService.searchWards(criteria)
+        @Parameter(description = "Comma-separated list of fields to include")
+        @RequestParam(required = false) fields: String?,
+    ): ResponseEntity<ApiResponse<PagedResponse<DynamicWardProjection>>> {
+        logger.debug("Raw fields parameter: $fields")
+
+        val selectedFields =
+            fields?.let {
+                it
+                    .split(",")
+                    .map { field -> WardField.valueOf(field.trim().uppercase()) }
+                    .toSet()
+            } ?: WardField.DEFAULT_FIELDS
+
+        val searchCriteria = criteria.copy(fields = selectedFields)
+        val searchResults = wardService.searchWards(searchCriteria)
+
         return ResponseEntity.ok(
-            ApiResponse.success(data = PagedResponse.from(searchResults)),
+            ApiResponse.success(
+                data = PagedResponse.from(searchResults),
+                message = "Found ${searchResults.totalElements} wards",
+            ),
         )
     }
 

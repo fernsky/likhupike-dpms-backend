@@ -232,4 +232,72 @@ object DistrictTestFixtures {
         municipalities = emptyList(),
         geometry = createTestGeometry(),
     )
+
+    fun createDistrictProjection(
+        code: String,
+        fields: Set<DistrictField> = DistrictField.DEFAULT_FIELDS,
+        includeTotals: Boolean = false,
+        includeGeometry: Boolean = false,
+        includeMunicipalities: Boolean = false,
+        geometryConverter: GeometryConverter = defaultGeometryConverter,
+    ): DynamicDistrictProjection {
+        val district = createDistrict(code = code)
+        val allFields = fields.toMutableSet()
+
+        if (includeTotals) {
+            allFields.addAll(
+                setOf(
+                    DistrictField.TOTAL_AREA,
+                    DistrictField.TOTAL_POPULATION,
+                    DistrictField.MUNICIPALITY_COUNT,
+                ),
+            )
+        }
+        if (includeGeometry) {
+            allFields.add(DistrictField.GEOMETRY)
+            district.geometry = createTestJTSPolygon()
+        }
+        if (includeMunicipalities) {
+            allFields.add(DistrictField.MUNICIPALITIES)
+            district.municipalities = createTestMunicipalities(district)
+        }
+
+        return DynamicDistrictProjection.from(district, allFields, geometryConverter)
+    }
+
+    fun createSearchTestData(): List<District> =
+        listOf(
+            District().apply {
+                name = "Kathmandu"
+                nameNepali = "काठमाडौं"
+                code = "KTM"
+                population = 2017532
+                area = BigDecimal("395.0")
+                geometry = createTestJTSPolygon()
+            },
+            District().apply {
+                name = "Lalitpur"
+                nameNepali = "ललितपुर"
+                code = "LTP"
+                population = 468132
+                area = BigDecimal("385.0")
+                geometry = createTestJTSPolygon()
+            },
+            District().apply {
+                name = "Bhaktapur"
+                nameNepali = "भक्तपुर"
+                code = "BKT"
+                population = 304651
+                area = BigDecimal("119.0")
+                geometry = createTestJTSPolygon()
+            },
+            District().apply {
+                name = "Chitwan"
+                nameNepali = "चितवन"
+                code = "CHT"
+                population = 579984
+                area = BigDecimal("2218.0")
+                geometry = createTestJTSPolygon()
+            },
+        )
 }

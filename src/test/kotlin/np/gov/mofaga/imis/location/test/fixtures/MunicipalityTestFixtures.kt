@@ -195,4 +195,76 @@ object MunicipalityTestFixtures {
         type = type,
         totalWards = totalWards,
     )
+
+    fun createMunicipalityProjection(
+        code: String,
+        fields: Set<MunicipalityField> = MunicipalityField.DEFAULT_FIELDS,
+        includeTotals: Boolean = false,
+        includeGeometry: Boolean = false,
+        includeWards: Boolean = false,
+        geometryConverter: GeometryConverter = defaultGeometryConverter,
+    ): DynamicMunicipalityProjection {
+        val municipality = createMunicipality(code = code)
+        val allFields = fields.toMutableSet()
+
+        if (includeTotals) {
+            allFields.addAll(
+                setOf(
+                    MunicipalityField.TOTAL_AREA,
+                    MunicipalityField.TOTAL_POPULATION,
+                    MunicipalityField.WARD_COUNT,
+                ),
+            )
+        }
+        if (includeGeometry) {
+            allFields.add(MunicipalityField.GEOMETRY)
+            municipality.geometry = createTestJTSPolygon()
+        }
+        if (includeWards) {
+            allFields.add(MunicipalityField.WARDS)
+            municipality.wards = createTestWards(municipality)
+        }
+
+        return DynamicMunicipalityProjection.from(municipality, allFields, geometryConverter)
+    }
+
+    fun createSearchTestData(): List<Municipality> =
+        listOf(
+            Municipality().apply {
+                name = "Kathmandu Metropolitan City"
+                nameNepali = "काठमाडौं महानगरपालिका"
+                code = "KMC"
+                type = MunicipalityType.METROPOLITAN_CITY
+                population = 975453
+                area = BigDecimal("49.45")
+                geometry = createTestJTSPolygon()
+            },
+            Municipality().apply {
+                name = "Lalitpur Metropolitan City"
+                nameNepali = "ललितपुर महानगरपालिका"
+                code = "LMC"
+                type = MunicipalityType.METROPOLITAN_CITY
+                population = 284922
+                area = BigDecimal("37.4")
+                geometry = createTestJTSPolygon()
+            },
+            Municipality().apply {
+                name = "Bharatpur Metropolitan City"
+                nameNepali = "भरतपुर महानगरपालिका"
+                code = "BMC"
+                type = MunicipalityType.METROPOLITAN_CITY
+                population = 280502
+                area = BigDecimal("432.95")
+                geometry = createTestJTSPolygon()
+            },
+            Municipality().apply {
+                name = "Pokhara Metropolitan City"
+                nameNepali = "पोखरा महानगरपालिका"
+                code = "PMC"
+                type = MunicipalityType.METROPOLITAN_CITY
+                population = 402995
+                area = BigDecimal("464.24")
+                geometry = createTestJTSPolygon()
+            },
+        )
 }

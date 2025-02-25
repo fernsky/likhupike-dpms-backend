@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import np.gov.mofaga.imis.location.api.dto.criteria.MunicipalitySearchCriteria
+import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
 import np.gov.mofaga.imis.location.api.dto.request.CreateMunicipalityRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateMunicipalityRequest
+import np.gov.mofaga.imis.location.api.dto.response.DynamicMunicipalityProjection
 import np.gov.mofaga.imis.location.api.dto.response.MunicipalityDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.MunicipalityResponse
 import np.gov.mofaga.imis.location.domain.MunicipalityType
@@ -100,11 +102,27 @@ class MunicipalityController(
     fun searchMunicipalities(
         @Parameter(description = "Search criteria")
         @Valid criteria: MunicipalitySearchCriteria,
-    ): ResponseEntity<ApiResponse<PagedResponse<MunicipalityResponse>>> {
-        logger.debug("Searching municipalities with criteria: $criteria")
-        val searchResults = municipalityService.searchMunicipalities(criteria)
+        @Parameter(description = "Comma-separated list of fields to include")
+        @RequestParam(required = false) fields: String?,
+    ): ResponseEntity<ApiResponse<PagedResponse<DynamicMunicipalityProjection>>> {
+        logger.debug("Raw fields parameter: $fields")
+
+        val selectedFields =
+            fields?.let {
+                it
+                    .split(",")
+                    .map { field -> MunicipalityField.valueOf(field.trim().uppercase()) }
+                    .toSet()
+            } ?: MunicipalityField.DEFAULT_FIELDS
+
+        val searchCriteria = criteria.copy(fields = selectedFields)
+        val searchResults = municipalityService.searchMunicipalities(searchCriteria)
+
         return ResponseEntity.ok(
-            ApiResponse.success(data = PagedResponse.from(searchResults)),
+            ApiResponse.success(
+                data = PagedResponse.from(searchResults),
+                message = "Found ${searchResults.totalElements} municipalities",
+            ),
         )
     }
 

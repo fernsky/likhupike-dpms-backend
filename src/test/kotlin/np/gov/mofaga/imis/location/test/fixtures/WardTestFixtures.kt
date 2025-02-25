@@ -170,4 +170,69 @@ object WardTestFixtures {
         wardNumber = wardNumber,
         population = population,
     )
+
+    fun createWardProjection(
+        wardNumber: Int,
+        municipalityCode: String = "TEST-M",
+        fields: Set<WardField> = WardField.DEFAULT_FIELDS,
+        includeGeometry: Boolean = false,
+        geometryConverter: GeometryConverter = defaultGeometryConverter,
+    ): DynamicWardProjection {
+        val municipality = MunicipalityTestFixtures.createMunicipality(code = municipalityCode)
+        val ward = createWard(municipality = municipality, wardNumber = wardNumber)
+        val allFields = fields.toMutableSet()
+
+        if (includeGeometry) {
+            allFields.add(WardField.GEOMETRY)
+            ward.geometry = createTestJTSPolygon()
+        }
+
+        return DynamicWardProjection.from(ward, allFields, geometryConverter)
+    }
+
+    fun createSearchTestData(): List<Ward> =
+        listOf(
+            Ward().apply {
+                wardNumber = 1
+                municipality = MunicipalityTestFixtures.createMunicipality(code = "TEST-M1")
+                population = 25000
+                area = BigDecimal("2.5")
+                geometry = createTestJTSPolygon()
+            },
+            Ward().apply {
+                wardNumber = 2
+                municipality = MunicipalityTestFixtures.createMunicipality(code = "TEST-M2")
+                population = 18500
+                area = BigDecimal("3.2")
+                geometry = createTestJTSPolygon()
+            },
+            Ward().apply {
+                wardNumber = 3
+                municipality = MunicipalityTestFixtures.createMunicipality(code = "TEST-M3")
+                population = 32000
+                area = BigDecimal("4.1")
+                geometry = createTestJTSPolygon()
+            },
+            Ward().apply {
+                wardNumber = 4
+                municipality = MunicipalityTestFixtures.createMunicipality(code = "TEST-M4")
+                population = 15000
+                area = BigDecimal("2.8")
+                geometry = createTestJTSPolygon()
+            },
+        )
+
+    private fun createTestJTSPolygon(): Polygon {
+        // Similar to the existing createTestGeometry but returns JTS Polygon
+        val coordinates =
+            arrayOf(
+                Coordinate(85.3240, 27.7172),
+                Coordinate(85.3340, 27.7172),
+                Coordinate(85.3340, 27.7272),
+                Coordinate(85.3240, 27.7272),
+                Coordinate(85.3240, 27.7172),
+            )
+        val ring = LinearRing(CoordinateArraySequence(coordinates), geometryFactory)
+        return geometryFactory.createPolygon(ring)
+    }
 }

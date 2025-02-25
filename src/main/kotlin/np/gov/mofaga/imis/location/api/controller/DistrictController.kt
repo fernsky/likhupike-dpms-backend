@@ -6,10 +6,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSearchCriteria
+import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
 import np.gov.mofaga.imis.location.api.dto.request.CreateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.request.UpdateDistrictRequest
 import np.gov.mofaga.imis.location.api.dto.response.DistrictDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.DistrictResponse
+import np.gov.mofaga.imis.location.api.dto.response.DynamicDistrictProjection
 import np.gov.mofaga.imis.location.service.DistrictService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
 import np.gov.mofaga.imis.shared.dto.PagedResponse
@@ -74,11 +76,27 @@ class DistrictController(
     fun searchDistricts(
         @Parameter(description = "Search criteria")
         @Valid criteria: DistrictSearchCriteria,
-    ): ResponseEntity<ApiResponse<PagedResponse<DistrictResponse>>> {
-        logger.debug("Searching districts with criteria: $criteria")
-        val searchResults = districtService.searchDistricts(criteria)
+        @Parameter(description = "Comma-separated list of fields to include")
+        @RequestParam(required = false) fields: String?,
+    ): ResponseEntity<ApiResponse<PagedResponse<DynamicDistrictProjection>>> {
+        logger.debug("Raw fields parameter: $fields")
+
+        val selectedFields =
+            fields?.let {
+                it
+                    .split(",")
+                    .map { field -> DistrictField.valueOf(field.trim().uppercase()) }
+                    .toSet()
+            } ?: DistrictField.DEFAULT_FIELDS
+
+        val searchCriteria = criteria.copy(fields = selectedFields)
+        val searchResults = districtService.searchDistricts(searchCriteria)
+
         return ResponseEntity.ok(
-            ApiResponse.success(data = PagedResponse.from(searchResults)),
+            ApiResponse.success(
+                data = PagedResponse.from(searchResults),
+                message = "Found ${searchResults.totalElements} districts",
+            ),
         )
     }
 
