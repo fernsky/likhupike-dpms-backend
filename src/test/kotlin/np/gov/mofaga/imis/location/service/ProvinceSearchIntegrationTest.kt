@@ -174,6 +174,26 @@ class ProvinceSearchIntegrationTest {
             assertNull(province.getValue(ProvinceField.NAME_NEPALI))
             assertNull(province.getValue(ProvinceField.AREA))
         }
+
+        @Test
+        @Transactional
+        fun `should handle underscore separated field names`() {
+            val criteria =
+                ProvinceSearchCriteria(
+                    searchTerm = "Bagmati",
+                    fields = setOf(ProvinceField.CODE, ProvinceField.NAME_NEPALI),
+                )
+
+            val result = provinceService.searchProvinces(criteria)
+
+            assertTrue(result.content.isNotEmpty())
+            val province = result.content.first()
+
+            // Verify fields are present and correctly named
+            assertNotNull(province.getValue(ProvinceField.CODE))
+            assertNotNull(province.getValue(ProvinceField.NAME_NEPALI))
+            assertEquals("बागमती प्रदेश", province.getValue(ProvinceField.NAME_NEPALI))
+        }
     }
 
     @Nested

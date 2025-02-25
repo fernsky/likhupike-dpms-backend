@@ -49,7 +49,7 @@ class JacksonConfig {
             gen.writeStartObject()
             ProvinceField.values().forEach { field ->
                 value.getValue(field)?.let {
-                    gen.writeObjectField(field.name.lowercase(), it)
+                    gen.writeObjectField(field.toJsonFieldName(), it)
                 }
             }
             gen.writeEndObject()

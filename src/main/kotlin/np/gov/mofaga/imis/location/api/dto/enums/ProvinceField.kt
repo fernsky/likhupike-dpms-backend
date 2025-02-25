@@ -20,6 +20,10 @@ enum class ProvinceField {
     UPDATED_BY,
     ;
 
+    fun toJsonFieldName(): String = name.lowercase().replace("_", "-")
+
+    fun toPropertyName(): String = name.lowercase().replace("_", "")
+
     companion object {
         val DEFAULT_FIELDS = setOf(CODE, NAME, NAME_NEPALI, AREA, POPULATION)
         val SUMMARY_FIELDS = setOf(CODE, NAME, NAME_NEPALI)
