@@ -22,7 +22,7 @@ import java.math.BigDecimal
     ],
 )
 class Ward : BaseEntity() {
-    @Column(nullable = false)
+    @Column(name = "ward_number", nullable = false)
     var wardNumber: Int? = null
 
     @Column(precision = 10, scale = 2)

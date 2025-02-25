@@ -288,8 +288,10 @@ object DistrictTestFixtures {
         return DynamicDistrictProjection.from(district, allFields, geometryConverter)
     }
 
-    fun createSearchTestData(): List<District> =
-        listOf(
+    fun createSearchTestData(province: Province? = null): List<District> {
+        val testProvince = province ?: ProvinceTestFixtures.createProvince()
+
+        return listOf(
             District().apply {
                 name = "Kathmandu"
                 nameNepali = "काठमाडौं"
@@ -297,6 +299,7 @@ object DistrictTestFixtures {
                 population = 2017532
                 area = BigDecimal("395.0")
                 geometry = createTestJTSPolygon()
+                this.province = testProvince
             },
             District().apply {
                 name = "Lalitpur"
@@ -305,6 +308,7 @@ object DistrictTestFixtures {
                 population = 468132
                 area = BigDecimal("385.0")
                 geometry = createTestJTSPolygon()
+                this.province = testProvince
             },
             District().apply {
                 name = "Bhaktapur"
@@ -313,6 +317,7 @@ object DistrictTestFixtures {
                 population = 304651
                 area = BigDecimal("119.0")
                 geometry = createTestJTSPolygon()
+                this.province = testProvince
             },
             District().apply {
                 name = "Chitwan"
@@ -321,6 +326,8 @@ object DistrictTestFixtures {
                 population = 579984
                 area = BigDecimal("2218.0")
                 geometry = createTestJTSPolygon()
+                this.province = testProvince
             },
         )
+    }
 }

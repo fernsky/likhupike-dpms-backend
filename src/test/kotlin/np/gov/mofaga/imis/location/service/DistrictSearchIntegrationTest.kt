@@ -5,7 +5,9 @@ import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSortField
 import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
 import np.gov.mofaga.imis.location.repository.DistrictRepository
+import np.gov.mofaga.imis.location.repository.ProvinceRepository
 import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
+import np.gov.mofaga.imis.location.test.fixtures.ProvinceTestFixtures
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -33,14 +35,24 @@ class DistrictSearchIntegrationTest {
     @Autowired
     private lateinit var districtRepository: DistrictRepository
 
+    @Autowired
+    private lateinit var provinceRepository: ProvinceRepository
+
     @BeforeEach
     fun setup() {
+        // Clean up both repositories
         districtRepository.deleteAll()
+        provinceRepository.deleteAll()
         setupTestData()
     }
 
     private fun setupTestData() {
-        DistrictTestFixtures.createSearchTestData().forEach { district ->
+        // First create and save a test province
+        val testProvince = provinceRepository.save(ProvinceTestFixtures.createProvince())
+        
+        // Create districts with the saved province
+        DistrictTestFixtures.createSearchTestData().map { district ->
+            district.province = testProvince
             districtRepository.save(district)
         }
     }

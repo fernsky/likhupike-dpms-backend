@@ -13,6 +13,7 @@ import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
 import np.gov.mofaga.imis.location.api.dto.enums.WardField
 import np.gov.mofaga.imis.location.api.dto.response.DynamicProvinceProjection
 import np.gov.mofaga.imis.location.api.dto.response.DynamicWardProjection
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
@@ -60,6 +61,8 @@ class JacksonConfig {
     }
 
     private class DynamicWardProjectionSerializer : StdSerializer<DynamicWardProjection>(DynamicWardProjection::class.java) {
+        private val logger = LoggerFactory.getLogger(this::class.java)
+
         override fun serialize(
             value: DynamicWardProjection,
             gen: JsonGenerator,
@@ -68,7 +71,9 @@ class JacksonConfig {
             gen.writeStartObject()
             WardField.values().forEach { field ->
                 value.getValue(field)?.let {
-                    gen.writeObjectField(field.toJsonFieldName(), it)
+                    val jsonFieldName = field.toJsonFieldName()
+                    logger.debug("Serializing field: ${field.name} as JSON field: $jsonFieldName with value: $it")
+                    gen.writeObjectField(jsonFieldName, it)
                 }
             }
             gen.writeEndObject()

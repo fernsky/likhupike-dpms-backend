@@ -3,6 +3,7 @@ package np.gov.mofaga.imis.location.service
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.WardSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.enums.WardField
+import np.gov.mofaga.imis.location.api.dto.response.MunicipalitySummaryResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardResponse
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Municipality
@@ -214,11 +215,10 @@ class WardServiceIntegrationTest {
             assertTrue(result.totalElements > 0)
             result.content.forEach { ward ->
                 val population = (ward.getValue(WardField.POPULATION) as Number).toLong()
-                @Suppress("UNCHECKED_CAST")
-                val municipalityData = ward.getValue(WardField.MUNICIPALITY) as Map<String, Any>
+                val municipality = ward.getValue(WardField.MUNICIPALITY) as MunicipalitySummaryResponse
 
                 assertTrue(population in 1000L..2000L)
-                assertEquals(testMunicipality.code, municipalityData["code"])
+                assertEquals(testMunicipality.code, municipality.code)
             }
         }
     }

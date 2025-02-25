@@ -1,8 +1,8 @@
 package np.gov.mofaga.imis.location.api.dto.enums
 
-import np.gov.mofaga.imis.shared.enums.FieldSupport
+import np.gov.mofaga.imis.shared.enums.EntityField
 
-enum class WardField : FieldSupport {
+enum class WardField : EntityField {
     WARD_NUMBER {
         override fun toJsonFieldName() = "wardNumber"
     },
