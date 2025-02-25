@@ -1,6 +1,7 @@
 package np.gov.mofaga.imis.location.api.dto.criteria
 
 import jakarta.validation.constraints.*
+import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
 import np.gov.mofaga.imis.location.api.dto.enums.MunicipalitySortField
 import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.shared.dto.BaseSearchCriteria

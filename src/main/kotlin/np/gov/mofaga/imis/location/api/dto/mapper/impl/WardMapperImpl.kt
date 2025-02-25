@@ -65,4 +65,9 @@ class WardMapperImpl(
         validateRequiredFields(ward)
         return DynamicWardProjection.from(ward, fields, geometryConverter)
     }
+
+    private fun validateRequiredFields(ward: Ward) {
+        require(ward.wardNumber != null) { "Ward number cannot be null" }
+        require(ward.municipality != null) { "Municipality cannot be null" }
+    }
 }

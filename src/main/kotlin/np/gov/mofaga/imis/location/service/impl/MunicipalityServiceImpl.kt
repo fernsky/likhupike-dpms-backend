@@ -15,6 +15,7 @@ import np.gov.mofaga.imis.location.repository.MunicipalityRepository
 import np.gov.mofaga.imis.location.repository.specification.MunicipalitySpecifications
 import np.gov.mofaga.imis.location.service.MunicipalityService
 import np.gov.mofaga.imis.shared.service.SecurityService
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -29,6 +30,7 @@ class MunicipalityServiceImpl(
     private val districtRepository: DistrictRepository,
     private val municipalityMapper: MunicipalityMapper,
     private val securityService: SecurityService,
+    private val geometryConverter: GeometryConverter,
 ) : MunicipalityService {
     private val logger = LoggerFactory.getLogger(javaClass)
 

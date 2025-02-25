@@ -13,6 +13,7 @@ import np.gov.mofaga.imis.location.repository.WardRepository
 import np.gov.mofaga.imis.location.repository.specification.WardSpecifications
 import np.gov.mofaga.imis.location.service.WardService
 import np.gov.mofaga.imis.shared.service.SecurityService
+import np.gov.mofaga.imis.shared.util.GeometryConverter
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -31,6 +32,7 @@ class WardServiceImpl(
     private val familyRepository: FamilyRepository,
     private val securityService: SecurityService,
     private val wardMapper: WardMapper,
+    private val geometryConverter: GeometryConverter,
 ) : WardService {
     private val logger = LoggerFactory.getLogger(javaClass)
 

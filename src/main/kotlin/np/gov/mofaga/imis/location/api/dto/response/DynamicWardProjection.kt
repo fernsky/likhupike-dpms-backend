@@ -1,6 +1,7 @@
 package np.gov.mofaga.imis.location.api.dto.response
 
 import np.gov.mofaga.imis.location.api.dto.enums.WardField
+import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.domain.Ward
 import np.gov.mofaga.imis.shared.projection.BaseEntityProjection
 import np.gov.mofaga.imis.shared.util.GeometryConverter
@@ -33,25 +34,33 @@ class DynamicWardProjection private constructor() : BaseEntityProjection<Ward, W
                     WardField.OFFICE_LOCATION -> ward.officeLocation
                     WardField.OFFICE_LOCATION_NEPALI -> ward.officeLocationNepali
                     WardField.MUNICIPALITY ->
-                        MunicipalitySummaryResponse(
-                            code = ward.municipality.code!!,
-                            name = ward.municipality.name!!,
-                            nameNepali = ward.municipality.nameNepali!!,
-                            type = ward.municipality.type!!,
-                        )
+                        ward.municipality?.let { municipality ->
+                            MunicipalitySummaryResponse(
+                                code = municipality.code ?: "",
+                                name = municipality.name ?: "",
+                                nameNepali = municipality.nameNepali ?: "",
+                                type = municipality.type ?: MunicipalityType.MUNICIPALITY,
+                                totalWards = municipality.totalWards ?: 0,
+                            )
+                        }
                     WardField.DISTRICT ->
-                        DistrictSummaryResponse(
-                            code = ward.municipality.district.code!!,
-                            name = ward.municipality.district.name!!,
-                            nameNepali = ward.municipality.district.nameNepali!!,
-                        )
+                        ward.municipality?.district?.let { district ->
+                            DistrictSummaryResponse(
+                                code = district.code ?: "",
+                                name = district.name ?: "",
+                                nameNepali = district.nameNepali ?: "",
+                                municipalityCount = district.municipalities?.size ?: 0,
+                            )
+                        }
                     WardField.PROVINCE ->
-                        ProvinceSummaryResponse(
-                            code = ward.municipality.district.province.code!!,
-                            name = ward.municipality.district.province.name!!,
-                            nameNepali = ward.municipality.district.province.nameNepali!!,
-                        )
-                    WardField.GEOMETRY -> ward.geometry?.let { geometryConverter.convert(it) }
+                        ward.municipality?.district?.province?.let { province ->
+                            ProvinceSummaryResponse(
+                                code = province.code ?: "",
+                                name = province.name ?: "",
+                                nameNepali = province.nameNepali ?: "",
+                            )
+                        }
+                    WardField.GEOMETRY -> ward.geometry?.let { geometryConverter.convertToGeoJson(it) }
                     WardField.CREATED_AT -> ward.createdAt
                     WardField.CREATED_BY -> ward.createdBy
                     WardField.UPDATED_AT -> ward.updatedAt

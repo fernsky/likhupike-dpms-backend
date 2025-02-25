@@ -39,7 +39,7 @@ class DynamicProvinceProjection private constructor() : BaseEntityProjection<Pro
                         province.districts
                             .mapNotNull { it.area }
                             .fold(java.math.BigDecimal.ZERO) { acc, area -> acc.add(area) }
-                    ProvinceField.GEOMETRY -> province.geometry?.let { geometryConverter.convert(it) }
+                    ProvinceField.GEOMETRY -> province.geometry?.let { geometryConverter.convertToGeoJson(it) }
                     ProvinceField.DISTRICTS ->
                         province.districts.map { district ->
                             DistrictSummaryResponse(

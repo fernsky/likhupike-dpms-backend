@@ -1,6 +1,7 @@
 package np.gov.mofaga.imis.location.api.dto.criteria
 
 import jakarta.validation.constraints.*
+import np.gov.mofaga.imis.location.api.dto.enums.WardField
 import np.gov.mofaga.imis.shared.dto.BaseSearchCriteria
 import org.springframework.data.domain.Sort
 import java.math.BigDecimal

@@ -35,30 +35,36 @@ class DynamicMunicipalityProjection private constructor() : BaseEntityProjection
                     MunicipalityField.LONGITUDE -> municipality.longitude
                     MunicipalityField.TOTAL_WARDS -> municipality.wards.size
                     MunicipalityField.DISTRICT ->
-                        DistrictSummaryResponse(
-                            code = municipality.district.code!!,
-                            name = municipality.district.name!!,
-                            nameNepali = municipality.district.nameNepali!!,
-                        )
-                    MunicipalityField.PROVINCE ->
-                        ProvinceSummaryResponse(
-                            code = municipality.district.province.code!!,
-                            name = municipality.district.province.name!!,
-                            nameNepali = municipality.district.province.nameNepali!!,
-                        )
-                    MunicipalityField.TOTAL_POPULATION -> municipality.wards.sumOf { it.population ?: 0L }
-                    MunicipalityField.TOTAL_AREA ->
-                        municipality.wards
-                            .mapNotNull { it.area }
-                            .fold(java.math.BigDecimal.ZERO) { acc, area -> acc.add(area) }
-                    MunicipalityField.GEOMETRY -> municipality.geometry?.let { geometryConverter.convert(it) }
-                    MunicipalityField.WARDS ->
-                        municipality.wards.map { ward ->
-                            WardSummaryResponse(
-                                wardNumber = ward.wardNumber!!,
-                                officeLocation = ward.officeLocation,
+                        municipality.district?.let { district ->
+                            DistrictSummaryResponse(
+                                code = district.code ?: "",
+                                name = district.name ?: "",
+                                nameNepali = district.nameNepali ?: "",
+                                municipalityCount = district.municipalities?.size ?: 0,
                             )
                         }
+                    MunicipalityField.PROVINCE ->
+                        municipality.district?.province?.let { province ->
+                            ProvinceSummaryResponse(
+                                code = province.code ?: "",
+                                name = province.name ?: "",
+                                nameNepali = province.nameNepali ?: "",
+                            )
+                        }
+                    MunicipalityField.TOTAL_POPULATION -> municipality.wards?.sumOf { it.population ?: 0L } ?: 0L
+                    MunicipalityField.TOTAL_AREA ->
+                        municipality.wards
+                            ?.mapNotNull { it.area }
+                            ?.fold(java.math.BigDecimal.ZERO) { acc, area -> acc.add(area) }
+                            ?: java.math.BigDecimal.ZERO
+                    MunicipalityField.GEOMETRY -> municipality.geometry?.let { geometryConverter.convertToGeoJson(it) }
+                    MunicipalityField.WARDS ->
+                        municipality.wards?.map { ward ->
+                            WardSummaryResponse(
+                                wardNumber = ward.wardNumber ?: 0,
+                                population = ward.population ?: 0L,
+                            )
+                        } ?: emptyList<WardSummaryResponse>() // Add explicit type parameter here
                     MunicipalityField.CREATED_AT -> municipality.createdAt
                     MunicipalityField.CREATED_BY -> municipality.createdBy
                     MunicipalityField.UPDATED_AT -> municipality.updatedAt
