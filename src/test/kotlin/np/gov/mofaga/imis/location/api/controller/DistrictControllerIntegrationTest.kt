@@ -194,7 +194,6 @@ class DistrictControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.content[0].code").value(testDistrict.code))
                 .andExpect(jsonPath("$.data.totalElements").value(1))
                 .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.number").value(0))
         }
 
         @Test

@@ -10,7 +10,9 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import np.gov.mofaga.imis.location.api.dto.enums.ProvinceField
+import np.gov.mofaga.imis.location.api.dto.enums.WardField
 import np.gov.mofaga.imis.location.api.dto.response.DynamicProvinceProjection
+import np.gov.mofaga.imis.location.api.dto.response.DynamicWardProjection
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
@@ -37,6 +39,7 @@ class JacksonConfig {
     fun customModule(): SimpleModule {
         val module = SimpleModule()
         module.addSerializer(DynamicProvinceProjection::class.java, DynamicProvinceProjectionSerializer())
+        module.addSerializer(DynamicWardProjection::class.java, DynamicWardProjectionSerializer())
         return module
     }
 
@@ -48,6 +51,22 @@ class JacksonConfig {
         ) {
             gen.writeStartObject()
             ProvinceField.values().forEach { field ->
+                value.getValue(field)?.let {
+                    gen.writeObjectField(field.toJsonFieldName(), it)
+                }
+            }
+            gen.writeEndObject()
+        }
+    }
+
+    private class DynamicWardProjectionSerializer : StdSerializer<DynamicWardProjection>(DynamicWardProjection::class.java) {
+        override fun serialize(
+            value: DynamicWardProjection,
+            gen: JsonGenerator,
+            provider: SerializerProvider,
+        ) {
+            gen.writeStartObject()
+            WardField.values().forEach { field ->
                 value.getValue(field)?.let {
                     gen.writeObjectField(field.toJsonFieldName(), it)
                 }

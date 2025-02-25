@@ -166,10 +166,11 @@ class WardControllerTest {
         @Test
         fun `should search with geometry included`() {
             // Arrange
-            mockLoggedInUser(viewer) // Changed from loginAs
+            mockLoggedInUser(viewer)
             val projection =
                 WardTestFixtures.createWardProjection(
                     wardNumber = 1,
+                    fields = setOf(WardField.WARD_NUMBER, WardField.GEOMETRY),
                     includeGeometry = true,
                 )
             val expectedResults: Page<DynamicWardProjection> = PageImpl(listOf(projection))
@@ -181,8 +182,12 @@ class WardControllerTest {
             mockMvc
                 .perform(
                     get("/api/v1/wards/search")
-                        .param("fields", "WARD_NUMBER,GEOMETRY"),
+                        .param("fields", "WARD_NUMBER,GEOMETRY")
+                        .param("includeGeometry", "true"),
                 ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.data.content").isArray)
+                .andExpect(jsonPath("$.data.content[0]").exists())
+                .andExpect(jsonPath("$.data.content[0].wardNumber").exists())
                 .andExpect(jsonPath("$.data.content[0].geometry").exists())
         }
     }

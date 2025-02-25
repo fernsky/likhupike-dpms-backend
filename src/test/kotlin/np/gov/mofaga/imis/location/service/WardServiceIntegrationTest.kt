@@ -213,7 +213,8 @@ class WardServiceIntegrationTest {
             // Then
             assertTrue(result.totalElements > 0)
             result.content.forEach { ward ->
-                val population = ward.getValue(WardField.POPULATION) as Long
+                val population = (ward.getValue(WardField.POPULATION) as Number).toLong()
+                @Suppress("UNCHECKED_CAST")
                 val municipalityData = ward.getValue(WardField.MUNICIPALITY) as Map<String, Any>
 
                 assertTrue(population in 1000L..2000L)

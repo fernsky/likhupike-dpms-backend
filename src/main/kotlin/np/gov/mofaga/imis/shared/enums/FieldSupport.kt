@@ -1,16 +1,18 @@
 package np.gov.mofaga.imis.shared.enums
 
 interface FieldSupport : EntityField {
-    override fun toJsonFieldName(): String =
-        fieldName()
-            .split('_')
-            .mapIndexed { index, part ->
+    override fun toJsonFieldName(): String {
+        val words = fieldName().split('_')
+        return buildString {
+            words.forEachIndexed { index, word ->
                 if (index == 0) {
-                    part.lowercase()
+                    append(word.lowercase())
                 } else {
-                    part.lowercase().capitalize()
+                    append(word.lowercase().replaceFirstChar { it.uppercase() })
                 }
-            }.joinToString("")
+            }
+        }
+    }
 
     override fun toPropertyName(): String = fieldName().lowercase().replace("_", "")
 

@@ -201,6 +201,28 @@ object WardTestFixtures {
         return DynamicWardProjection.from(ward, allFields, geometryConverter)
     }
 
+    fun createWardProjection(
+        wardNumber: Int,
+        fields: Set<WardField> = setOf(WardField.WARD_NUMBER),
+        includeGeometry: Boolean = false,
+    ): DynamicWardProjection {
+        val ward = createWard(
+            wardNumber = wardNumber,
+            municipality = MunicipalityTestFixtures.createMunicipality()
+        )
+
+        if (includeGeometry) {
+            ward.geometry = createTestJTSPolygon()
+        }
+
+        val allFields = fields.toMutableSet()
+        if (includeGeometry) {
+            allFields.add(WardField.GEOMETRY)
+        }
+
+        return DynamicWardProjection.from(ward, allFields, defaultGeometryConverter)
+    }
+
     fun createSearchTestData(): List<Ward> =
         listOf(
             Ward().apply {

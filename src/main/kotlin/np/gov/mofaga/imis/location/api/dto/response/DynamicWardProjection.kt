@@ -1,7 +1,6 @@
 package np.gov.mofaga.imis.location.api.dto.response
 
 import np.gov.mofaga.imis.location.api.dto.enums.WardField
-import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.domain.Ward
 import np.gov.mofaga.imis.shared.projection.BaseEntityProjection
 import np.gov.mofaga.imis.shared.util.GeometryConverter
@@ -39,7 +38,7 @@ class DynamicWardProjection private constructor() : BaseEntityProjection<Ward, W
                                 code = municipality.code ?: "",
                                 name = municipality.name ?: "",
                                 nameNepali = municipality.nameNepali ?: "",
-                                type = municipality.type ?: MunicipalityType.MUNICIPALITY,
+                                type = municipality.type ?: np.gov.mofaga.imis.location.domain.MunicipalityType.MUNICIPALITY,
                                 totalWards = municipality.totalWards ?: 0,
                             )
                         }
