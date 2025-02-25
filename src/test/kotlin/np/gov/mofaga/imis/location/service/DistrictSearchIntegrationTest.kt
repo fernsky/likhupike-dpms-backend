@@ -4,6 +4,7 @@ import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSearchCriteria
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSortField
 import np.gov.mofaga.imis.location.api.dto.enums.DistrictField
+import np.gov.mofaga.imis.location.api.dto.response.ProvinceSummaryResponse
 import np.gov.mofaga.imis.location.repository.DistrictRepository
 import np.gov.mofaga.imis.location.repository.ProvinceRepository
 import np.gov.mofaga.imis.location.test.fixtures.DistrictTestFixtures
@@ -49,7 +50,7 @@ class DistrictSearchIntegrationTest {
     private fun setupTestData() {
         // First create and save a test province
         val testProvince = provinceRepository.save(ProvinceTestFixtures.createProvince())
-        
+
         // Create districts with the saved province
         DistrictTestFixtures.createSearchTestData().map { district ->
             district.province = testProvince
@@ -112,6 +113,40 @@ class DistrictSearchIntegrationTest {
                     it.getValue(DistrictField.POPULATION) as? Long
                 }
             assertEquals(populations, populations.sortedDescending())
+        }
+    }
+
+    @Nested
+    @DisplayName("Filter Tests")
+    inner class FilterTests {
+        @Test
+        @Transactional
+        fun `should filter districts by province code`() {
+            // Given
+            val province1 = provinceRepository.save(ProvinceTestFixtures.createProvince(code = "P1"))
+            val province2 = provinceRepository.save(ProvinceTestFixtures.createProvince(code = "P2"))
+
+            // Create districts in different provinces
+            districtRepository.save(DistrictTestFixtures.createDistrict(code = "D1", province = province1))
+            districtRepository.save(DistrictTestFixtures.createDistrict(code = "D2", province = province1))
+            districtRepository.save(DistrictTestFixtures.createDistrict(code = "D3", province = province2))
+
+            val criteria =
+                DistrictSearchCriteria(
+                    provinceCode = "P1",
+                    fields = setOf(DistrictField.CODE, DistrictField.PROVINCE),
+                )
+
+            // When
+            val result = districtService.searchDistricts(criteria)
+
+            // Then
+            assertEquals(2, result.totalElements)
+            result.content.forEach { district ->
+                val provinceData = district.getValue(DistrictField.PROVINCE)
+                assertNotNull(provinceData)
+                assertEquals("P1", (provinceData as ProvinceSummaryResponse).code)
+            }
         }
     }
 }

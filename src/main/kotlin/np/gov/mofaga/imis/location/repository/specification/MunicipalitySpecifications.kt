@@ -40,16 +40,27 @@ object MunicipalitySpecifications {
                 )
             }
 
-            // District and Province filtering
+            // District code filter (case-insensitive)
             criteria.districtCode?.let { districtCode ->
                 val district = root.join(Municipality_.district)
-                predicates.add(cb.equal(district.get(District_.code), districtCode))
+                predicates.add(
+                    cb.equal(
+                        cb.lower(district.get(District_.code)),
+                        districtCode.lowercase()
+                    )
+                )
             }
 
+            // Province code filter (case-insensitive)
             criteria.provinceCode?.let { provinceCode ->
                 val district = root.join(Municipality_.district)
                 val province = district.join(District_.province)
-                predicates.add(cb.equal(province.get(Province_.code), provinceCode))
+                predicates.add(
+                    cb.equal(
+                        cb.lower(province.get(Province_.code)),
+                        provinceCode.lowercase()
+                    )
+                )
             }
 
             // Municipality type filtering

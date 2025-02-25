@@ -1,6 +1,7 @@
 package np.gov.mofaga.imis.location.api.dto.response
 
 import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
+import np.gov.mofaga.imis.location.api.dto.response.DistrictSummaryResponse
 import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.shared.projection.BaseEntityProjection
 import np.gov.mofaga.imis.shared.util.GeometryConverter

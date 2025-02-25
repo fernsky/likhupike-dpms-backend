@@ -4,6 +4,7 @@ import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.dto.criteria.MunicipalitySearchCriteria
 import np.gov.mofaga.imis.location.api.dto.enums.MunicipalityField
 import np.gov.mofaga.imis.location.api.dto.enums.MunicipalitySortField
+import np.gov.mofaga.imis.location.api.dto.response.DistrictSummaryResponse
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.Province
 import np.gov.mofaga.imis.location.exception.*
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @WebMvcTest(MunicipalityService::class)
 @AutoConfigureMockMvc
@@ -196,6 +198,81 @@ class MunicipalityServiceIntegrationTest {
 
             assertEquals("Test Municipality 2", name)
             assertEquals(100000L, population)
+        }
+
+        @Test
+        @Transactional
+        @DisplayName("Should filter municipalities by district and province code")
+        fun shouldFilterByDistrictAndProvinceCode() {
+            // Given
+            val province = provinceRepository.save(ProvinceTestFixtures.createProvince(code = "P1"))
+
+            // Create districts with unique codes
+            val district1 =
+                districtRepository.save(
+                    DistrictTestFixtures.createDistrict(
+                        code = "D1-${System.currentTimeMillis()}",
+                        province = province,
+                    ),
+                )
+            val district2 =
+                districtRepository.save(
+                    DistrictTestFixtures.createDistrict(
+                        code = "D2-${System.currentTimeMillis()}",
+                        province = province,
+                    ),
+                )
+
+            // Create municipalities
+            municipalityRepository.saveAll(
+                listOf(
+                    MunicipalityTestFixtures.createMunicipality(
+                        district = district1,
+                        code = "M1-${System.currentTimeMillis()}",
+                    ),
+                    MunicipalityTestFixtures.createMunicipality(
+                        district = district1,
+                        code = "M2-${System.currentTimeMillis()}",
+                    ),
+                    MunicipalityTestFixtures.createMunicipality(
+                        district = district2,
+                        code = "M3-${System.currentTimeMillis()}",
+                    ),
+                ),
+            )
+
+            // When - Filter by district
+            val districtCriteria =
+                MunicipalitySearchCriteria(
+                    districtCode = district1.code,
+                    fields = setOf(MunicipalityField.CODE, MunicipalityField.DISTRICT),
+                )
+            val districtResult = municipalityService.searchMunicipalities(districtCriteria)
+
+            // Then
+            assertEquals(2, districtResult.totalElements)
+            districtResult.content.forEach { municipality ->
+                val district = municipality.getValue(MunicipalityField.DISTRICT) as DistrictSummaryResponse
+                assertEquals(district1.code, district.code)
+            }
+
+            // When - Filter by province
+            val provinceCriteria =
+                MunicipalitySearchCriteria(
+                    provinceCode = "P1",
+                    fields = setOf(MunicipalityField.CODE, MunicipalityField.DISTRICT),
+                )
+            val provinceResult = municipalityService.searchMunicipalities(provinceCriteria)
+
+            // Then
+            assertEquals(3, provinceResult.totalElements)
+            provinceResult.content.forEach { municipality ->
+                val district = municipality.getValue(MunicipalityField.DISTRICT) as DistrictSummaryResponse
+                assertTrue(district.code in listOf(district1.code, district2.code))
+                // Verify the district belongs to province P1
+                val savedDistrict = districtRepository.findByCodeIgnoreCase(district.code).orElseThrow()
+                assertEquals("P1", savedDistrict.province?.code)
+            }
         }
     }
 

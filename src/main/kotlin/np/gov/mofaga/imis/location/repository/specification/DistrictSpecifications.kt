@@ -1,11 +1,14 @@
 package np.gov.mofaga.imis.location.repository.specification
 
 import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Join
 import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
 import np.gov.mofaga.imis.location.api.dto.criteria.DistrictSearchCriteria
 import np.gov.mofaga.imis.location.domain.District
 import np.gov.mofaga.imis.location.domain.District_
+import np.gov.mofaga.imis.location.domain.Province
+import np.gov.mofaga.imis.location.domain.Province_
 import org.springframework.data.jpa.domain.Specification
 
 object DistrictSpecifications {
@@ -32,6 +35,17 @@ object DistrictSpecifications {
                         cb.lower(root.get(District_.code)),
                         code.lowercase(),
                     ),
+                )
+            }
+
+            // Province code filter
+            criteria.provinceCode?.let { provinceCode ->
+                val province: Join<District, Province> = root.join(District_.province)
+                predicates.add(
+                    cb.equal(
+                        cb.lower(province.get(Province_.code)),
+                        provinceCode.lowercase()
+                    )
                 )
             }
 
