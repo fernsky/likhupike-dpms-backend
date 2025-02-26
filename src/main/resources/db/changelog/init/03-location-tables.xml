@@ -1,0 +1,143 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="03-location-tables-1">
+        <comment>Create provinces table</comment>
+        <createTable tableName="provinces">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="provinces_pkey"/>
+            </column>
+            <column name="code" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_nepali" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="headquarter" type="VARCHAR(50)"/>
+            <column name="headquarter_nepali" type="VARCHAR(50)"/>
+            <column name="area" type="numeric(10, 2)"/>
+            <column name="population" type="BIGINT"/>
+            <column name="geometry" type="GEOMETRY"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-tables-2">
+        <comment>Create districts table</comment>
+        <createTable tableName="districts">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="districts_pkey"/>
+            </column>
+            <column name="code" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="province_code" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_nepali" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="headquarter" type="VARCHAR(50)"/>
+            <column name="headquarter_nepali" type="VARCHAR(50)"/>
+            <column name="area" type="numeric(10, 2)"/>
+            <column name="population" type="BIGINT"/>
+            <column name="geometry" type="GEOMETRY"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-tables-3">
+        <comment>Create municipalities table</comment>
+        <createTable tableName="municipalities">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="municipalities_pkey"/>
+            </column>
+            <column name="code" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="district_code" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_nepali" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_wards" type="INTEGER"/>
+            <column name="area" type="numeric(10, 2)"/>
+            <column name="population" type="BIGINT"/>
+            <column name="latitude" type="numeric(10, 6)"/>
+            <column name="longitude" type="numeric(10, 6)"/>
+            <column name="geometry" type="GEOMETRY"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-tables-4">
+        <comment>Create wards table</comment>
+        <createTable tableName="wards">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="wards_pkey"/>
+            </column>
+            <column name="municipality_code" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ward_number" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="office_location" type="VARCHAR(100)"/>
+            <column name="office_location_nepali" type="VARCHAR(100)"/>
+            <column name="area" type="numeric(10, 2)"/>
+            <column name="population" type="BIGINT"/>
+            <column name="latitude" type="numeric(10, 6)"/>
+            <column name="longitude" type="numeric(10, 6)"/>
+            <column name="geometry" type="GEOMETRY"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

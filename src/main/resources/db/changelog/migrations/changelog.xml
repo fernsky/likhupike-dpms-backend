@@ -1,0 +1,9 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <!-- <include file="R__2024_01_migrate_old_data.xml" relativeToChangelogFile="true"/>
+    <include file="R__2024_02_cleanup_deprecated.xml" relativeToChangelogFile="true"/> -->
+
+</databaseChangeLog>

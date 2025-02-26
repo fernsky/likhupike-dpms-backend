@@ -1,0 +1,42 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="03-location-indexes-1">
+        <createIndex indexName="idx_provinces_name" tableName="provinces">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-indexes-2">
+        <createIndex indexName="idx_districts_name" tableName="districts">
+            <column name="name"/>
+        </createIndex>
+        <createIndex indexName="idx_districts_province" tableName="districts">
+            <column name="province_code"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-indexes-3">
+        <createIndex indexName="idx_municipalities_name" tableName="municipalities">
+            <column name="name"/>
+        </createIndex>
+        <createIndex indexName="idx_municipalities_district" tableName="municipalities">
+            <column name="district_code"/>
+        </createIndex>
+        <createIndex indexName="idx_municipalities_type" tableName="municipalities">
+            <column name="type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-indexes-4">
+        <createIndex indexName="idx_wards_municipality" tableName="wards">
+            <column name="municipality_code"/>
+        </createIndex>
+        <createIndex indexName="idx_wards_number" tableName="wards">
+            <column name="ward_number"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

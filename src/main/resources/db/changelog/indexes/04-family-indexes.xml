@@ -1,0 +1,26 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="04-family-indexes-1">
+        <comment>Create indexes for families table</comment>
+        <createIndex indexName="idx_families_ward" tableName="families">
+            <column name="ward_number"/>
+        </createIndex>
+        <createIndex indexName="idx_families_head" tableName="families">
+            <column name="head_of_family"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-family-indexes-2">
+        <comment>Create indexes for family_photos table</comment>
+        <createIndex indexName="idx_family_photos_family" tableName="family_photos">
+            <column name="family_id"/>
+        </createIndex>
+        <createIndex indexName="idx_family_photos_filename" tableName="family_photos">
+            <column name="file_name"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

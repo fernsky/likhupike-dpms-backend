@@ -1,0 +1,91 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="04-family-tables-1">
+        <comment>Create families table</comment>
+        <createTable tableName="families">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="families_pkey"/>
+            </column>
+            <column name="head_of_family" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ward_number" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_members" type="INTEGER"/>
+            <column name="construction_type" remarks="Type of house construction (e.g., CONCRETE, MUD, etc.)" type="VARCHAR(50)"/>
+            <column name="total_rooms" remarks="Total number of rooms in the house" type="INTEGER"/>
+            <column name="has_electricity" remarks="Indicates if house has electricity connection" type="BOOLEAN"/>
+            <column name="has_toilet" remarks="Indicates if house has toilet facility" type="BOOLEAN"/>
+            <column name="primary_water_source" remarks="Primary source of water for the family" type="VARCHAR(50)"/>
+            <column name="distance_to_water" remarks="Distance to water source in meters" type="FLOAT8"/>
+            <column name="has_water_treatment" remarks="Indicates if family has water treatment system" type="BOOLEAN"/>
+            <column name="has_kitchen_garden" remarks="Indicates if house has kitchen garden" type="BOOLEAN"/>
+            <column name="land_area" remarks="Total agricultural land area in Ropani" type="numeric(10)"/>
+            <column name="has_irrigation" remarks="Indicates if land has irrigation facilities" type="BOOLEAN"/>
+            <column name="has_greenhouse" remarks="Indicates if family has greenhouse" type="BOOLEAN"/>
+            <column name="cultivated_crops" remarks="List of crops currently being cultivated" type="VARCHAR(255)"/>
+            <column name="livestock_count" remarks="Number of livestock animals" type="INTEGER"/>
+            <column name="poultry_count" remarks="Number of poultry birds" type="INTEGER"/>
+            <column name="has_agricultural_equipment" remarks="Indicates if family owns agricultural equipment" type="BOOLEAN"/>
+            <column name="equipment_details" remarks="Details of agricultural equipment owned" type="VARCHAR(500)"/>
+            <column name="monthly_income" remarks="Monthly income of the family in NPR" type="numeric(12)"/>
+            <column name="primary_income_source" remarks="Primary source of family income" type="VARCHAR(100)"/>
+            <column name="has_employed_members" remarks="Indicates if any family members are employed" type="BOOLEAN"/>
+            <column name="number_of_employed_members" remarks="Number of employed family members" type="INTEGER"/>
+            <column name="has_bank_account" remarks="Indicates if family has a bank account" type="BOOLEAN"/>
+            <column name="has_loans" remarks="Indicates if family has any outstanding loans" type="BOOLEAN"/>
+            <column name="loan_amount" remarks="Total outstanding loan amount in NPR" type="numeric(12)"/>
+            <column name="receives_social_security" remarks="Indicates if family receives any social security benefits" type="BOOLEAN"/>
+            <column name="social_category" type="VARCHAR(255)"/>
+            <column name="latitude" type="FLOAT8"/>
+            <column name="longitude" type="FLOAT8"/>
+            <column name="additional_details" remarks="Any additional details about the housing" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-family-tables-2">
+        <comment>Create family photos table</comment>
+        <createTable tableName="family_photos">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="family_photos_pkey"/>
+            </column>
+            <column name="family_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_size" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="storage_path" type="VARCHAR(255)"/>
+            <column name="thumbnail_path" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(255)"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

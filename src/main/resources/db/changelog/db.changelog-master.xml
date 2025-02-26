@@ -1,289 +1,36 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="trilochan (generated)" id="1739595213044-1">
-        <createTable tableName="spring_session">
-            <column name="primary_id" type="CHAR(36)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="spring_session_pk"/>
-            </column>
-            <column name="session_id" type="CHAR(36)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="creation_time" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="last_access_time" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="max_inactive_interval" type="INTEGER">
-                <constraints nullable="false"/>
-            </column>
-            <column name="expiry_time" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="principal_name" type="VARCHAR(100)"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-2">
-        <createTable tableName="families">
-            <column name="distance_to_water" remarks="Distance to water source in meters" type="FLOAT8"/>
-            <column name="has_agricultural_equipment" remarks="Indicates if family owns agricultural equipment" type="BOOLEAN"/>
-            <column name="has_bank_account" remarks="Indicates if family has a bank account" type="BOOLEAN"/>
-            <column name="has_electricity" remarks="Indicates if house has electricity connection" type="BOOLEAN"/>
-            <column name="has_employed_members" remarks="Indicates if any family members are employed" type="BOOLEAN"/>
-            <column name="has_greenhouse" remarks="Indicates if family has greenhouse" type="BOOLEAN"/>
-            <column name="has_irrigation" remarks="Indicates if land has irrigation facilities" type="BOOLEAN"/>
-            <column name="has_kitchen_garden" remarks="Indicates if house has kitchen garden" type="BOOLEAN"/>
-            <column name="has_loans" remarks="Indicates if family has any outstanding loans" type="BOOLEAN"/>
-            <column name="has_toilet" remarks="Indicates if house has toilet facility" type="BOOLEAN"/>
-            <column name="has_water_treatment" remarks="Indicates if family has water treatment system" type="BOOLEAN"/>
-            <column name="land_area" remarks="Total agricultural land area in Ropani" type="numeric(10)"/>
-            <column name="latitude" type="FLOAT8"/>
-            <column name="livestock_count" remarks="Number of livestock animals" type="INTEGER"/>
-            <column name="loan_amount" remarks="Total outstanding loan amount in NPR" type="numeric(12)"/>
-            <column name="longitude" type="FLOAT8"/>
-            <column name="monthly_income" remarks="Monthly income of the family in NPR" type="numeric(12)"/>
-            <column name="number_of_employed_members" remarks="Number of employed family members" type="INTEGER"/>
-            <column name="poultry_count" remarks="Number of poultry birds" type="INTEGER"/>
-            <column name="receives_social_security" remarks="Indicates if family receives any social security benefits" type="BOOLEAN"/>
-            <column name="total_members" type="INTEGER"/>
-            <column name="total_rooms" remarks="Total number of rooms in the house" type="INTEGER"/>
-            <column name="ward_number" type="INTEGER">
-                <constraints nullable="false"/>
-            </column>
-            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="version" type="BIGINT"/>
-            <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="families_pkey"/>
-            </column>
-            <column name="construction_type" remarks="Type of house construction (e.g., CONCRETE, MUD, etc.)" type="VARCHAR(50)"/>
-            <column name="primary_water_source" remarks="Primary source of water for the family" type="VARCHAR(50)"/>
-            <column name="primary_income_source" remarks="Primary source of family income" type="VARCHAR(100)"/>
-            <column name="additional_details" remarks="Any additional details about the housing" type="VARCHAR(500)"/>
-            <column name="equipment_details" remarks="Details of agricultural equipment owned" type="VARCHAR(500)"/>
-            <column name="created_by" type="VARCHAR(255)"/>
-            <column name="cultivated_crops" remarks="List of crops currently being cultivated" type="VARCHAR(255)"/>
-            <column name="head_of_family" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="social_category" type="VARCHAR(255)"/>
-            <column name="updated_by" type="VARCHAR(255)"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-3">
-        <createTable tableName="family_photos">
-            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="file_size" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="version" type="BIGINT"/>
-            <column name="family_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-            <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="family_photos_pkey"/>
-            </column>
-            <column name="content_type" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="created_by" type="VARCHAR(255)"/>
-            <column name="file_name" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="storage_path" type="VARCHAR(255)"/>
-            <column name="thumbnail_path" type="VARCHAR(255)"/>
-            <column name="updated_by" type="VARCHAR(255)"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-4">
-        <createTable tableName="permissions">
-            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="version" type="BIGINT"/>
-            <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="permissions_pkey"/>
-            </column>
-            <column name="action_type" type="VARCHAR(20)"/>
-            <column name="resource_type" type="VARCHAR(50)"/>
-            <column name="name" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="created_by" type="VARCHAR(255)"/>
-            <column name="description" type="VARCHAR(255)"/>
-            <column name="updated_by" type="VARCHAR(255)"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-5">
-        <createTable tableName="roles">
-            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="version" type="BIGINT"/>
-            <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="roles_pkey"/>
-            </column>
-            <column name="role_type" type="VARCHAR(20)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="description" type="VARCHAR(100)"/>
-            <column name="created_by" type="VARCHAR(255)"/>
-            <column name="updated_by" type="VARCHAR(255)"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-6">
-        <createTable tableName="users">
-            <column name="date_of_birth" type="date"/>
-            <column name="is_approved" type="BOOLEAN"/>
-            <column name="is_deleted" type="BOOLEAN"/>
-            <column name="is_municipality_level" type="BOOLEAN"/>
-            <column name="ward_number" type="INTEGER"/>
-            <column name="approved_at" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="deleted_at" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="version" type="BIGINT"/>
-            <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="users_pkey"/>
-            </column>
-            <column name="address" type="VARCHAR(255)"/>
-            <column name="approved_by" type="VARCHAR(255)"/>
-            <column name="created_by" type="VARCHAR(255)"/>
-            <column name="deleted_by" type="VARCHAR(255)"/>
-            <column name="email" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="full_name" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="full_name_np" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="office_post" type="VARCHAR(255)"/>
-            <column name="password" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="profile_picture" type="VARCHAR(255)"/>
-            <column name="updated_by" type="VARCHAR(255)"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-10">
-        <createIndex indexName="spring_session_ix1" tableName="spring_session" unique="true">
-            <column name="session_id"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-11">
-        <createIndex indexName="spring_session_ix2" tableName="spring_session">
-            <column name="expiry_time"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-12">
-        <createIndex indexName="spring_session_ix3" tableName="spring_session">
-            <column name="principal_name"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-13">
-        <createIndex indexName="idx_families_ward" tableName="families">
-            <column name="ward_number"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-14">
-        <createIndex indexName="idx_families_head" tableName="families">
-            <column name="head_of_family"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-15">
-        <createIndex indexName="idx_family_photos_family" tableName="family_photos">
-            <column name="family_id"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-16">
-        <createIndex indexName="idx_family_photos_filename" tableName="family_photos">
-            <column name="file_name"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-17">
-        <addUniqueConstraint columnNames="name" constraintName="permissions_name_key" tableName="permissions"/>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-18">
-        <addUniqueConstraint columnNames="role_type" constraintName="roles_role_type_key" tableName="roles"/>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-19">
-        <createIndex indexName="idx_users_full_name" tableName="users">
-            <column name="full_name"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-20">
-        <addUniqueConstraint columnNames="email" constraintName="users_email_key" tableName="users"/>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-21">
-        <createTable tableName="role_permissions">
-            <column name="permission_id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="role_permissions_pkey"/>
-            </column>
-            <column name="role_id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="role_permissions_pkey"/>
-            </column>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-22">
-        <createTable tableName="spring_session_attributes">
-            <column name="session_primary_id" type="CHAR(36)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="spring_session_attributes_pk"/>
-            </column>
-            <column name="attribute_name" type="VARCHAR(200)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="spring_session_attributes_pk"/>
-            </column>
-            <column name="attribute_bytes" type="BYTEA">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-23">
-        <createTable tableName="user_roles">
-            <column name="role_id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="user_roles_pkey"/>
-            </column>
-            <column name="user_id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="user_roles_pkey"/>
-            </column>
-        </createTable>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-24">
-        <addForeignKeyConstraint baseColumnNames="permission_id" baseTableName="role_permissions" constraintName="fkegdk29eiy7mdtefy5c7eirr6e" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="permissions" validate="true"/>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-25">
-        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="user_roles" constraintName="fkh8ciramu9cc9q3qcqiv4ue8a6" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="roles" validate="true"/>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-26">
-        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_roles" constraintName="fkhfh9dx7w3ubf1co1vdev94g3f" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-27">
-        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="role_permissions" constraintName="fkn5fotdgk8d1xvo8nav9uv3muc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="roles" validate="true"/>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-28">
-        <addForeignKeyConstraint baseColumnNames="family_id" baseTableName="family_photos" constraintName="fkskd13hulxuvxk86f9t0o2469s" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="families" validate="true"/>
-    </changeSet>
-    <changeSet author="trilochan (generated)" id="1739595213044-29">
-        <addForeignKeyConstraint baseColumnNames="session_primary_id" baseTableName="spring_session_attributes" constraintName="spring_session_attributes_fk" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="primary_id" referencedTableName="spring_session" validate="true"/>
-    </changeSet>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Initial Schema -->
+    <include file="init/01-session-tables.xml" relativeToChangelogFile="true"/>
+    <include file="init/02-users-and-auth.xml" relativeToChangelogFile="true"/>
+    <include file="init/03-location-tables.xml" relativeToChangelogFile="true"/>
+    <include file="init/04-family-tables.xml" relativeToChangelogFile="true"/>
+
+    <!-- Indexes -->
+    <include file="indexes/01-session-indexes.xml" relativeToChangelogFile="true"/>
+    <include file="indexes/02-users-indexes.xml" relativeToChangelogFile="true"/>
+    <include file="indexes/03-location-indexes.xml" relativeToChangelogFile="true"/>
+    <include file="indexes/04-family-indexes.xml" relativeToChangelogFile="true"/>
+
+    <!-- Constraints -->
+    <include file="constraints/01-users-constraints.xml" relativeToChangelogFile="true"/>
+    <include file="constraints/02-location-constraints.xml" relativeToChangelogFile="true"/>
+    <include file="constraints/03-family-constraints.xml" relativeToChangelogFile="true"/>
+
+    <!-- Versioned Updates -->
+    <!-- <include file="versions/v1.0/changelog.xml" relativeToChangelogFile="true"/>
+    <include file="versions/v1.1/changelog.xml" relativeToChangelogFile="true"/> -->
+
+    <!-- Data Migration Scripts -->
+    <!-- <include file="migrations/changelog.xml" relativeToChangelogFile="true"/> -->
+
+    <!-- Seed Data -->
+    <!-- <include file="data/dev/changelog.xml" relativeToChangelogFile="true"/>
+    <include file="data/test/changelog.xml" relativeToChangelogFile="true"/>
+    <include file="data/prod/changelog.xml" relativeToChangelogFile="true"/> -->
+    <include file="data/locations/changelog.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

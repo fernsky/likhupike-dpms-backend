@@ -1,0 +1,24 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet author="trilochan" id="01-users-constraints-1">
+        <comment>Add unique constraints</comment>
+        <addUniqueConstraint columnNames="email" constraintName="users_email_key" tableName="users"/>
+        <addUniqueConstraint columnNames="role_type" constraintName="roles_role_type_key" tableName="roles"/>
+        <addUniqueConstraint columnNames="name" constraintName="permissions_name_key" tableName="permissions"/>
+    </changeSet>
+
+    <changeSet author="trilochan" id="01-users-constraints-2">
+        <comment>Add foreign key constraints</comment>
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_roles" constraintName="fk_user_roles_user" referencedColumnNames="id" referencedTableName="users"/>
+
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="user_roles" constraintName="fk_user_roles_role" referencedColumnNames="id" referencedTableName="roles"/>
+
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="role_permissions" constraintName="fk_role_permissions_role" referencedColumnNames="id" referencedTableName="roles"/>
+
+        <addForeignKeyConstraint baseColumnNames="permission_id" baseTableName="role_permissions" constraintName="fk_role_permissions_permission" referencedColumnNames="id" referencedTableName="permissions"/>
+    </changeSet>
+
+</databaseChangeLog>

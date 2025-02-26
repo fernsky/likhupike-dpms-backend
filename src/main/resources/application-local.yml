@@ -53,11 +53,22 @@ spring:
       naming:
         physical-strategy: ${SPRING_JPA_HIBERNATE_NAMING_PHYSICAL_STRATEGY:org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy}
         implicit-strategy: ${SPRING_JPA_HIBERNATE_NAMING_IMPLICIT_STRATEGY:org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl}
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
     show-sql: ${SPRING_JPA_SHOW_SQL:true}
     properties:
       hibernate:
         format_sql: ${SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL:true}
+    liquibase:
+      enabled: true
+      contexts: local
+      change-log: classpath:db/changelog/db.changelog-master.xml
+      search-paths:
+        - classpath:db/changelog/
+        - classpath:db/changelog/init/
+        - classpath:db/changelog/constraints/
+        - classpath:db/changelog/indexes/
+        - classpath:db/changelog/data/
+        - classpath:db/changelog/versions/
 
 dpms:
   minio:
