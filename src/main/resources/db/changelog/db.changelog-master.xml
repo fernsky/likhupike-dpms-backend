@@ -31,6 +31,6 @@
     <!-- <include file="data/dev/changelog.xml" relativeToChangelogFile="true"/>
     <include file="data/test/changelog.xml" relativeToChangelogFile="true"/>
     <include file="data/prod/changelog.xml" relativeToChangelogFile="true"/> -->
-    <include file="data/locations/changelog.xml" relativeToChangelogFile="true"/>
+    <!-- <include file="data/locations/changelog.xml" relativeToChangelogFile="true"/> -->
 
 </databaseChangeLog>
