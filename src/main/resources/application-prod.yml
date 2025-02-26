@@ -24,14 +24,7 @@ spring:
     enabled: true
     contexts: prod
     change-log: classpath:db/changelog/db.changelog-master.xml
-    search-paths:
-      - classpath:db/changelog/
-      - classpath:db/changelog/init/
-      - classpath:db/changelog/constraints/
-      - classpath:db/changelog/indexes/
-      - classpath:db/changelog/data/
-      - classpath:db/changelog/versions/
-
+    
 logging:
   level:
     root: INFO
