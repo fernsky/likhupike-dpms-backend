@@ -1,8 +1,6 @@
 package np.gov.mofaga.imis.family.api.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import np.gov.mofaga.imis.family.api.dto.request.CreateFamilyRequest
@@ -11,8 +9,7 @@ import np.gov.mofaga.imis.family.api.dto.request.UpdateFamilyRequest
 import np.gov.mofaga.imis.family.api.dto.response.FamilyResponse
 import np.gov.mofaga.imis.family.service.FamilyService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
-import np.gov.mofaga.imis.shared.dto.PagedResponse
-import org.springframework.data.domain.Page
+import np.gov.mofaga.imis.shared.dto.toApiResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -28,72 +25,74 @@ import java.util.*
 class FamilyController(
     private val familyService: FamilyService,
 ) {
-    @Operation(
-        summary = "Create new family",
-        description = "Create a new family record. Only super admin, municipality admin, ward admin and editors can create families."
-    )
+    @Operation(summary = "Create new family")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MUNICIPALITY_ADMIN', 'WARD_ADMIN', 'EDITOR')")
     fun createFamily(
-        @Parameter(description = "Family creation details", required = true)
         @Valid @RequestBody request: CreateFamilyRequest,
     ): ResponseEntity<ApiResponse<FamilyResponse>> =
-        ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.success(data = familyService.createFamily(request)))
+        ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(
+                ApiResponse.success(
+                    data = familyService.createFamily(request),
+                    message = "Family created successfully",
+                ),
+            )
 
-    @Operation(
-        summary = "Update family details",
-        description = "Update an existing family's information. Only super admin, municipality admin, ward admin and editors can update families."
-    )
+    @Operation(summary = "Update family details")
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MUNICIPALITY_ADMIN', 'WARD_ADMIN', 'EDITOR')")
     fun updateFamily(
-        @Parameter(description = "Family ID", required = true)
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpdateFamilyRequest,
     ): ResponseEntity<ApiResponse<FamilyResponse>> =
-        ResponseEntity.ok(ApiResponse.success(data = familyService.updateFamily(id, request)))
+        ResponseEntity.ok(
+            ApiResponse.success(
+                data = familyService.updateFamily(id, request),
+                message = "Family updated successfully",
+            ),
+        )
 
-    @Operation(
-        summary = "Get family details",
-        description = "Retrieve details of a specific family. All authenticated users including viewers can access this endpoint."
-    )
+    @Operation(summary = "Get family details")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MUNICIPALITY_ADMIN', 'WARD_ADMIN', 'EDITOR', 'VIEWER')")
     fun getFamily(
-        @Parameter(description = "Family ID", required = true)
         @PathVariable id: UUID,
     ): ResponseEntity<ApiResponse<FamilyResponse>> =
-        ResponseEntity.ok(ApiResponse.success(data = familyService.getFamily(id)))
+        ResponseEntity.ok(
+            ApiResponse.success(
+                data = familyService.getFamily(id),
+            ),
+        )
 
-    @Operation(
-        summary = "Search families",
-        description = "Search and filter families based on various criteria. All authenticated users including viewers can access this endpoint."
-    )
+    @Operation(summary = "Search families")
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MUNICIPALITY_ADMIN', 'WARD_ADMIN', 'EDITOR', 'VIEWER')")
     fun searchFamilies(
-        @Parameter(description = "Search criteria with filters")
-        @Valid criteria: FamilySearchCriteria
-    ): ResponseEntity<ApiResponse<PagedResponse<FamilyResponse>>> {
+        @Valid criteria: FamilySearchCriteria,
+    ): ResponseEntity<ApiResponse<List<FamilyResponse>>> {
         val searchResults = familyService.searchFamilies(criteria)
-        val pagedResponse = PagedResponse.from(searchResults)
-        return ResponseEntity.ok(ApiResponse.success(data = pagedResponse))
+        return ResponseEntity.ok(
+            searchResults.toApiResponse(
+                message = "Found ${searchResults.totalElements} families",
+            ),
+        )
     }
 
-    @Operation(
-        summary = "Delete family",
-        description = "Delete a family record. Only super admin, municipality admin, ward admin and editors can delete families."
-    )
+    @Operation(summary = "Delete family")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MUNICIPALITY_ADMIN', 'WARD_ADMIN', 'EDITOR')")
     fun deleteFamily(
-        @Parameter(description = "Family ID", required = true)
         @PathVariable id: UUID,
     ): ResponseEntity<ApiResponse<Unit>> =
         familyService.deleteFamily(id).let {
-            ResponseEntity.ok(ApiResponse.success(message = "Family deleted successfully"))
+            ResponseEntity.ok(
+                ApiResponse.success(
+                    message = "Family deleted successfully",
+                ),
+            )
         }
 }

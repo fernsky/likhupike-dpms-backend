@@ -15,7 +15,7 @@ import np.gov.mofaga.imis.location.api.dto.response.WardResponse
 import np.gov.mofaga.imis.location.api.dto.response.WardSummaryResponse
 import np.gov.mofaga.imis.location.service.WardService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
-import np.gov.mofaga.imis.shared.dto.PagedResponse
+import np.gov.mofaga.imis.shared.dto.toApiResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -110,7 +110,7 @@ class WardController(
         @Valid criteria: WardSearchCriteria,
         @Parameter(description = "Comma-separated list of fields to include")
         @RequestParam(required = false) fields: String?,
-    ): ResponseEntity<ApiResponse<PagedResponse<DynamicWardProjection>>> {
+    ): ResponseEntity<ApiResponse<List<DynamicWardProjection>>> {
         logger.debug("Raw fields parameter: $fields")
 
         val selectedFields =
@@ -125,8 +125,7 @@ class WardController(
         val searchResults = wardService.searchWards(searchCriteria)
 
         return ResponseEntity.ok(
-            ApiResponse.success(
-                data = PagedResponse.from(searchResults),
+            searchResults.toApiResponse(
                 message = "Found ${searchResults.totalElements} wards",
             ),
         )
@@ -156,11 +155,9 @@ class WardController(
         @RequestParam(defaultValue = "0") page: Int,
         @Parameter(description = "Page size")
         @RequestParam(defaultValue = "20") size: Int,
-    ): ResponseEntity<ApiResponse<PagedResponse<WardSummaryResponse>>> {
+    ): ResponseEntity<ApiResponse<List<WardSummaryResponse>>> {
         logger.debug("Finding wards within ${radiusKm}km of ($latitude, $longitude)")
         val nearbyWards = wardService.findNearbyWards(latitude, longitude, radiusKm, page, size)
-        return ResponseEntity.ok(
-            ApiResponse.success(data = PagedResponse.from(nearbyWards)),
-        )
+        return ResponseEntity.ok(nearbyWards.toApiResponse())
     }
 }

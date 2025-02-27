@@ -14,7 +14,7 @@ import np.gov.mofaga.imis.location.api.dto.response.DistrictResponse
 import np.gov.mofaga.imis.location.api.dto.response.DynamicDistrictProjection
 import np.gov.mofaga.imis.location.service.DistrictService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
-import np.gov.mofaga.imis.shared.dto.PagedResponse
+import np.gov.mofaga.imis.shared.dto.toApiResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -78,7 +78,7 @@ class DistrictController(
         @Valid criteria: DistrictSearchCriteria,
         @Parameter(description = "Comma-separated list of fields to include")
         @RequestParam(required = false) fields: String?,
-    ): ResponseEntity<ApiResponse<PagedResponse<DynamicDistrictProjection>>> {
+    ): ResponseEntity<ApiResponse<List<DynamicDistrictProjection>>> {
         logger.debug("Raw fields parameter: $fields")
 
         val selectedFields =
@@ -93,8 +93,7 @@ class DistrictController(
         val searchResults = districtService.searchDistricts(searchCriteria)
 
         return ResponseEntity.ok(
-            ApiResponse.success(
-                data = PagedResponse.from(searchResults),
+            searchResults.toApiResponse(
                 message = "Found ${searchResults.totalElements} districts",
             ),
         )

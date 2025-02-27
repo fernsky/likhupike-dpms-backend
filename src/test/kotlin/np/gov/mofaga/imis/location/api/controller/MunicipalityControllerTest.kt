@@ -85,9 +85,11 @@ class MunicipalityControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .with(csrf()),
                 ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.code").value(expectedResponse.code))
                 .andExpect(jsonPath("$.data.name").value(expectedResponse.name))
                 .andExpect(jsonPath("$.data.type").value(expectedResponse.type.name))
+                .andExpect(jsonPath("$.message").value("Municipality created successfully"))
         }
 
         @Test
@@ -179,8 +181,12 @@ class MunicipalityControllerTest {
                         .param("type", MunicipalityType.MUNICIPALITY.name)
                         .param("minPopulation", "10000"),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.totalElements").isNumber)
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.meta.total").value(2))
+                .andExpect(jsonPath("$.meta.page").value(1))
+                .andExpect(jsonPath("$.meta.size").value(2))
+                .andExpect(jsonPath("$.message").value("Found 2 municipalities"))
         }
 
         @Test
@@ -201,7 +207,9 @@ class MunicipalityControllerTest {
             mockMvc
                 .perform(get("/api/v1/municipalities/by-district/$districtCode"))
                 .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.data.length()").value(2))
         }
 
         @Test
@@ -221,6 +229,7 @@ class MunicipalityControllerTest {
             mockMvc
                 .perform(get("/api/v1/municipalities/by-type/${MunicipalityType.MUNICIPALITY}"))
                 .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isArray)
         }
     }
@@ -249,10 +258,14 @@ class MunicipalityControllerTest {
                     get("/api/v1/municipalities/search")
                         .param("fields", fields),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content[0].code").exists())
-                .andExpect(jsonPath("$.data.content[0].name").exists())
-                .andExpect(jsonPath("$.data.content[0].type").exists())
-                .andExpect(jsonPath("$.data.content[0].area").doesNotExist())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].code").exists())
+                .andExpect(jsonPath("$.data[0].name").exists())
+                .andExpect(jsonPath("$.data[0].type").exists())
+                .andExpect(jsonPath("$.data[0].area").doesNotExist())
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.meta.size").value(1))
+                .andExpect(jsonPath("$.message").value("Found 1 municipalities"))
         }
 
         @Test
@@ -275,7 +288,9 @@ class MunicipalityControllerTest {
                     get("/api/v1/municipalities/search")
                         .param("fields", "CODE,GEOMETRY"),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content[0].geometry").exists())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].geometry").exists())
+                .andExpect(jsonPath("$.meta.total").exists())
         }
     }
 

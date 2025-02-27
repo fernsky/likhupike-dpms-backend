@@ -74,8 +74,9 @@ class UserControllerFilteringTest {
                     .param("wardNumberFrom", "1")
                     .param("wardNumberTo", "1"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].wardNumber").value(1))
-            .andExpect(jsonPath("$.data.totalElements").value(1))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].wardNumber").value(1))
+            .andExpect(jsonPath("$.meta.total").value(1))
     }
 
     @Test
@@ -90,7 +91,9 @@ class UserControllerFilteringTest {
                 get("/api/v1/users/search")
                     .param("roles", "WARD_ADMIN"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].roles[0]").value("WARD_ADMIN"))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].roles[0]").value("WARD_ADMIN"))
+            .andExpect(jsonPath("$.message").value("Found 1 users"))
     }
 
     @Test
@@ -105,7 +108,8 @@ class UserControllerFilteringTest {
                 get("/api/v1/users/search")
                     .param("searchTerm", "Ward"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].fullName").value("Ward One User"))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].fullName").value("Ward One User"))
     }
 
     @Test
@@ -120,7 +124,7 @@ class UserControllerFilteringTest {
                 get("/api/v1/users/search")
                     .param("isMunicipalityLevel", "true"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].email").value("admin@municipality.gov.np"))
+            .andExpect(jsonPath("$.data[0].email").value("admin@municipality.gov.np"))
     }
 
     @Test
@@ -135,7 +139,7 @@ class UserControllerFilteringTest {
                 get("/api/v1/users/search")
                     .param("officePosts", "Ward Officer"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].officePost").value("Ward Officer"))
+            .andExpect(jsonPath("$.data[0].officePost").value("Ward Officer"))
     }
 
     // TODO [TEST] Invalid ward number range should return 400
@@ -174,13 +178,20 @@ class UserControllerFilteringTest {
     @Test
     @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
     fun `combine multiple filters`() {
+        // Create PageImpl with proper page size
+        val filteredUsers =
+            testUsers.filter {
+                it.wardNumber == 1 &&
+                    it.roles.contains(RoleType.WARD_ADMIN) &&
+                    it.officePost == "Ward Officer"
+            }
+
         whenever(userService.searchUsers(any())).thenReturn(
             PageImpl(
-                testUsers.filter {
-                    it.wardNumber == 1 &&
-                        it.roles.contains(RoleType.WARD_ADMIN) &&
-                        it.officePost == "Ward Officer"
-                },
+                filteredUsers,
+                org.springframework.data.domain.PageRequest
+                    .of(0, 20), // Specify page size as 20
+                filteredUsers.size.toLong(),
             ),
         )
 
@@ -192,8 +203,12 @@ class UserControllerFilteringTest {
                     .param("roles", "WARD_ADMIN")
                     .param("officePosts", "Ward Officer"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].id").value("123e4567-e89b-12d3-a456-426614174000"))
-            .andExpect(jsonPath("$.data.totalElements").value(1))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].id").value("123e4567-e89b-12d3-a456-426614174000"))
+            .andExpect(jsonPath("$.meta.total").value(1))
+            .andExpect(jsonPath("$.meta.page").value(1))
+            .andExpect(jsonPath("$.meta.size").value(20))
+            .andExpect(jsonPath("$.message").value("Found 1 users"))
     }
 
     @Test
@@ -227,6 +242,9 @@ class UserControllerFilteringTest {
                     .param("wardNumberFrom", "1")
                     .param("wardNumberTo", "5"),
             ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.meta.total").value(2))
+            .andExpect(jsonPath("$.message").value("Found 2 users"))
     }
 
     @Test

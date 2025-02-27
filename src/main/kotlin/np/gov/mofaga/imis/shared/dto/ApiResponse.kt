@@ -9,19 +9,20 @@ import java.time.LocalDateTime
 @Schema(description = "Standard API response wrapper")
 data class ApiResponse<T>(
     @Schema(
-        description = "Response status",
-        allowableValues = ["SUCCESS", "ERROR"],
-        example = "SUCCESS",
+        description = "Indicates if the request was successful",
+        example = "true",
     )
-    val status: Status,
+    val success: Boolean,
     @Schema(description = "Response payload")
     val data: T? = null,
     @Schema(
-        description = "Optional success message",
+        description = "Response message",
         example = "User created successfully",
     )
     val message: String? = null,
-    @Schema(description = "Error details if status is ERROR")
+    @Schema(description = "Pagination metadata (if applicable)")
+    val meta: PaginationMeta? = null,
+    @Schema(description = "Error details if success is false")
     val error: ErrorDetails? = null,
     @Schema(
         description = "Response timestamp",
@@ -33,29 +34,30 @@ data class ApiResponse<T>(
         fun <T> success(
             data: T? = null,
             message: String? = null,
+            meta: PaginationMeta? = null,
         ) = ApiResponse(
-            status = Status.SUCCESS,
+            success = true,
             data = data,
             message = message,
+            meta = meta,
         )
 
         fun <T> error(error: ErrorDetails): ApiResponse<T> =
             ApiResponse(
-                status = Status.ERROR,
+                success = false,
                 error = error,
                 data = null,
             )
     }
-
-    enum class Status {
-        SUCCESS,
-        ERROR,
-    }
 }
 
 // Extension function to wrap Page in ApiResponse
-fun <T> Page<T>.toApiResponse(message: String? = null): ApiResponse<PagedResponse<T>> =
-    ApiResponse.success(PagedResponse.from(this), message)
+fun <T> Page<T>.toApiResponse(message: String? = null): ApiResponse<List<T>> =
+    ApiResponse.success(
+        data = this.content,
+        message = message,
+        meta = PaginationMeta.from(this),
+    )
 
 // Extension function to create error response
 fun errorResponse(

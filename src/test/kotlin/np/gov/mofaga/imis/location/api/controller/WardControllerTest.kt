@@ -6,7 +6,6 @@ import np.gov.mofaga.imis.auth.test.UserTestDataFactory
 import np.gov.mofaga.imis.config.TestSecurityConfig
 import np.gov.mofaga.imis.location.api.controller.WardController
 import np.gov.mofaga.imis.location.api.dto.enums.WardField
-import np.gov.mofaga.imis.location.api.dto.response.DynamicWardProjection
 import np.gov.mofaga.imis.location.domain.Municipality
 import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.service.WardService
@@ -22,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -65,13 +63,11 @@ class WardControllerTest {
 
     @Test
     fun `should create ward successfully when super admin`() {
-        // Arrange
         mockLoggedInUser(superAdmin)
         val request = WardTestFixtures.createWardRequest()
         val response = WardTestFixtures.createWardResponse()
         whenever(wardService.createWard(any())).thenReturn(response)
 
-        // Act & Assert
         mockMvc
             .perform(
                 post("/api/v1/wards")
@@ -79,8 +75,10 @@ class WardControllerTest {
                     .content(objectMapper.writeValueAsString(request))
                     .with(csrf()),
             ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.wardNumber").value(response.wardNumber))
             .andExpect(jsonPath("$.data.municipality.code").value(response.municipality.code))
+            .andExpect(jsonPath("$.message").value("Ward created successfully"))
     }
 
     // TODO: Fix this failing test
@@ -105,15 +103,14 @@ class WardControllerTest {
 
     @Test
     fun `should get ward detail successfully when viewer`() {
-        // Arrange
         mockLoggedInUser(viewer)
         val response = WardTestFixtures.createWardDetailResponse()
         whenever(wardService.getWardDetail(1, "TEST-M")).thenReturn(response)
 
-        // Act & Assert
         mockMvc
             .perform(get("/api/v1/wards/TEST-M/1"))
             .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.wardNumber").value(1))
     }
 
@@ -138,34 +135,41 @@ class WardControllerTest {
     inner class DynamicSearchTests {
         @Test
         fun `should search with specific fields`() {
-            // Arrange
-            mockLoggedInUser(viewer) // Changed from loginAs
+            mockLoggedInUser(viewer)
             val fields = "WARD_NUMBER,POPULATION,MUNICIPALITY"
             val projection =
                 WardTestFixtures.createWardProjection(
                     wardNumber = 1,
                     fields = setOf(WardField.WARD_NUMBER, WardField.POPULATION, WardField.MUNICIPALITY),
                 )
-            val expectedResults: Page<DynamicWardProjection> = PageImpl(listOf(projection))
+            val expectedResults =
+                PageImpl(
+                    listOf(projection),
+                    org.springframework.data.domain.PageRequest
+                        .of(0, 20),
+                    1,
+                )
 
-            whenever(wardService.searchWards(any()))
-                .thenReturn(expectedResults)
+            whenever(wardService.searchWards(any())).thenReturn(expectedResults)
 
-            // Act & Assert
             mockMvc
                 .perform(
                     get("/api/v1/wards/search")
                         .param("fields", fields),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content[0].wardNumber").exists())
-                .andExpect(jsonPath("$.data.content[0].population").exists())
-                .andExpect(jsonPath("$.data.content[0].municipality").exists())
-                .andExpect(jsonPath("$.data.content[0].area").doesNotExist())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].wardNumber").exists())
+                .andExpect(jsonPath("$.data[0].population").exists())
+                .andExpect(jsonPath("$.data[0].municipality").exists())
+                .andExpect(jsonPath("$.data[0].area").doesNotExist())
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.meta.page").value(1))
+                .andExpect(jsonPath("$.meta.size").value(20))
+                .andExpect(jsonPath("$.message").value("Found 1 wards"))
         }
 
         @Test
         fun `should search with geometry included`() {
-            // Arrange
             mockLoggedInUser(viewer)
             val projection =
                 WardTestFixtures.createWardProjection(
@@ -173,22 +177,29 @@ class WardControllerTest {
                     fields = setOf(WardField.WARD_NUMBER, WardField.GEOMETRY),
                     includeGeometry = true,
                 )
-            val expectedResults: Page<DynamicWardProjection> = PageImpl(listOf(projection))
+            val expectedResults =
+                PageImpl(
+                    listOf(projection),
+                    org.springframework.data.domain.PageRequest
+                        .of(0, 20),
+                    1,
+                )
 
-            whenever(wardService.searchWards(any()))
-                .thenReturn(expectedResults)
+            whenever(wardService.searchWards(any())).thenReturn(expectedResults)
 
-            // Act & Assert
             mockMvc
                 .perform(
                     get("/api/v1/wards/search")
                         .param("fields", "WARD_NUMBER,GEOMETRY")
                         .param("includeGeometry", "true"),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.content[0]").exists())
-                .andExpect(jsonPath("$.data.content[0].wardNumber").exists())
-                .andExpect(jsonPath("$.data.content[0].geometry").exists())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.data[0]").exists())
+                .andExpect(jsonPath("$.data[0].wardNumber").exists())
+                .andExpect(jsonPath("$.data[0].geometry").exists())
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.message").value("Found 1 wards"))
         }
     }
 

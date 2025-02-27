@@ -133,6 +133,7 @@ class DistrictControllerIntegrationTest {
             mockMvc
                 .perform(get("/api/v1/districts/${testDistrict.code}"))
                 .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.code").value(testDistrict.code))
                 .andExpect(jsonPath("$.data.name").value(testDistrict.name))
         }
@@ -175,25 +176,25 @@ class DistrictControllerIntegrationTest {
     inner class SearchDistrictTests {
         @Test
         fun `should search districts with criteria`() {
-            // Given: Setup test data
             loginAs(viewer)
 
-            // When & Then: Perform search and verify
             mockMvc
                 .perform(
                     get("/api/v1/districts/search")
                         .param("provinceCode", testProvince.code)
                         .param("searchTerm", testDistrict.name)
                         .param("page", "0")
-                        .param("size", "10"),
-                ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.content.length()").value(1))
-                .andExpect(jsonPath("$.data.content[0].name").value(testDistrict.name))
-                .andExpect(jsonPath("$.data.content[0].code").value(testDistrict.code))
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
+                        .param("size", "10")
+                )
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].name").value(testDistrict.name))
+                .andExpect(jsonPath("$.data[0].code").value(testDistrict.code))
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.meta.totalPages").value(1))
+                .andExpect(jsonPath("$.message").value("Found 1 districts"))
         }
 
         @Test
@@ -205,13 +206,16 @@ class DistrictControllerIntegrationTest {
                     get("/api/v1/districts/search")
                         .param("searchTerm", "NonExistentDistrict")
                         .param("page", "0")
-                        .param("size", "10"),
-                ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data").exists())
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.content").isEmpty)
-                .andExpect(jsonPath("$.data.totalElements").value(0))
-                .andExpect(jsonPath("$.data.totalPages").value(0))
+                        .param("size", "10")
+                )
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.data").isEmpty)
+                .andExpect(jsonPath("$.meta.total").value(0))
+                .andExpect(jsonPath("$.meta.totalPages").value(0))
+                .andExpect(jsonPath("$.meta.isEmpty").value(true))
+                .andExpect(jsonPath("$.message").value("Found 0 districts"))
         }
     }
 
@@ -225,6 +229,7 @@ class DistrictControllerIntegrationTest {
             mockMvc
                 .perform(get("/api/v1/districts/by-province/${testProvince.code}"))
                 .andExpect(status().isOk)
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isArray)
                 .andExpect(jsonPath("$.data[0].code").value(testDistrict.code))
         }

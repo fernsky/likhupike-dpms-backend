@@ -1,8 +1,6 @@
 package np.gov.mofaga.imis.location.api.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import np.gov.mofaga.imis.location.api.dto.criteria.ProvinceSearchCriteria
@@ -14,14 +12,13 @@ import np.gov.mofaga.imis.location.api.dto.response.ProvinceDetailResponse
 import np.gov.mofaga.imis.location.api.dto.response.ProvinceResponse
 import np.gov.mofaga.imis.location.service.ProvinceService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
-import np.gov.mofaga.imis.shared.dto.PagedResponse
+import np.gov.mofaga.imis.shared.dto.toApiResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
-import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 
 @RestController
 @RequestMapping("/api/v1/provinces")
@@ -32,24 +29,11 @@ class ProvinceController(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Operation(
-        summary = "Create a new province",
-        description = "Creates a new province. Only accessible by super admins.",
-    )
-    @ApiResponses(
-        value = [
-            SwaggerApiResponse(responseCode = "200", description = "Province created successfully"),
-            SwaggerApiResponse(responseCode = "400", description = "Invalid input data"),
-            SwaggerApiResponse(responseCode = "403", description = "Insufficient permissions"),
-            SwaggerApiResponse(responseCode = "409", description = "Province code already exists"),
-        ],
-    )
+    @Operation(summary = "Create a new province")
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     fun createProvince(
-        @Parameter(description = "Province creation details", required = true)
-        @Valid
-        @RequestBody request: CreateProvinceRequest,
+        @Valid @RequestBody request: CreateProvinceRequest,
     ): ResponseEntity<ApiResponse<ProvinceResponse>> {
         logger.info("Creating province with code: ${request.code}")
         val createdProvince = provinceService.createProvince(request)
@@ -61,28 +45,12 @@ class ProvinceController(
         )
     }
 
-    @Operation(summary = "Get province details", description = "Get detailed information about a specific province")
-    @GetMapping("/{code}")
-    fun getProvinceDetail(
-        @Parameter(description = "Province code", required = true)
-        @PathVariable code: String,
-    ): ResponseEntity<ApiResponse<ProvinceDetailResponse>> {
-        logger.debug("Fetching province detail: $code")
-        val provinceDetail = provinceService.getProvinceDetail(code)
-        return ResponseEntity.ok(ApiResponse.success(data = provinceDetail))
-    }
-
-    @Operation(
-        summary = "Search provinces",
-        description = "Search provinces with various filters and criteria. Supports field selection and dynamic loading of related data.",
-    )
+    @Operation(summary = "Search provinces")
     @GetMapping("/search")
     fun searchProvinces(
-        @Parameter(description = "Search criteria")
         @Valid criteria: ProvinceSearchCriteria,
-        @Parameter(description = "Comma-separated list of fields to include")
         @RequestParam(required = false) fields: String?,
-    ): ResponseEntity<ApiResponse<PagedResponse<DynamicProvinceProjection>>> { // Changed return type
+    ): ResponseEntity<ApiResponse<List<DynamicProvinceProjection>>> {
         logger.debug("Raw fields parameter: $fields")
 
         val selectedFields =
@@ -91,27 +59,46 @@ class ProvinceController(
                     .split(",")
                     .map { field -> ProvinceField.valueOf(field.trim().uppercase()) }
                     .toSet()
-            } ?: ProvinceField.DEFAULT_FIELDS // Use default fields from enum
+            } ?: ProvinceField.DEFAULT_FIELDS
 
         val searchCriteria = criteria.copy(fields = selectedFields)
         val searchResults = provinceService.searchProvinces(searchCriteria)
 
         return ResponseEntity.ok(
-            ApiResponse.success(
-                data = PagedResponse.from(searchResults),
+            searchResults.toApiResponse(
                 message = "Found ${searchResults.totalElements} provinces",
             ),
         )
     }
 
-    @Operation(
-        summary = "Update province",
-        description = "Updates an existing province. Only accessible by super admins.",
-    )
+    @Operation(summary = "Find large provinces")
+    @GetMapping("/large")
+    fun findLargeProvinces(
+        @RequestParam minArea: BigDecimal,
+        @RequestParam minPopulation: Long,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+    ): ResponseEntity<ApiResponse<List<ProvinceResponse>>> {
+        logger.debug("Finding large provinces with minArea: $minArea, minPopulation: $minPopulation")
+        val provinces = provinceService.findLargeProvinces(minArea, minPopulation, page, size)
+        return ResponseEntity.ok(provinces.toApiResponse())
+    }
+
+    // For non-paginated endpoints, use simple success response
+    @Operation(summary = "Get province details")
+    @GetMapping("/{code}")
+    fun getProvinceDetail(
+        @PathVariable code: String,
+    ): ResponseEntity<ApiResponse<ProvinceDetailResponse>> {
+        logger.debug("Fetching province detail: $code")
+        val provinceDetail = provinceService.getProvinceDetail(code)
+        return ResponseEntity.ok(ApiResponse.success(data = provinceDetail))
+    }
+
+    @Operation(summary = "Update province")
     @PutMapping("/{code}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     fun updateProvince(
-        @Parameter(description = "Province code", required = true)
         @PathVariable code: String,
         @Valid @RequestBody request: UpdateProvinceRequest,
     ): ResponseEntity<ApiResponse<ProvinceResponse>> {
@@ -125,33 +112,11 @@ class ProvinceController(
         )
     }
 
-    @Operation(summary = "Get all provinces", description = "Get list of all provinces")
+    @Operation(summary = "Get all provinces")
     @GetMapping
     fun getAllProvinces(): ResponseEntity<ApiResponse<List<ProvinceResponse>>> {
         logger.debug("Fetching all provinces")
         val provinces = provinceService.getAllProvinces()
         return ResponseEntity.ok(ApiResponse.success(data = provinces))
-    }
-
-    @Operation(
-        summary = "Find large provinces",
-        description = "Find provinces based on minimum area and population criteria",
-    )
-    @GetMapping("/large")
-    fun findLargeProvinces(
-        @Parameter(description = "Minimum area in square kilometers")
-        @RequestParam minArea: BigDecimal,
-        @Parameter(description = "Minimum population")
-        @RequestParam minPopulation: Long,
-        @Parameter(description = "Page number")
-        @RequestParam(defaultValue = "0") page: Int,
-        @Parameter(description = "Page size")
-        @RequestParam(defaultValue = "20") size: Int,
-    ): ResponseEntity<ApiResponse<PagedResponse<ProvinceResponse>>> {
-        logger.debug("Finding large provinces with minArea: $minArea, minPopulation: $minPopulation")
-        val provinces = provinceService.findLargeProvinces(minArea, minPopulation, page, size)
-        return ResponseEntity.ok(
-            ApiResponse.success(data = PagedResponse.from(provinces)),
-        )
     }
 }

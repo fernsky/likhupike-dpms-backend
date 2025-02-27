@@ -146,7 +146,6 @@ class ProvinceControllerIntegrationTest {
     inner class SearchProvinceTests {
         @Test
         fun `should search provinces with criteria`() {
-            // Arrange
             mockLoggedInUser(viewer)
             val criteria =
                 ProvinceSearchCriteria(
@@ -176,7 +175,6 @@ class ProvinceControllerIntegrationTest {
             whenever(provinceService.searchProvinces(any()))
                 .thenReturn(expectedResults)
 
-            // Act & Assert
             mockMvc
                 .perform(
                     get("/api/v1/provinces/search")
@@ -184,36 +182,17 @@ class ProvinceControllerIntegrationTest {
                         .param("page", criteria.page.toString())
                         .param("pageSize", criteria.pageSize.toString()),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.totalElements").value(2))
-        }
-
-        @Test
-        fun `should search provinces with criteria and fields`() {
-            // Arrange
-            mockLoggedInUser(viewer)
-            val expectedResults =
-                PageImpl(
-                    listOf(
-                        ProvinceTestFixtures.createProvinceProjection(
-                            code = "TEST-P1",
-                            fields = setOf(ProvinceField.NAME, ProvinceField.CODE),
-                            includeTotals = true,
-                            includeGeometry = true,
-                            includeDistricts = true,
-                            geometryConverter = geometryConverter, // Pass the mocked converter
-                        ),
-                    ),
-                    PageRequest.of(0, 10),
-                    1,
-                )
-
-            // ...existing code...
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.meta.total").value(2))
+                .andExpect(jsonPath("$.meta.page").value(1))
+                .andExpect(jsonPath("$.meta.size").value(10))
+                .andExpect(jsonPath("$.message").value("Found 2 provinces"))
         }
 
         @Test
         fun `should search provinces with specific fields`() {
-            // Arrange
             mockLoggedInUser(viewer)
             val fields = "CODE,NAME"
             val expectedResults =
@@ -231,16 +210,18 @@ class ProvinceControllerIntegrationTest {
             whenever(provinceService.searchProvinces(any()))
                 .thenReturn(expectedResults)
 
-            // Act & Assert
             mockMvc
                 .perform(
                     get("/api/v1/provinces/search")
                         .param("fields", fields),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content[0].code").exists())
-                .andExpect(jsonPath("$.data.content[0].name").exists())
-                .andExpect(jsonPath("$.data.content[0].nameNepali").doesNotExist())
-                .andExpect(jsonPath("$.data.content[0].area").doesNotExist())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].code").exists())
+                .andExpect(jsonPath("$.data[0].name").exists())
+                .andExpect(jsonPath("$.data[0].nameNepali").doesNotExist())
+                .andExpect(jsonPath("$.data[0].area").doesNotExist())
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.message").value("Found 1 provinces"))
         }
     }
 
@@ -296,7 +277,6 @@ class ProvinceControllerIntegrationTest {
     inner class LargeProvinceTests {
         @Test
         fun `should find large provinces`() {
-            // Arrange
             mockLoggedInUser(viewer)
             val minArea = BigDecimal("5000.00")
             val minPopulation = 500000L
@@ -316,7 +296,6 @@ class ProvinceControllerIntegrationTest {
             whenever(provinceService.findLargeProvinces(minArea, minPopulation, 0, 10))
                 .thenReturn(expectedResults)
 
-            // Act & Assert
             mockMvc
                 .perform(
                     get("/api/v1/provinces/large")
@@ -325,8 +304,11 @@ class ProvinceControllerIntegrationTest {
                         .param("page", "0")
                         .param("size", "10"),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.content[0].area").exists())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.data[0].area").exists())
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.meta.size").value(10))
         }
     }
 }

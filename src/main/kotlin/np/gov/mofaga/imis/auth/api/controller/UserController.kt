@@ -10,7 +10,7 @@ import np.gov.mofaga.imis.auth.api.dto.request.UserSearchCriteria
 import np.gov.mofaga.imis.auth.api.dto.response.UserResponse
 import np.gov.mofaga.imis.auth.service.UserService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
-import np.gov.mofaga.imis.shared.dto.PagedResponse
+import np.gov.mofaga.imis.shared.dto.toApiResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -27,23 +27,28 @@ class UserController(
     @PostMapping
     @PreAuthorize("hasAnyRole('MUNICIPALITY_ADMIN', 'WARD_ADMIN')")
     fun createUser(
-        @Parameter(description = "User creation details", required = true)
-        @Validated
-        @RequestBody request: CreateUserRequest,
+        @Valid @RequestBody request: CreateUserRequest,
     ): ResponseEntity<ApiResponse<UserResponse>> {
         val createdUser = userService.createUser(request)
-        return ResponseEntity.ok(ApiResponse.success(data = createdUser))
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                data = createdUser,
+                message = "User created successfully",
+            ),
+        )
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('MUNICIPALITY_ADMIN', 'WARD_ADMIN', 'VIEWER')")
     fun searchUsers(
-        @Parameter(description = "Search criteria with filters")
         @Valid criteria: UserSearchCriteria,
-    ): ResponseEntity<ApiResponse<PagedResponse<UserResponse>>> {
+    ): ResponseEntity<ApiResponse<List<UserResponse>>> {
         val searchResults = userService.searchUsers(criteria)
-        val pagedResponse: PagedResponse<UserResponse> = PagedResponse.from(searchResults)
-        return ResponseEntity.ok(ApiResponse.success(data = pagedResponse))
+        return ResponseEntity.ok(
+            searchResults.toApiResponse(
+                message = "Found ${searchResults.totalElements} users",
+            ),
+        )
     }
 
     @Operation(
@@ -115,7 +120,11 @@ class UserController(
         @PathVariable userId: String,
     ): ResponseEntity<ApiResponse<Unit>> =
         userService.deactivateUser(userId).let {
-            ResponseEntity.ok(ApiResponse.success(message = "User deactivated successfully"))
+            ResponseEntity.ok(
+                ApiResponse.success(
+                    message = "User deactivated successfully",
+                ),
+            )
         }
 
     @Operation(
@@ -150,6 +159,10 @@ class UserController(
         @PathVariable userId: String,
     ): ResponseEntity<ApiResponse<Unit>> =
         userService.safeDeleteUser(userId).let {
-            ResponseEntity.ok(ApiResponse.success(message = "User deleted successfully"))
+            ResponseEntity.ok(
+                ApiResponse.success(
+                    message = "User deleted successfully",
+                ),
+            )
         }
 }

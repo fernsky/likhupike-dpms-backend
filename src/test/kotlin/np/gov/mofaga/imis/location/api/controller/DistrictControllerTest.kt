@@ -183,6 +183,9 @@ class DistrictControllerTest {
                             fields = DistrictField.DEFAULT_FIELDS,
                         ),
                     ),
+                    org.springframework.data.domain.PageRequest
+                        .of(0, 10),
+                    1,
                 )
 
             whenever(districtService.searchDistricts(any()))
@@ -197,8 +200,12 @@ class DistrictControllerTest {
                         .param("page", "0")
                         .param("pageSize", "10"),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content").isArray)
-                .andExpect(jsonPath("$.data.totalElements").isNumber)
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray)
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.meta.page").value(1))
+                .andExpect(jsonPath("$.meta.size").value(10))
+                .andExpect(jsonPath("$.message").value("Found 1 districts"))
         }
     }
 
@@ -208,14 +215,20 @@ class DistrictControllerTest {
         @Test
         fun `should search with specific fields`() {
             // Arrange
-            mockLoggedInUser(viewer) // Replace loginAs with mockLoggedInUser
+            mockLoggedInUser(viewer)
             val fields = "CODE,NAME,POPULATION"
             val projection =
                 DistrictTestFixtures.createDistrictProjection(
                     code = "TEST-D1",
                     fields = setOf(DistrictField.CODE, DistrictField.NAME, DistrictField.POPULATION),
                 )
-            val expectedResults: Page<DynamicDistrictProjection> = PageImpl(listOf(projection))
+            val expectedResults: Page<DynamicDistrictProjection> =
+                PageImpl(
+                    listOf(projection),
+                    org.springframework.data.domain.PageRequest
+                        .of(0, 20),
+                    1,
+                )
 
             whenever(districtService.searchDistricts(any()))
                 .thenReturn(expectedResults)
@@ -226,22 +239,31 @@ class DistrictControllerTest {
                     get("/api/v1/districts/search")
                         .param("fields", fields),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content[0].code").exists())
-                .andExpect(jsonPath("$.data.content[0].name").exists())
-                .andExpect(jsonPath("$.data.content[0].population").exists())
-                .andExpect(jsonPath("$.data.content[0].area").doesNotExist())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].code").exists())
+                .andExpect(jsonPath("$.data[0].name").exists())
+                .andExpect(jsonPath("$.data[0].population").exists())
+                .andExpect(jsonPath("$.data[0].area").doesNotExist())
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.meta.size").value(20))
         }
 
         @Test
         fun `should search with municipalities included`() {
             // Arrange
-            mockLoggedInUser(viewer) // Replace loginAs with mockLoggedInUser
+            mockLoggedInUser(viewer)
             val projection =
                 DistrictTestFixtures.createDistrictProjection(
                     code = "TEST-D1",
                     includeMunicipalities = true,
                 )
-            val expectedResults: Page<DynamicDistrictProjection> = PageImpl(listOf(projection))
+            val expectedResults: Page<DynamicDistrictProjection> =
+                PageImpl(
+                    listOf(projection),
+                    org.springframework.data.domain.PageRequest
+                        .of(0, 20),
+                    1,
+                )
 
             whenever(districtService.searchDistricts(any()))
                 .thenReturn(expectedResults)
@@ -252,7 +274,10 @@ class DistrictControllerTest {
                     get("/api/v1/districts/search")
                         .param("fields", "CODE,MUNICIPALITIES"),
                 ).andExpect(status().isOk)
-                .andExpect(jsonPath("$.data.content[0].municipalities").exists())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].municipalities").exists())
+                .andExpect(jsonPath("$.meta.total").value(1))
+                .andExpect(jsonPath("$.message").value("Found 1 districts"))
         }
     }
 

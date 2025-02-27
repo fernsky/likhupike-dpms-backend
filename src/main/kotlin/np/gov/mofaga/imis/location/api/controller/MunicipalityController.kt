@@ -15,7 +15,7 @@ import np.gov.mofaga.imis.location.api.dto.response.MunicipalityResponse
 import np.gov.mofaga.imis.location.domain.MunicipalityType
 import np.gov.mofaga.imis.location.service.MunicipalityService
 import np.gov.mofaga.imis.shared.dto.ApiResponse
-import np.gov.mofaga.imis.shared.dto.PagedResponse
+import np.gov.mofaga.imis.shared.dto.toApiResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -104,7 +104,7 @@ class MunicipalityController(
         @Valid criteria: MunicipalitySearchCriteria,
         @Parameter(description = "Comma-separated list of fields to include")
         @RequestParam(required = false) fields: String?,
-    ): ResponseEntity<ApiResponse<PagedResponse<DynamicMunicipalityProjection>>> {
+    ): ResponseEntity<ApiResponse<List<DynamicMunicipalityProjection>>> {
         logger.debug("Raw fields parameter: $fields")
 
         val selectedFields =
@@ -119,8 +119,7 @@ class MunicipalityController(
         val searchResults = municipalityService.searchMunicipalities(searchCriteria)
 
         return ResponseEntity.ok(
-            ApiResponse.success(
-                data = PagedResponse.from(searchResults),
+            searchResults.toApiResponse(
                 message = "Found ${searchResults.totalElements} municipalities",
             ),
         )
@@ -161,7 +160,7 @@ class MunicipalityController(
         @RequestParam(defaultValue = "0") page: Int,
         @Parameter(description = "Page size")
         @RequestParam(defaultValue = "20") size: Int,
-    ): ResponseEntity<ApiResponse<PagedResponse<MunicipalityResponse>>> {
+    ): ResponseEntity<ApiResponse<List<MunicipalityResponse>>> {
         logger.debug("Finding municipalities within ${radiusKm}km of ($latitude, $longitude)")
 
         val criteria =
@@ -174,9 +173,7 @@ class MunicipalityController(
             )
 
         val nearbyMunicipalities = municipalityService.findNearbyMunicipalities(criteria)
-        return ResponseEntity.ok(
-            ApiResponse.success(data = PagedResponse.from(nearbyMunicipalities)),
-        )
+        return ResponseEntity.ok(nearbyMunicipalities.toApiResponse())
     }
 
     @Operation(summary = "Get all municipalities")

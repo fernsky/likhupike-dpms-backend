@@ -106,8 +106,10 @@ class UserControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)),
             ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.email").value(municipalityViewer.email))
             .andExpect(jsonPath("$.data.isMunicipalityLevel").value(true))
+            .andExpect(jsonPath("$.message").value("User created successfully"))
     }
 
     @Test
@@ -138,8 +140,10 @@ class UserControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)),
             ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.wardNumber").value(1))
             .andExpect(jsonPath("$.data.isMunicipalityLevel").value(false))
+            .andExpect(jsonPath("$.message").value("User created successfully"))
     }
 
     @Test
@@ -161,8 +165,13 @@ class UserControllerTest {
                 get("/api/v1/users/search")
                     .param("isMunicipalityLevel", "true"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].email").value(municipalityViewer.email))
-            .andExpect(jsonPath("$.data.content[1].email").value(wardViewer.email))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].email").value(municipalityViewer.email))
+            .andExpect(jsonPath("$.data[1].email").value(wardViewer.email))
+            .andExpect(jsonPath("$.meta.total").value(2))
+            .andExpect(jsonPath("$.meta.page").value(1))
+            .andExpect(jsonPath("$.meta.hasMore").value(false))
+            .andExpect(jsonPath("$.message").value("Found 2 users"))
     }
 
     @Test
@@ -178,7 +187,12 @@ class UserControllerTest {
                 get("/api/v1/users/search")
                     .param("wardNumber", "1"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].wardNumber").value(1))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].wardNumber").value(1))
+            .andExpect(jsonPath("$.meta.total").value(1))
+            .andExpect(jsonPath("$.meta.page").value(1))
+            .andExpect(jsonPath("$.meta.hasMore").value(false))
+            .andExpect(jsonPath("$.message").value("Found 1 users"))
     }
 
     @Test
@@ -191,7 +205,9 @@ class UserControllerTest {
         mockMvc
             .perform(post("/api/v1/users/${wardViewer.id}/approve"))
             .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.email").value(wardViewer.email))
+            .andExpect(jsonPath("$.message").value("User approved successfully"))
     }
 
     // TODO: Fix this test

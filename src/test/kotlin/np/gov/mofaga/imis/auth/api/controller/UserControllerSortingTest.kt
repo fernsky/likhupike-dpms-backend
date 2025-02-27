@@ -66,69 +66,71 @@ class UserControllerSortingTest {
     @Test
     @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
     fun `sort by FULL_NAME ascending`() {
-        // Arrange
         whenever(userService.searchUsers(any())).thenReturn(PageImpl(testUsers))
 
-        // Act & Assert
         mockMvc
             .perform(
                 get("/api/v1/users/search")
                     .param("sortBy", "FULL_NAME")
                     .param("sortDirection", "ASC"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].fullName").value("Aaron Smith"))
-            .andExpect(jsonPath("$.data.content[1].fullName").value("Bob Johnson"))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].fullName").value("Aaron Smith"))
+            .andExpect(jsonPath("$.data[1].fullName").value("Bob Johnson"))
+            .andExpect(jsonPath("$.meta.total").value(2))
+            .andExpect(jsonPath("$.message").value("Found 2 users"))
     }
 
     @Test
     @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
     fun `sort by EMAIL descending`() {
-        // Arrange
         whenever(userService.searchUsers(any())).thenReturn(PageImpl(testUsers.reversed()))
 
-        // Act & Assert
         mockMvc
             .perform(
                 get("/api/v1/users/search")
                     .param("sortBy", "EMAIL")
                     .param("sortDirection", "DESC"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].email").value("b@example.com"))
-            .andExpect(jsonPath("$.data.content[1].email").value("a@example.com"))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].email").value("b@example.com"))
+            .andExpect(jsonPath("$.data[1].email").value("a@example.com"))
+            .andExpect(jsonPath("$.meta.total").value(2))
     }
 
     @Test
     @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
     fun `sort by WARD_NUMBER ascending`() {
-        // Arrange
         whenever(userService.searchUsers(any())).thenReturn(PageImpl(testUsers))
 
-        // Act & Assert
         mockMvc
             .perform(
                 get("/api/v1/users/search")
                     .param("sortBy", "WARD_NUMBER")
                     .param("sortDirection", "ASC"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].wardNumber").value(1))
-            .andExpect(jsonPath("$.data.content[1].wardNumber").value(2))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].wardNumber").value(1))
+            .andExpect(jsonPath("$.data[1].wardNumber").value(2))
+            .andExpect(jsonPath("$.meta.page").value(1))
+            .andExpect(jsonPath("$.meta.size").value(2))
     }
 
     @Test
     @WithMockUser(roles = ["MUNICIPALITY_ADMIN"])
     fun `sort by CREATED_AT descending`() {
-        // Arrange
         whenever(userService.searchUsers(any())).thenReturn(PageImpl(testUsers.reversed()))
 
-        // Act & Assert
         mockMvc
             .perform(
                 get("/api/v1/users/search")
                     .param("sortBy", "CREATED_AT")
                     .param("sortDirection", "DESC"),
             ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content[0].id").value("123e4567-e89b-12d3-a456-426614174001"))
-            .andExpect(jsonPath("$.data.content[1].id").value("123e4567-e89b-12d3-a456-426614174000"))
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data[0].id").value("123e4567-e89b-12d3-a456-426614174001"))
+            .andExpect(jsonPath("$.data[1].id").value("123e4567-e89b-12d3-a456-426614174000"))
+            .andExpect(jsonPath("$.meta.hasMore").value(false))
     }
 
     @Test
