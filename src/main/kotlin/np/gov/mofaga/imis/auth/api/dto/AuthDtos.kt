@@ -58,8 +58,8 @@ data class RegisterRequest(
     val fullNameNepali: String,
     @field:NotNull(message = "Date of birth is required")
     @field:Past(message = "Date of birth must be a past date")
-    @Schema(example = "1990-01-01", required = true)
-    val dateOfBirth: LocalDate,
+    @Schema(example = "1990-01-01", required = false)
+    val dateOfBirth: LocalDate?,
     @field:NotBlank(message = "Address cannot be empty")
     @field:Size(min = 5, max = 200, message = "Address must be between 5 and 200 characters")
     @Schema(example = "123 Main St, City", required = true)
@@ -104,9 +104,9 @@ data class RegisterRequest(
     @Schema(
         example = "Manager",
         description = "Must be one of: Chief Administrative Officer, Manager, Employee, IT Officer, Administrative Officer, Account Officer",
-        required = true
+        required = false
     )
-    val officePost: String,
+    val officePost: String?,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
