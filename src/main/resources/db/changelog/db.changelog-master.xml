@@ -21,8 +21,8 @@
     <include file="constraints/03-family-constraints.xml" relativeToChangelogFile="true"/>
 
     <!-- Versioned Updates -->
-    <!-- <include file="versions/v1.0/changelog.xml" relativeToChangelogFile="true"/>
-    <include file="versions/v1.1/changelog.xml" relativeToChangelogFile="true"/> -->
+    <include file="versions/v1.0/changelog.xml" relativeToChangelogFile="true"/>
+    <!-- <include file="versions/v1.1/changelog.xml" relativeToChangelogFile="true"/> -->
 
     <!-- Data Migration Scripts -->
     <!-- <include file="migrations/changelog.xml" relativeToChangelogFile="true"/> -->

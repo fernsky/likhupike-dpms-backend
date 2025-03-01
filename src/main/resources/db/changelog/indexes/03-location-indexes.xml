@@ -4,36 +4,88 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet author="trilochan" id="03-location-indexes-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_provinces_name"/>
+            </not>
+        </preConditions>
         <createIndex indexName="idx_provinces_name" tableName="provinces">
             <column name="name"/>
         </createIndex>
     </changeSet>
 
     <changeSet author="trilochan" id="03-location-indexes-2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_districts_name"/>
+            </not>
+        </preConditions>
         <createIndex indexName="idx_districts_name" tableName="districts">
             <column name="name"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-indexes-3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_districts_province"/>
+            </not>
+        </preConditions>
         <createIndex indexName="idx_districts_province" tableName="districts">
             <column name="province_code"/>
         </createIndex>
     </changeSet>
 
-    <changeSet author="trilochan" id="03-location-indexes-3">
+    <changeSet author="trilochan" id="03-location-indexes-4">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_municipalities_name"/>
+            </not>
+        </preConditions>
         <createIndex indexName="idx_municipalities_name" tableName="municipalities">
             <column name="name"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-indexes-5">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_municipalities_district"/>
+            </not>
+        </preConditions>
         <createIndex indexName="idx_municipalities_district" tableName="municipalities">
             <column name="district_code"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-indexes-6">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_municipalities_type"/>
+            </not>
+        </preConditions>
         <createIndex indexName="idx_municipalities_type" tableName="municipalities">
             <column name="type"/>
         </createIndex>
     </changeSet>
 
-    <changeSet author="trilochan" id="03-location-indexes-4">
+    <changeSet author="trilochan" id="03-location-indexes-7">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_wards_municipality"/>
+            </not>
+        </preConditions>
         <createIndex indexName="idx_wards_municipality" tableName="wards">
             <column name="municipality_code"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="03-location-indexes-8">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_wards_number"/>
+            </not>
+        </preConditions>
         <createIndex indexName="idx_wards_number" tableName="wards">
             <column name="ward_number"/>
         </createIndex>

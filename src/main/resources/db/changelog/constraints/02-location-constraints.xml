@@ -4,21 +4,74 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet author="trilochan" id="02-location-constraints-1">
-        <comment>Add unique constraints for location tables</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists tableName="provinces" columnNames="code"/>
+            </not>
+        </preConditions>
+        <comment>Add unique constraint for province code</comment>
         <addUniqueConstraint columnNames="code" constraintName="provinces_code_key" tableName="provinces"/>
-        <addUniqueConstraint columnNames="code" constraintName="districts_code_key" tableName="districts"/>
-        <addUniqueConstraint columnNames="code" constraintName="municipalities_code_key" tableName="municipalities"/>
-        <addUniqueConstraint columnNames="code, province_code" constraintName="uk_district_code_province" tableName="districts"/>
-        <addUniqueConstraint columnNames="code, district_code" constraintName="uk_municipality_code_district" tableName="municipalities"/>
-        <addUniqueConstraint columnNames="ward_number, municipality_code" constraintName="uk_ward_number_municipality" tableName="wards"/>
     </changeSet>
 
     <changeSet author="trilochan" id="02-location-constraints-2">
-        <comment>Add foreign key constraints for location tables</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists tableName="districts" columnNames="code"/>
+            </not>
+        </preConditions>
+        <comment>Add unique constraints for districts</comment>
+        <addUniqueConstraint columnNames="code" constraintName="districts_code_key" tableName="districts"/>
+        <addUniqueConstraint columnNames="code, province_code" constraintName="uk_district_code_province" tableName="districts"/>
+    </changeSet>
+
+    <changeSet author="trilochan" id="02-location-constraints-3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists tableName="municipalities" columnNames="code"/>
+            </not>
+        </preConditions>
+        <comment>Add unique constraints for municipalities</comment>
+        <addUniqueConstraint columnNames="code" constraintName="municipalities_code_key" tableName="municipalities"/>
+        <addUniqueConstraint columnNames="code, district_code" constraintName="uk_municipality_code_district" tableName="municipalities"/>
+    </changeSet>
+
+    <changeSet author="trilochan" id="02-location-constraints-4">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists tableName="wards" columnNames="ward_number, municipality_code"/>
+            </not>
+        </preConditions>
+        <comment>Add unique constraint for wards</comment>
+        <addUniqueConstraint columnNames="ward_number, municipality_code" constraintName="uk_ward_number_municipality" tableName="wards"/>
+    </changeSet>
+
+    <changeSet author="trilochan" id="02-location-constraints-5">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_district_province"/>
+            </not>
+        </preConditions>
+        <comment>Add foreign key for districts to provinces</comment>
         <addForeignKeyConstraint baseColumnNames="province_code" baseTableName="districts" constraintName="fk_district_province" referencedColumnNames="code" referencedTableName="provinces"/>
+    </changeSet>
 
+    <changeSet author="trilochan" id="02-location-constraints-6">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_municipality_district"/>
+            </not>
+        </preConditions>
+        <comment>Add foreign key for municipalities to districts</comment>
         <addForeignKeyConstraint baseColumnNames="district_code" baseTableName="municipalities" constraintName="fk_municipality_district" referencedColumnNames="code" referencedTableName="districts"/>
+    </changeSet>
 
+    <changeSet author="trilochan" id="02-location-constraints-7">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_ward_municipality"/>
+            </not>
+        </preConditions>
+        <comment>Add foreign key for wards to municipalities</comment>
         <addForeignKeyConstraint baseColumnNames="municipality_code" baseTableName="wards" constraintName="fk_ward_municipality" referencedColumnNames="code" referencedTableName="municipalities"/>
     </changeSet>
 

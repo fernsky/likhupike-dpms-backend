@@ -4,20 +4,48 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet author="trilochan" id="04-family-indexes-1">
-        <comment>Create indexes for families table</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_families_ward"/>
+            </not>
+        </preConditions>
+        <comment>Create index on families ward_number</comment>
         <createIndex indexName="idx_families_ward" tableName="families">
             <column name="ward_number"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-family-indexes-2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_families_head"/>
+            </not>
+        </preConditions>
+        <comment>Create index on families head_of_family</comment>
         <createIndex indexName="idx_families_head" tableName="families">
             <column name="head_of_family"/>
         </createIndex>
     </changeSet>
 
-    <changeSet author="trilochan" id="04-family-indexes-2">
-        <comment>Create indexes for family_photos table</comment>
+    <changeSet author="trilochan" id="04-family-indexes-3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_family_photos_family"/>
+            </not>
+        </preConditions>
+        <comment>Create index on family_photos family_id</comment>
         <createIndex indexName="idx_family_photos_family" tableName="family_photos">
             <column name="family_id"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="04-family-indexes-4">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_family_photos_filename"/>
+            </not>
+        </preConditions>
+        <comment>Create index on family_photos file_name</comment>
         <createIndex indexName="idx_family_photos_filename" tableName="family_photos">
             <column name="file_name"/>
         </createIndex>

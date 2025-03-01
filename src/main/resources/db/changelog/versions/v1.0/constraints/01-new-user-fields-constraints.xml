@@ -1,0 +1,22 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet author="trilochan" id="01-new-user-fields-constraints-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_users_province"/>
+            </not>
+        </preConditions>
+        <comment>Add foreign key constraints for location references</comment>
+
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="province_code" constraintName="fk_users_province" referencedTableName="provinces" referencedColumnNames="code"/>
+
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="district_code" constraintName="fk_users_district" referencedTableName="districts" referencedColumnNames="code"/>
+
+        <addForeignKeyConstraint baseTableName="users" baseColumnNames="municipality_code" constraintName="fk_users_municipality" referencedTableName="municipalities" referencedColumnNames="code"/>
+    </changeSet>
+
+</databaseChangeLog>

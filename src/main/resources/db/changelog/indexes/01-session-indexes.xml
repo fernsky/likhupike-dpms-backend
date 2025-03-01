@@ -4,13 +4,36 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet author="trilochan" id="01-session-indexes-1">
-        <comment>Create indexes for spring session table</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="spring_session_ix1"/>
+            </not>
+        </preConditions>
+        <comment>Create unique index on session_id</comment>
         <createIndex indexName="spring_session_ix1" tableName="spring_session" unique="true">
             <column name="session_id"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="01-session-indexes-2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="spring_session_ix2"/>
+            </not>
+        </preConditions>
+        <comment>Create index on expiry_time</comment>
         <createIndex indexName="spring_session_ix2" tableName="spring_session">
             <column name="expiry_time"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet author="trilochan" id="01-session-indexes-3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="spring_session_ix3"/>
+            </not>
+        </preConditions>
+        <comment>Create index on principal_name</comment>
         <createIndex indexName="spring_session_ix3" tableName="spring_session">
             <column name="principal_name"/>
         </createIndex>

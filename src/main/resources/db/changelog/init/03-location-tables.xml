@@ -4,6 +4,11 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet author="trilochan" id="03-location-tables-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="provinces"/>
+            </not>
+        </preConditions>
         <comment>Create provinces table</comment>
         <createTable tableName="provinces">
             <column name="id" type="UUID">
@@ -36,6 +41,11 @@
     </changeSet>
 
     <changeSet author="trilochan" id="03-location-tables-2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="districts"/>
+            </not>
+        </preConditions>
         <comment>Create districts table</comment>
         <createTable tableName="districts">
             <column name="id" type="UUID">
@@ -71,6 +81,11 @@
     </changeSet>
 
     <changeSet author="trilochan" id="03-location-tables-3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="municipalities"/>
+            </not>
+        </preConditions>
         <comment>Create municipalities table</comment>
         <createTable tableName="municipalities">
             <column name="id" type="UUID">
@@ -110,6 +125,11 @@
     </changeSet>
 
     <changeSet author="trilochan" id="03-location-tables-4">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="wards"/>
+            </not>
+        </preConditions>
         <comment>Create wards table</comment>
         <createTable tableName="wards">
             <column name="id" type="UUID">

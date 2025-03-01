@@ -4,6 +4,11 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet author="trilochan" id="02-users-and-auth-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
         <comment>Create users table</comment>
         <createTable tableName="users">
             <column name="id" type="UUID">
@@ -46,6 +51,11 @@
     </changeSet>
 
     <changeSet author="trilochan" id="02-users-and-auth-2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="roles"/>
+            </not>
+        </preConditions>
         <comment>Create roles table</comment>
         <createTable tableName="roles">
             <column name="id" type="UUID">
@@ -68,6 +78,11 @@
     </changeSet>
 
     <changeSet author="trilochan" id="02-users-and-auth-3">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="permissions"/>
+            </not>
+        </preConditions>
         <comment>Create permissions table</comment>
         <createTable tableName="permissions">
             <column name="id" type="UUID">
@@ -92,6 +107,16 @@
     </changeSet>
 
     <changeSet author="trilochan" id="02-users-and-auth-4">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <not>
+                    <tableExists tableName="user_roles"/>
+                </not>
+                <not>
+                    <tableExists tableName="role_permissions"/>
+                </not>
+            </and>
+        </preConditions>
         <comment>Create junction tables for user roles and role permissions</comment>
         <createTable tableName="user_roles">
             <column name="user_id" type="UUID">

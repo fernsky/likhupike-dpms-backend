@@ -1,0 +1,37 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet author="trilochan" id="01-new-user-fields-1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="user_type"/>
+            </not>
+        </preConditions>
+        <comment>Add new user type and office related fields</comment>
+        <addColumn tableName="users">
+            <column name="user_type" type="VARCHAR(50)" defaultValue="CITIZEN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="office_section" type="VARCHAR(50)"/>
+            <column name="elected_position" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="trilochan" id="01-new-user-fields-2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="province_code"/>
+            </not>
+        </preConditions>
+        <comment>Add location reference fields</comment>
+        <addColumn tableName="users">
+            <column name="province_code" type="VARCHAR(20)"/>
+            <column name="district_code" type="VARCHAR(20)"/>
+            <column name="municipality_code" type="VARCHAR(20)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
