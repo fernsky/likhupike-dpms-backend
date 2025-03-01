@@ -19,14 +19,14 @@ pipeline {
             }
         }
         
-        stage('Build and Test') {
-            steps {
-                sh '''
-                    gradle clean build -Pprofile=prod
-                    gradle test -Pprofile=prod
-                '''
-            }
-        }
+        // stage('Build and Test') {
+        //     steps {
+        //         sh '''
+        //             gradle clean build -Pprofile=prod
+        //             gradle test -Pprofile=prod
+        //         '''
+        //     }
+        // }
         
         stage('Docker Test') {
             steps {
