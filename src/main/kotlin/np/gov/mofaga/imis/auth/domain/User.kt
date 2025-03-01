@@ -2,6 +2,9 @@ package np.gov.mofaga.imis.auth.domain
 
 import jakarta.persistence.*
 import np.gov.mofaga.imis.common.entity.BaseEntity
+import np.gov.mofaga.imis.location.domain.District
+import np.gov.mofaga.imis.location.domain.Municipality
+import np.gov.mofaga.imis.location.domain.Province
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.LocalDate
@@ -73,6 +76,30 @@ class User :
     )
     var roles: MutableSet<Role> = mutableSetOf()
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", nullable = false)
+    var userType: UserType = UserType.CITIZEN
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "office_section")
+    var officeSection: OfficeSection? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "elected_position")
+    var electedPosition: ElectedPosition? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "province_code", referencedColumnName = "code")
+    var province: Province? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "district_code", referencedColumnName = "code")
+    var district: District? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "municipality_code", referencedColumnName = "code")
+    var municipality: Municipality? = null
+
     // UserDetails implementation
     override fun getAuthorities() = roles.map { SimpleGrantedAuthority(it.getAuthority()) }
 
@@ -101,4 +128,23 @@ class User :
     fun isMunicipalityAdmin() = hasRole(RoleType.MUNICIPALITY_ADMIN)
 
     fun isWardAdmin() = hasRole(RoleType.WARD_ADMIN)
+
+    // Helper functions for type-specific fields
+    fun isEmployee() = userType == UserType.LOCAL_LEVEL_EMPLOYEE
+
+    fun isElectedRepresentative() = userType == UserType.ELECTED_REPRESENTATIVE
+
+    fun isCitizen() = userType == UserType.CITIZEN
+
+    // Validation function
+    fun validate() {
+        when (userType) {
+            UserType.LOCAL_LEVEL_EMPLOYEE -> requireNotNull(officeSection) { "Office section is required for employees" }
+            UserType.ELECTED_REPRESENTATIVE -> requireNotNull(electedPosition) { "Elected position is required for representatives" }
+            else -> {}
+        }
+        requireNotNull(municipality) { "Municipality is required" }
+        requireNotNull(district) { "District is required" }
+        requireNotNull(province) { "Province is required" }
+    }
 }

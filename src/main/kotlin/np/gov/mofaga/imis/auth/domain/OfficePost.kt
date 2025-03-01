@@ -9,6 +9,7 @@ enum class OfficePost(
     IT_OFFICER("IT Officer"),
     ADMINISTRATIVE_OFFICER("Administrative Officer"),
     ACCOUNT_OFFICER("Account Officer"),
+    OTHER("Other"),
     ;
 
     companion object {

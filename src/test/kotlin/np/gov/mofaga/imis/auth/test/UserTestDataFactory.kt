@@ -1,8 +1,7 @@
 package np.gov.mofaga.imis.auth.test
 
-import np.gov.mofaga.imis.auth.domain.Role
-import np.gov.mofaga.imis.auth.domain.RoleType
-import np.gov.mofaga.imis.auth.domain.User
+import np.gov.mofaga.imis.auth.domain.*
+import np.gov.mofaga.imis.location.test.fixtures.MunicipalityTestFixtures
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -27,6 +26,12 @@ object UserTestDataFactory {
         dateOfBirth = LocalDate.now()
         address = "Municipality"
         officePost = "Admin"
+        userType = UserType.LOCAL_LEVEL_EMPLOYEE
+        officeSection = OfficeSection.GENERAL_ADMINISTRATION
+        val municipality = MunicipalityTestFixtures.createMunicipality()
+        this.municipality = municipality
+        this.district = municipality.district
+        this.province = municipality.district?.province
         isMunicipalityLevel = true
         isApproved = true
         roles = mutableSetOf(createRole(RoleType.MUNICIPALITY_ADMIN))
@@ -47,10 +52,47 @@ object UserTestDataFactory {
         dateOfBirth = LocalDate.now()
         address = "Ward $wardNumber"
         officePost = "Ward Admin"
+        userType = UserType.LOCAL_LEVEL_EMPLOYEE
+        officeSection = OfficeSection.GENERAL_ADMINISTRATION
+        val municipality = MunicipalityTestFixtures.createMunicipality()
+        this.municipality = municipality
+        this.district = municipality.district
+        this.province = municipality.district?.province
         this.wardNumber = wardNumber
         isMunicipalityLevel = false
         isApproved = true
         roles = mutableSetOf(createRole(RoleType.WARD_ADMIN))
+        createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+        updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
+    }
+
+    fun createElectedRepresentative(
+        id: String = "550e8400-e29b-41d4-a716-446655440004",
+        email: String = "ward.chair@municipality.gov.np",
+        position: ElectedPosition = ElectedPosition.WARD_CHAIRPERSON,
+        wardNumber: Int? = 1,
+    ) = User().apply {
+        this.id = UUID.fromString(id)
+        this.email = email
+        setPassword("encoded_password")
+        fullName = "Elected Representative"
+        fullNameNepali = "निर्वाचित प्रतिनिधि"
+        dateOfBirth = LocalDate.now()
+        address = wardNumber?.let { "Ward $it" } ?: "Municipality"
+        userType = UserType.ELECTED_REPRESENTATIVE
+        electedPosition = position
+        val municipality = MunicipalityTestFixtures.createMunicipality()
+        this.municipality = municipality
+        this.district = municipality.district
+        this.province = municipality.district?.province
+        this.wardNumber = wardNumber
+        isMunicipalityLevel = position in
+            setOf(
+                ElectedPosition.CHAIRPERSON,
+                ElectedPosition.VICE_CHAIRPERSON,
+            )
+        isApproved = true
+        roles = mutableSetOf(createRole(RoleType.EDITOR))
         createdAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
         updatedAt = LocalDateTime.now().toInstant(ZoneOffset.UTC)
     }
@@ -69,6 +111,11 @@ object UserTestDataFactory {
         dateOfBirth = LocalDate.now()
         address = wardNumber?.let { "Ward $it" } ?: "Municipality"
         officePost = "Viewer"
+        userType = UserType.CITIZEN
+        val municipality = MunicipalityTestFixtures.createMunicipality()
+        this.municipality = municipality
+        this.district = municipality.district
+        this.province = municipality.district?.province
         this.wardNumber = wardNumber
         this.isMunicipalityLevel = isMunicipalityLevel
         isApproved = true
@@ -89,6 +136,12 @@ object UserTestDataFactory {
         dateOfBirth = LocalDate.now()
         address = "Likhu Pike Municipality"
         officePost = "Super Admin"
+        userType = UserType.LOCAL_LEVEL_EMPLOYEE
+        officeSection = OfficeSection.GENERAL_ADMINISTRATION
+        val municipality = MunicipalityTestFixtures.createMunicipality()
+        this.municipality = municipality
+        this.district = municipality.district
+        this.province = municipality.district?.province
         isMunicipalityLevel = true
         isApproved = true
         roles = mutableSetOf(createRole(RoleType.SUPER_ADMIN))

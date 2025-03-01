@@ -5,29 +5,26 @@ import jakarta.validation.ConstraintValidatorContext
 import np.gov.mofaga.imis.auth.domain.OfficePost
 import np.gov.mofaga.imis.shared.validation.annotations.ValidOfficePost
 
-class ValidOfficePostValidator : ConstraintValidator<ValidOfficePost, String> {
+class ValidOfficePostValidator : ConstraintValidator<ValidOfficePost, String?> {
     override fun initialize(constraintAnnotation: ValidOfficePost) {}
 
     override fun isValid(
         value: String?,
         context: ConstraintValidatorContext,
     ): Boolean {
-        if (value == null) {
-            context.disableDefaultConstraintViolation()
-            context
-                .buildConstraintViolationWithTemplate("Office post cannot be null")
-                .addConstraintViolation()
-            return false
-        }
+        // If value is null, consider it valid (optional field)
+        if (value == null) return true
 
+        // If value is blank, consider it invalid
         if (value.isBlank()) {
             context.disableDefaultConstraintViolation()
             context
-                .buildConstraintViolationWithTemplate("Office post cannot be empty")
+                .buildConstraintViolationWithTemplate("Office post cannot be blank if provided")
                 .addConstraintViolation()
             return false
         }
 
+        // Check if the value is a valid office post
         val isValid = OfficePost.fromTitle(value) != null
 
         if (!isValid) {

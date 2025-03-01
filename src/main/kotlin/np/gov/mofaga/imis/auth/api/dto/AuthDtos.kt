@@ -3,11 +3,13 @@ package np.gov.mofaga.imis.auth.api.dto
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
+import np.gov.mofaga.imis.auth.domain.ElectedPosition
 import np.gov.mofaga.imis.auth.domain.OfficePost
+import np.gov.mofaga.imis.auth.domain.OfficeSection
 import np.gov.mofaga.imis.auth.domain.RoleType
+import np.gov.mofaga.imis.auth.domain.UserType
 import np.gov.mofaga.imis.shared.validation.annotations.NepaliName
 import np.gov.mofaga.imis.shared.validation.annotations.ValidOfficePost
-import np.gov.mofaga.imis.shared.validation.annotations.ValidOfficePostWardCombination
 import java.time.LocalDate
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -25,7 +27,6 @@ data class LoginRequest(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Registration request payload")
-@ValidOfficePostWardCombination
 data class RegisterRequest(
     @field:Email(message = "The provided email address is invalid")
     @field:NotBlank(message = "Email address cannot be empty")
@@ -63,6 +64,41 @@ data class RegisterRequest(
     @field:Size(min = 5, max = 200, message = "Address must be between 5 and 200 characters")
     @Schema(example = "123 Main St, City", required = true)
     val address: String,
+    @field:NotNull(message = "User type is required")
+    @Schema(
+        example = "LOCAL_LEVEL_EMPLOYEE",
+        required = true,
+        description = "Type of user (CITIZEN, LOCAL_LEVEL_EMPLOYEE, ELECTED_REPRESENTATIVE, OTHER)"
+    )
+    val userType: UserType,
+    @field:NotBlank(message = "Province code is required")
+    @Schema(example = "P1", required = true)
+    val provinceCode: String,
+    @field:NotBlank(message = "District code is required")
+    @Schema(example = "D1", required = true)
+    val districtCode: String,
+    @field:NotBlank(message = "Municipality code is required")
+    @Schema(example = "M1", required = true)
+    val municipalityCode: String,
+    @Schema(
+        example = "1",
+        description = "Ward number (required for ward-level employees and ward representatives)",
+        minimum = "1",
+        maximum = "50"
+    )
+    @field:Min(value = 1, message = "Ward number must be at least 1")
+    @field:Max(value = 50, message = "Ward number cannot exceed 50")
+    val wardNumber: Int?,
+    @Schema(
+        example = "GENERAL_ADMINISTRATION",
+        description = "Office section (required for LOCAL_LEVEL_EMPLOYEE)"
+    )
+    val officeSection: OfficeSection?,
+    @Schema(
+        example = "WARD_CHAIRPERSON",
+        description = "Elected position (required for ELECTED_REPRESENTATIVE)"
+    )
+    val electedPosition: ElectedPosition?,
     @field:NotBlank(message = "Office post cannot be empty")
     @field:ValidOfficePost
     @Schema(
@@ -71,15 +107,6 @@ data class RegisterRequest(
         required = true
     )
     val officePost: String,
-    @Schema(
-        example = "1",
-        description = "Ward number (not applicable for Chief Administrative Officer)",
-        minimum = "1",
-        maximum = "50"
-    )
-    @field:Min(value = 1, message = "Ward number must be at least 1")
-    @field:Max(value = 5, message = "Ward number cannot exceed 5")
-    val wardNumber: Int?,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -102,6 +129,28 @@ data class AuthResponse(
     
     @Schema(description = "Token expiration time in seconds")
     val expiresIn: Long
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "User profile response")
+data class UserProfileResponse(
+    val id: String,
+    val email: String,
+    val fullName: String,
+    val fullNameNepali: String,
+    val dateOfBirth: LocalDate,
+    val address: String,
+    val profilePicture: String?,
+    val userType: UserType,
+    val officeSection: OfficeSection?,
+    val electedPosition: ElectedPosition?,
+    val provinceCode: String,
+    val districtCode: String,
+    val municipalityCode: String,
+    val wardNumber: Int?,
+    val officePost: String,
+    val roles: Set<RoleType>,
+    val isApproved: Boolean,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

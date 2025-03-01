@@ -1,19 +1,16 @@
 package np.gov.mofaga.imis.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import np.gov.mofaga.imis.auth.api.dto.AuthResponse
 import np.gov.mofaga.imis.auth.api.dto.LoginRequest
-import np.gov.mofaga.imis.auth.api.dto.RegisterRequest
 import np.gov.mofaga.imis.auth.api.dto.RequestPasswordResetRequest
 import np.gov.mofaga.imis.auth.api.dto.ResetPasswordRequest
-import np.gov.mofaga.imis.auth.domain.OfficePost
-import np.gov.mofaga.imis.auth.domain.RoleType
 import np.gov.mofaga.imis.auth.exception.EmailAlreadyExistsException
 import np.gov.mofaga.imis.auth.exception.InvalidCredentialsException
 import np.gov.mofaga.imis.auth.exception.InvalidPasswordResetTokenException
 import np.gov.mofaga.imis.auth.exception.TokenExpiredException
 import np.gov.mofaga.imis.auth.exception.UserNotFoundException
 import np.gov.mofaga.imis.auth.service.AuthService
+import np.gov.mofaga.imis.auth.test.fixtures.UserTestFixtures
 import np.gov.mofaga.imis.config.TestConfig
 import np.gov.mofaga.imis.shared.security.jwt.JwtService
 import org.junit.jupiter.api.Test
@@ -51,24 +48,15 @@ class AuthControllerTest {
     @MockBean
     private lateinit var jwtService: JwtService // This should now be properly wired
 
-    private val testAuthResponse =
-        AuthResponse(
-            userId = UUID.randomUUID().toString(), // Convert UUID to String
-            email = "test@example.com",
-            token = "test-token",
-            refreshToken = "test-refresh-token",
-            expiresIn = 3600,
-            roles = setOf(RoleType.VIEWER),
-        )
+    private val testAuthResponse = UserTestFixtures.createAuthResponse()
 
     private val baseRegisterRequest =
-        RegisterRequest(
+        UserTestFixtures.createRegisterRequest(
             email = "test@example.com",
             password = "Password@123",
             fullName = "Test User",
             fullNameNepali = "टेस्ट युजर",
-            officePost = OfficePost.CHIEF_ADMINISTRATIVE_OFFICER.title,
-            wardNumber = null,
+            officePost = "Chief Administrative Officer",
             dateOfBirth = LocalDate.of(1990, 1, 1),
             address = "Test Address",
         )
@@ -93,7 +81,7 @@ class AuthControllerTest {
     @Test
     fun `register - should return 409 when email already exists`() {
         // given
-        val registerRequest = baseRegisterRequest.copy(email = "existing@example.com")
+        val registerRequest = UserTestFixtures.createRegisterRequest(email = "existing@example.com")
         whenever(authService.register(any())).thenThrow(EmailAlreadyExistsException(registerRequest.email))
 
         // when/then

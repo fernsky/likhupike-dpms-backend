@@ -10,6 +10,7 @@ import np.gov.mofaga.imis.auth.domain.RoleType
 import np.gov.mofaga.imis.auth.domain.User
 import np.gov.mofaga.imis.auth.exception.*
 import np.gov.mofaga.imis.auth.infrastructure.repository.UserRepository
+import np.gov.mofaga.imis.auth.test.fixtures.UserTestFixtures
 import np.gov.mofaga.imis.shared.event.UserEventPublisher
 import np.gov.mofaga.imis.shared.security.jwt.JwtService
 import np.gov.mofaga.imis.shared.security.jwt.TokenPair
@@ -58,19 +59,16 @@ class AuthServiceImplTest {
         }
 
     private val mockUser =
-        User().apply {
-            id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
-            email = "test@example.com"
-            setPassword("encoded_password")
-            fullName = "Test User"
-            fullNameNepali = "टेस्ट युजर"
-            dateOfBirth = LocalDate.now()
-            address = "Test Address"
-            officePost = "Test Post"
-            wardNumber = 1
-            isApproved = true
-            roles = mutableSetOf(mockRole)
-        }
+        UserTestFixtures
+            .createUser(
+                email = "test@example.com",
+                password = "encoded_password",
+                fullName = "Test User",
+                fullNameNepali = "टेस्ट युजर",
+                isApproved = true,
+            ).apply {
+                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+            }
 
     private val mockTokenPair =
         TokenPair(
@@ -88,7 +86,7 @@ class AuthServiceImplTest {
     fun `register should create new user and return auth response`() {
         // Arrange
         val request =
-            RegisterRequest(
+            UserTestFixtures.createRegisterRequest(
                 email = "test@example.com",
                 password = "password123",
                 fullName = "Test User",
@@ -118,15 +116,8 @@ class AuthServiceImplTest {
     @Test
     fun `register should throw EmailAlreadyExistsException when email exists`() {
         val request =
-            RegisterRequest(
+            UserTestFixtures.createRegisterRequest(
                 email = "test@example.com",
-                password = "password123",
-                fullName = "Test User",
-                fullNameNepali = "टेस्ट युजर",
-                dateOfBirth = LocalDate.now(),
-                address = "Test Address",
-                officePost = "Test Post",
-                wardNumber = 1,
             )
 
         every { userRepository.existsByEmail(any()) } returns true

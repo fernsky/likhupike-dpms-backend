@@ -46,33 +46,33 @@ class ValidOfficePostValidatorTest {
         verify(context).buildConstraintViolationWithTemplate(
             "Invalid office post. Must be one of: ${OfficePost.getAllTitles().joinToString(", ")}",
         )
+        verify(violationBuilder).addConstraintViolation()
     }
 
     @Test
-    fun `should return false for null value`() {
-        `when`(context.buildConstraintViolationWithTemplate("Office post cannot be null"))
-            .thenReturn(violationBuilder)
-
-        assertThat(validator.isValid(null, context)).isFalse()
-
-        verify(context).disableDefaultConstraintViolation()
-        verify(context).buildConstraintViolationWithTemplate("Office post cannot be null")
-        verify(violationBuilder).addConstraintViolation()
+    fun `should return true for null value`() {
+        assertThat(validator.isValid(null, context)).isTrue()
     }
 
     @Test
     fun `should return false for empty string`() {
         `when`(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder)
+
         assertThat(validator.isValid("", context)).isFalse()
+
         verify(context).disableDefaultConstraintViolation()
-        verify(context).buildConstraintViolationWithTemplate(anyString())
+        verify(context).buildConstraintViolationWithTemplate("Office post cannot be blank if provided")
+        verify(violationBuilder).addConstraintViolation()
     }
 
     @Test
     fun `should return false for blank string`() {
         `when`(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder)
+
         assertThat(validator.isValid("   ", context)).isFalse()
+
         verify(context).disableDefaultConstraintViolation()
-        verify(context).buildConstraintViolationWithTemplate(anyString())
+        verify(context).buildConstraintViolationWithTemplate("Office post cannot be blank if provided")
+        verify(violationBuilder).addConstraintViolation()
     }
 }
